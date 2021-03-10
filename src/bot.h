@@ -494,9 +494,7 @@ void handleGameEvent(ServerMessage *newServerMessage) {
             enq(cmd, &sendHead, &sendTail);   
             
             printw("INFO: Deck loaded for game %d\n", id);
-        }
-        
-        if (currentGame->deckLoaded && !currentGame->readiedUp) {
+        } else if (currentGame->deckLoaded && !currentGame->readiedUp) {
             currentGame->readiedUp = 1;
             
             Command_ReadyStart rs;
@@ -510,10 +508,9 @@ void handleGameEvent(ServerMessage *newServerMessage) {
             enq(cmd, &sendHead, &sendTail); 
             
             printw("INFO: Ready up for game %d\n", id);
-        }
-        
-        // If game started concede    
-        if (!currentGame->conceded) {
+        } else if (!currentGame->conceded) {
+            //Concede on game start
+            
             int size = gameEventContainer.event_list_size();
             for (int i = 0; i < size && !currentGame->conceded; i++) {
                 GameEvent g = gameEventContainer.event_list().Get(i);
@@ -535,12 +532,21 @@ void handleGameEvent(ServerMessage *newServerMessage) {
                     }                        
                 }
             }            
-        }
-        
-        refresh();
+        } else {
+            //Check for game end
+            
+            #if DEBUG
+            printw("DEBUG: Game event with no action needed.\n");
+            refresh();
+            #endif
+        }        
     } else {
-        printw("INFO: No game with id %d found.\n", id);
+        attron(RED_COLOUR_PAIR);
+        printw("ERROR: No game with id %d found.\n", id);
+        attroff(RED_COLOUR_PAIR);
     }
+    
+    refresh();
 }
 
 void handleGameCreate(const SessionEvent sessionEvent) {
@@ -560,24 +566,13 @@ void handleGameCreate(const SessionEvent sessionEvent) {
             cmd->param;
             
             if (game != NULL) {
-                game->gameID = listGames.game_info().game_id();
-                
-                #if DEBUG
-                printw("DEBUG: Adding game with id %d\n", listGames.game_info().game_id());
-                refresh();                         
-                #endif
-                
-                addGame(&gamesHead, createGame(game->gameID));  
-                
-                #if DEBUG
-                printw("DEBUG: Calling callback for game with id %d\n",
-                       listGames.game_info().game_id());
-                refresh();                         
-                #endif                
+                game->gameID = listGames.game_info().game_id();            
             } else {
                 printw("ERROR: No callback found for game.\n");
             }
-        }
+        } 
+        
+        addGame(&gamesHead, createGame(listGames.game_info().game_id()));          
     } else {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: Invalid list games event.\n");
@@ -663,10 +658,8 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
         
         #if DEBUG
         attron(GREEN_COLOUR_PAIR);
-        char *msg = strToHex(wm->data.ptr, (int) wm->data.len);
-        printw("DEBUG: Message received with op code :%d and message: >>\"%s\"<< of length %d and debug str: %s\n", 
-               wm->flags, msg, wm->data.len, newServerMessage->ShortDebugString().c_str());
-        free(msg);
+        printw("DEBUG: Message received with op code :%d and debug str: %s\n", 
+               wm->flags, newServerMessage->ShortDebugString().c_str());
         attroff(GREEN_COLOUR_PAIR);
         refresh();
         #endif

@@ -33,7 +33,7 @@ void printBanner() {
 }
 
 void initCurses() {    
-    //initscr();
+    WINDOW *a = initscr();
     // Colours and that jazz
     if (has_colors()) {
         start_color();
@@ -46,7 +46,7 @@ void initCurses() {
         exit(1);
     }
         
-    scrollok(stdscr, 1);
+    scrollok(a, 1);
         
     printBanner();
 }

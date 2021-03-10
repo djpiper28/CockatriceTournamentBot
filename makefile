@@ -1,6 +1,7 @@
 LIBS = -lncurses -lpthread -lprotobuf -lmbedtls -lmbedcrypto -lmbedx509
 MONGOOSE-ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1
 DO_DEBUG = -DDEBUG=1 -g
+BASE_CC = g++ $(CFLAGS) ${LIBS} ${MONGOOSE-ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc
 
 build:
 	make prep-src	
@@ -17,11 +18,11 @@ prep-src: src/* pb/*
 	cp -rf pb/buildtmp/* buildtmp/ && cp -rf src/* buildtmp/
 	
 build-prj: src/* pb/*
-	cd buildtmp && g++ $(CFLAGS) ${LIBS} ${MONGOOSE-ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc && cd ../ && cp buildtmp/botExecutable botExecutable
+	cd buildtmp && ${BASE_CC} && cd ../ && cp buildtmp/botExecutable botExecutable
 
 build-debug:
 	make prep-src
-	cd buildtmp && g++ $(CFLAGS) ${DO_DEBUG} ${LIBS} ${MONGOOSE-ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc && cd ../ && cp buildtmp/botExecutable botExecutable
+	cd buildtmp && ${BASE_CC} ${DO_DEBUG} && cd ../ && cp buildtmp/botExecutable botExecutable
 
 	
 gendocs:
