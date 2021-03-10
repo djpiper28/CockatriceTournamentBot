@@ -1,0 +1,14 @@
+syntax = "proto2";
+import "game_event_context.proto";
+
+message Context_Concede {
+    extend GameEventContext {
+        optional Context_Concede ext = 1001;
+    }
+}
+
+message Context_Unconcede {
+    extend GameEventContext {
+        optional Context_Unconcede ext = 1009;
+    }
+}

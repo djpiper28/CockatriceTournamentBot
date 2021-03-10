@@ -1,0 +1,18 @@
+syntax = "proto2";
+import "room_event.proto";
+
+message Event_RoomSay {
+    extend RoomEvent {
+        optional Event_RoomSay ext = 1002;
+    }
+    enum RoomMessageType {
+        UserMessage = 0; // user message
+        Welcome = 1;     // rooms welcome message
+        ChatHistory = 2; // rooms chat history message
+    }
+    optional string name = 1;
+    optional string message = 2;
+    optional RoomMessageType message_type = 3;
+    optional uint64 time_of = 4;
+
+}

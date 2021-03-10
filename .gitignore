@@ -1,0 +1,8 @@
+buildtmp
+replays
+*.conf
+*.pem
+*.cert
+botExecutable
+MSG_RAW
+log

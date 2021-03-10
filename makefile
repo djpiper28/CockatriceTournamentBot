@@ -1,0 +1,31 @@
+LIBS = -lncurses -lpthread -lprotobuf -lmbedtls -lmbedcrypto -lmbedx509
+MONGOOSE-ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1
+DO_DEBUG = -DDEBUG=1 -g
+
+build:
+	make prep-src	
+	make build-prj
+
+prep-src: src/* pb/*	
+	make gendocs
+	rm -rf buildtmp/ && mkdir buildtmp/
+
+	cd pb && rm -rf buildtmp/ && mkdir buildtmp/ &&	find . | grep -o [^/]*\\.proto | xargs protoc --cpp_out=buildtmp/
+
+	cd src/ && python3 helpToSrc.py
+
+	cp -rf pb/buildtmp/* buildtmp/ && cp -rf src/* buildtmp/
+	
+build-prj: src/* pb/*
+	cd buildtmp && g++ $(CFLAGS) ${LIBS} ${MONGOOSE-ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc && cd ../ && cp buildtmp/botExecutable botExecutable
+
+build-debug:
+	make prep-src
+	cd buildtmp && g++ $(CFLAGS) ${DO_DEBUG} ${LIBS} ${MONGOOSE-ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc && cd ../ && cp buildtmp/botExecutable botExecutable
+
+	
+gendocs:
+	cd src/ && python3 helpToSrc.py
+	
+clean:
+	rm -rf buildtmp/ && rm -rf pb/buildtmp/

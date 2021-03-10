@@ -1,0 +1,66 @@
+import requests
+
+class TriceBot:    
+    def __init__(self, authToken, apiURL="https://0.0.0.0:8000"):
+        self.authToken = authToken
+        self.apiURL = apiURL
+        
+    # verify = false as self signed ssl certificates will cause errors here
+    def req(self, urlpostfix, data):
+        return requests.get(self.apiURL + "/" + urlpostfix, timeout=3.0, data=data,  verify=False).text
+        
+    def checkauthkey(self):
+        return self.req("api/checkauthkey", self.authToken) == "1"
+    
+    def createGame(self, gamename, password, playercount, spectatorsallowed, spectatorsneedpassword, spectatorscanchat, spectatorscanseehands, onlyreistered):
+        body = "authtoken=" + self.authToken + "\n"
+        body += "gamename=" + gamename + "\n"
+        body += "password=" + password + "\n"
+        body += "playerCount=" + str(playercount) + "\n"
+        
+        body += "spectatorsAllowed="
+        if spectatorsallowed:
+            body+="TRUE"
+        else:
+            body +="FALSE"
+        body += "\n"
+            
+        body += "spectatorsNeedPassword="
+        if spectatorsneedpassword:
+            body+="TRUE"
+        else:
+            body +="FALSE"
+        body += "\n"
+        
+        body += "spectatorsCanChat="
+        if spectatorscanchat:
+            body+="TRUE"
+        else:
+            body +="FALSE"
+        body += "\n"
+        
+        body += "spectatorsCanSeeHands="
+        if spectatorscanseehands:
+            body+="TRUE"
+        else:
+            body +="FALSE"
+        body += "\n"
+        
+        body += "onlyRegistered="
+        if onlyreistered:
+            body+="TRUE"
+        else:
+            body +="FALSE"
+            
+        status = self.req("api/creategame/", body)
+        
+        if (status == "error" or status == "invalid auth token"):
+            return False
+        
+        return True
+def test():
+    t = TriceBot("nGpzR/KspN6ry7jG8CU4bonN2aujzfJa")
+    print(t.createGame("test", "poop", 1, True, True, True, True, True))
+    
+test()
+    
