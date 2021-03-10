@@ -33,7 +33,7 @@ void printBanner() {
 }
 
 void initCurses() {    
-    initscr();
+    //initscr();
     // Colours and that jazz
     if (has_colors()) {
         start_color();

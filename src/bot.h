@@ -94,8 +94,8 @@ long lastPingTime = 0;
 
 struct pendingCommand *prepCmd(CommandContainer cont, int gameID, int roomID){    
     static int cmdID = 0;    
-        
-    id = cmdID
+    
+    int id = cmdID;
     
     if (gameID != -1)
         cont.set_game_id(gameID);
@@ -107,9 +107,9 @@ struct pendingCommand *prepCmd(CommandContainer cont, int gameID, int roomID){
     
     char *data = (char*) malloc(sizeof(char) * msgLength);
     cont.SerializeToArray(data, msgLength);
-        
+    
     struct pendingCommand *pending = (struct pendingCommand *) 
-                    malloc(sizeof (struct pendingCommand));
+    malloc(sizeof (struct pendingCommand));
     
     pending->message  = data;
     pending->size     = msgLength;
@@ -121,7 +121,7 @@ struct pendingCommand *prepCmd(CommandContainer cont, int gameID, int roomID){
     #if DEBUG
     char *msg = strToHex(data, msgLength);
     printw("DEBUG: About to send a message: >>\"%s\"<<\n       With cmdId: %d and debug str: %s\n", 
-        msg, id, cont.DebugString().c_str());
+           msg, id, cont.DebugString().c_str());
     refresh();
     free(msg);        
     #endif
@@ -170,10 +170,10 @@ void loginResponse(const Response *response, void *param) {
     
     if (response->HasExtension(Response_Login::ext)) {    
         Response_Login resp = response->GetExtension(Response_Login::ext);
-            
+        
         if (response->response_code() == Response::RespOk) {
             loggedIn = 1;
-        
+            
             attron(GREEN_COLOUR_PAIR);
             printw("INFO: Logged in successfully (%d)\n",
                    response->response_code());
@@ -236,7 +236,7 @@ void sendLogin() {
     cmdLogin->add_clientfeatures("websocket");          
     cmdLogin->add_clientfeatures("2.7.0_min_version");          
     cmdLogin->add_clientfeatures("2.8.0_min_version");     
-            
+    
     CommandContainer cont;     
     SessionCommand *c = cont.add_session_command(); 
     c->MutableExtension(Command_Login::ext)->CopyFrom(*cmdLogin);
@@ -278,22 +278,22 @@ void handleResponse (ServerMessage *newServerMessage) {
         
         if (DEBUG || response.response_code() == -1) {
             printw("DEBUG: Callback received with cmdId: %d and response code:%d debug str: %s.\n",
-                response.cmd_id(), response.response_code(), response.ShortDebugString().c_str());
+                   response.cmd_id(), response.response_code(), response.ShortDebugString().c_str());
             refresh();
         }
         
         struct pendingCommand *cmd = NULL;
         if (response.cmd_id() != -1) 
-             cmd = cmdForCMDId(&callbackHead, &callbackTail, response.cmd_id());   
+            cmd = cmdForCMDId(&callbackHead, &callbackTail, response.cmd_id());   
         
         if (response.HasExtension(Response_Login::ext)) 
             loginResponse(&response, NULL);            
-            
+        
         if (cmd != NULL) {       
             if (fork() == 0) {
                 #if DEBUG   
                 printw("DEBUG: CMD found with ID: %d.\n",
-                        response.cmd_id());
+                       response.cmd_id());
                 refresh();    
                 #endif    
                 executeCallback(cmd, &response);
@@ -320,21 +320,21 @@ void roomsListed(Event_ListRooms listRooms) {
     int found = 0;
     for (int i = 0; i < size && !found; i++) {
         ServerInfo_Room room = listRooms.room_list().Get(i);
-            
+        
         if (strncmp(config.roomName, room.name().c_str(), BUFFER_LENGTH) == 0) {
             //Send room join cmd
             printw("INFO: joining a room...\n");
-                
+            
             Command_JoinRoom roomJoin;
             roomJoin.set_room_id(room.room_id());
             magicRoomID = room.room_id();
-                
+            
             CommandContainer cont;
             SessionCommand *c = cont.add_session_command(); 
             c->MutableExtension(Command_JoinRoom::ext)->CopyFrom(roomJoin);
             struct pendingCommand *cmd = prepCmd(cont, -1, -1);  
             enq(cmd, &sendHead, &sendTail);            
-                
+            
             found = 1;
         }
     }
@@ -360,7 +360,7 @@ void handleRoomEvent(ServerMessage *newServerMessage) {
 void processServerMessageEvent(const SessionEvent *sessionEvent) {
     #if DEBUG
     Event_ServerMessage serverMessage = sessionEvent
-        ->GetExtension(Event_ServerMessage::ext);
+    ->GetExtension(Event_ServerMessage::ext);
     printw("INFO: Server message: %s\n", serverMessage.message().c_str());
     refresh();
     #endif
@@ -440,7 +440,7 @@ void replayResponseDownload(const Response *response, void *param) {
 
 void replayReady(const SessionEvent *sessionEvent) {
     Event_ReplayAdded replayAdded = sessionEvent
-        ->GetExtension(Event_ReplayAdded::ext);
+    ->GetExtension(Event_ReplayAdded::ext);
     
     ServerInfo_ReplayMatch replays = replayAdded.match_info();
     int gameID = replays.game_id();
@@ -472,10 +472,10 @@ void replayReady(const SessionEvent *sessionEvent) {
 
 void handleGameEvent(ServerMessage *newServerMessage) {    
     GameEventContainer gameEventContainer = newServerMessage->game_event_container();
-        
+    
     int id = gameEventContainer.game_id();
     struct game *currentGame = getGameWithID(gamesHead, id);
-        
+    
     if (currentGame != NULL) {
         // If game created load a deck
         if (!currentGame->deckLoaded) {
@@ -551,13 +551,13 @@ void handleGameCreate(const SessionEvent sessionEvent) {
         #endif
         
         Event_GameJoined listGames = sessionEvent.GetExtension(Event_GameJoined::ext);
-           
+        
         struct pendingCommand *cmd = gameWithName(&callbackHead, &callbackTail,
-                                     listGames.game_info().description().c_str());
+                                                  listGames.game_info().description().c_str());
         
         if (cmd != NULL) {
             struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *) 
-                                                                      cmd->param;
+            cmd->param;
             
             if (game != NULL) {
                 game->gameID = listGames.game_info().game_id();
@@ -571,7 +571,7 @@ void handleGameCreate(const SessionEvent sessionEvent) {
                 
                 #if DEBUG
                 printw("DEBUG: Calling callback for game with id %d\n",
-                                                listGames.game_info().game_id());
+                       listGames.game_info().game_id());
                 refresh();                         
                 #endif                
             } else {
@@ -589,12 +589,12 @@ void handleGameCreate(const SessionEvent sessionEvent) {
 void handleSessionEvent(ServerMessage *newServerMessage) {
     //Session event
     const SessionEvent sessionEvent = newServerMessage->session_event();
-        
+    
     attron(YELLOW_COLOUR_PAIR);
     if (sessionEvent.HasExtension(Event_ServerIdentification::ext)) {
         printw("INFO: Server identification event received.\n");
         sendLogin();   
-            
+        
     } else if (sessionEvent.HasExtension(Event_ServerCompleteList::ext)) {
         printw("INFO: Server complete list event received.\n");
     } else if (sessionEvent.HasExtension(Event_ServerMessage::ext)) { 
@@ -611,7 +611,7 @@ void handleSessionEvent(ServerMessage *newServerMessage) {
     } else if (sessionEvent.HasExtension(Event_ListRooms::ext)) {                
         printw("INFO: List rooms event received.\n");
         roomsListed(sessionEvent.GetExtension(Event_ListRooms::ext));
-            
+        
     } else if (sessionEvent.HasExtension(Event_AddToList::ext)) {                
         printw("INFO: Add to list event received.\n");
     } else if (sessionEvent.HasExtension(Event_RemoveFromList::ext)) {                
@@ -627,20 +627,20 @@ void handleSessionEvent(ServerMessage *newServerMessage) {
         //Due to cockatrice spaghetti this is going to have to trigger the callback 
         //for the create game command        
         handleGameCreate(sessionEvent);
-            
+        
     } else if (sessionEvent.HasExtension(Event_NotifyUser::ext)) {                
         printw("INFO: Notify user event received.\n");
     } else if (sessionEvent.HasExtension(Event_ReplayAdded::ext)) {                
         printw("INFO: Replay ready event received.\n");
         replayReady(&sessionEvent);
-            
+        
     } else {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: Unknown session event received.\n");
         attroff(RED_COLOUR_PAIR);
     }
     attroff(YELLOW_COLOUR_PAIR);
-        
+    
     refresh();
 }
 
@@ -656,11 +656,11 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
         refresh();
     } else if (ev == MG_EV_WS_MSG) { 
         struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
-                
+        
         ServerMessage *newServerMessage = new ServerMessage();
         newServerMessage->ParseFromArray(wm->data.ptr, wm->data.len);
         int messageType = newServerMessage->message_type();
-                
+        
         #if DEBUG
         attron(GREEN_COLOUR_PAIR);
         char *msg = strToHex(wm->data.ptr, (int) wm->data.len);
@@ -689,160 +689,147 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
         lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received
         
         delete(newServerMessage);        
-    }    
-    struct pendingCommandQueue **tail) {
-        struct pendingCommandQueue *node = (struct pendingCommandQueue *)
-        malloc(sizeof(struct pendingCommandQueue));
-        node->payload = cmd;
-        node->next    = NULL;    
+    } else if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
+            attron(RED_COLOUR_PAIR);
+            printw("ERROR: Bot disconnected due to socket close.\n");      
+            attroff(RED_COLOUR_PAIR);
+            refresh();
+            *(int *) fn_data = 1;  
+            // Signal that we're done
+        }  
         
-        if (!hasNext(*head)) {
-            *head = node;
-            *tail = node;
-        } else {        
-            (*tail)->next = node;        
-            *tail = node;
-        }    
-    if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: Bot disconnected due to socket close.\n");      
-        attroff(RED_COLOUR_PAIR);
+        if (!running) {
+            c->is_closing = 1;        
+        }
+        
         refresh();
-        *(int *) fn_data = 1;  
-        // Signal that we're done
-    }  
-    
-    if (!running) {
-        c->is_closing = 1;        
     }
     
-    refresh();
-}
-
-void *botThread(void *nothing) {
-    //Reconnect
-    while (running) {
-        struct mg_mgr mgr;
-        
-        int done = 0;   
-        loggedIn = 0;
-        magicRoomID = -1;
-        // Event handler flips it to true
-        
-        printw("INFO: Connecting to the server...\n");
-        refresh();
-        
-        struct mg_connection *c;
-        mg_mgr_init(&mgr);
-        c = mg_ws_connect(&mgr, config.cockatriceServer, botEventHandler,
-                        &done, NULL);  
-        
-        // Create client
-        while (running && !done && c != NULL) {
-            mg_mgr_poll(&mgr, 50);
+    void *botThread(void *nothing) {
+        //Reconnect
+        while (running) {
+            struct mg_mgr mgr;
             
-            if (!done && running) {
-                //Send command if possible
-                if (hasNext(sendHead)) {           
-                    struct pendingCommand *cmd = deq(&sendHead);   
-                    
-                    mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
+            int done = 0;   
+            loggedIn = 0;
+            magicRoomID = -1;
+            // Event handler flips it to true
             
-                    enq(cmd, &callbackHead, &callbackTail);
-                    #if DEBUG
-                    printw("DEBUG: Waiting for callback for cmd with ID: %d.\n",
-                        cmd->cmdID);
-                    refresh();
-                    #endif
-                }
+            printw("INFO: Connecting to the server...\n");
+            refresh();
+            
+            struct mg_connection *c;
+            mg_mgr_init(&mgr);
+            c = mg_ws_connect(&mgr, config.cockatriceServer, botEventHandler,
+                              &done, NULL);  
+            
+            // Create client
+            while (running && !done && c != NULL) {
+                mg_mgr_poll(&mgr, 50);
                 
-                //Check for callback that has timed out
-                if(hasNext(callbackHead)) {
-                    struct pendingCommand *cmd = peek(callbackHead);
-                    
-                    if (cmd != NULL) {
-                        if (time(NULL) - cmd->timeSent >= TIMEOUT) {
-                            struct pendingCommand *cmdd = deq(&callbackHead);
-                            attron(YELLOW_COLOUR_PAIR);
-                            printw("INFO: Timeout for cmd with id %d\n", cmdd->cmdID);
-                            refresh();
-                            attroff(YELLOW_COLOUR_PAIR);
-                            
-                            executeCallback(cmdd, NULL);                        
-                        }
+                if (!done && running) {
+                    //Send command if possible
+                    if (hasNext(sendHead)) {           
+                        struct pendingCommand *cmd = deq(&sendHead);   
+                        
+                        mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
+                        
+                        enq(cmd, &callbackHead, &callbackTail);
+                        #if DEBUG
+                        printw("DEBUG: Waiting for callback for cmd with ID: %d.\n",
+                               cmd->cmdID);
+                        refresh();
+                        #endif
                     }
-                }            
-                
-                //Send ping if needed
-                if (needsPing(lastPingTime)) {
-                    sendPing();
-                    lastPingTime = time(NULL);
-                }
-            }
-        }    
                     
-        while (hasNext(sendHead)) {
-            struct pendingCommand *cmd = deq(&sendHead);
-            free(cmd->message);
-            free(cmd);
-        }
-        
-        while (hasNext(callbackHead)) {
-            struct pendingCommand *cmd = deq(&callbackHead);
-            free(cmd->message);
-            free(cmd);
-        }
-        
-        while (gamesHead != NULL) {
-            struct gameList *tmp = gamesHead;
-            gamesHead = gamesHead->nextGame;
+                    //Check for callback that has timed out
+                    if(hasNext(callbackHead)) {
+                        struct pendingCommand *cmd = peek(callbackHead);
+                        
+                        if (cmd != NULL) {
+                            if (time(NULL) - cmd->timeSent >= TIMEOUT) {
+                                struct pendingCommand *cmdd = deq(&callbackHead);
+                                attron(YELLOW_COLOUR_PAIR);
+                                printw("INFO: Timeout for cmd with id %d\n", cmdd->cmdID);
+                                refresh();
+                                attroff(YELLOW_COLOUR_PAIR);
+                                
+                                executeCallback(cmdd, NULL);                        
+                            }
+                        }
+                    }            
+                    
+                    //Send ping if needed
+                    if (needsPing(lastPingTime)) {
+                        sendPing();
+                        lastPingTime = time(NULL);
+                    }
+                }
+            }    
             
-            freeGameListNode(tmp);
+            while (hasNext(sendHead)) {
+                struct pendingCommand *cmd = deq(&sendHead);
+                free(cmd->message);
+                free(cmd);
+            }
+            
+            while (hasNext(callbackHead)) {
+                struct pendingCommand *cmd = deq(&callbackHead);
+                free(cmd->message);
+                free(cmd);
+            }
+            
+            while (gamesHead != NULL) {
+                struct gameList *tmp = gamesHead;
+                gamesHead = gamesHead->nextGame;
+                
+                freeGameListNode(tmp);
+            }
+            
+            mg_mgr_free(&mgr); 
+            
+            printw("INFO: Bot thread stopped.\n");
+            refresh();   
         }
         
-        mg_mgr_free(&mgr); 
+        attron(RED_COLOUR_PAIR);
+        printw("INFO: Bot not restarting.\n");
+        attroff(RED_COLOUR_PAIR);
         
-        printw("INFO: Bot thread stopped.\n");
-        refresh();   
+        pthread_exit(NULL);
     }
     
-    attron(RED_COLOUR_PAIR);
-    printw("INFO: Bot not restarting.\n");
-    attroff(RED_COLOUR_PAIR);
-    
-    pthread_exit(NULL);
-}
-
-//Bot control functions
-void stopBot() {
-    google::protobuf::ShutdownProtobufLibrary();    
-    
-    printw("Bot stopped.\n");
-    refresh();
-}
-
-void startBot() {
-    printw("Starting bot...\n");
-    
-    attron(COLOR_PAIR(YELLOW_COLOUR_PAIR));
-    printw("INFO: Target cockatrice version: \"%s\" (%s - %s)\n", VERSION_STRING,
-        VERSION_COMMIT, VERSION_DATE);
-    attroff(COLOR_PAIR(YELLOW_COLOUR_PAIR));
-    
-    refresh();    
-    
-    if (pthread_create(&pollingThreadBOT, NULL, botThread, NULL)) {        
-        attron(COLOR_PAIR(RED_COLOUR_PAIR));
-        printw("ERROR: Error creating bot thread\n");
-        attroff(COLOR_PAIR(RED_COLOUR_PAIR));
+    //Bot control functions
+    void stopBot() {
+        google::protobuf::ShutdownProtobufLibrary();    
         
-        refresh(); 
-        
-        exitCurses();
+        printw("Bot stopped.\n");
+        refresh();
     }
     
-    printw("Bot threads created.\nBot started.\n");
-    refresh();
-}
-
-#endif
+    void startBot() {
+        printw("Starting bot...\n");
+        
+        attron(COLOR_PAIR(YELLOW_COLOUR_PAIR));
+        printw("INFO: Target cockatrice version: \"%s\" (%s - %s)\n", VERSION_STRING,
+               VERSION_COMMIT, VERSION_DATE);
+        attroff(COLOR_PAIR(YELLOW_COLOUR_PAIR));
+        
+        refresh();    
+        
+        if (pthread_create(&pollingThreadBOT, NULL, botThread, NULL)) {        
+            attron(COLOR_PAIR(RED_COLOUR_PAIR));
+            printw("ERROR: Error creating bot thread\n");
+            attroff(COLOR_PAIR(RED_COLOUR_PAIR));
+            
+            refresh(); 
+            
+            exitCurses();
+        }
+        
+        printw("Bot threads created.\nBot started.\n");
+        refresh();
+    }
+    
+    #endif
+    

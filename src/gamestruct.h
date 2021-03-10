@@ -2,6 +2,7 @@
 #define GAMESTRUCT_
 
 #include <stdlib.h>
+#include <pthread.h>
 #include "version_string.h"
 
 struct gameList {
