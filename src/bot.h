@@ -625,8 +625,17 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
         printw("INFO: Connection started.\n");
         refresh();
         
-        //Login to the server
-        sendLogin();
+        if (!config.authRequired) {
+            printw("INFO: Requesting room list\n");
+            
+            //Get room list
+            CommandContainer cont;     
+            SessionCommand *c = cont.add_session_command(); 
+            c->MutableExtension(Command_ListRooms::ext);
+            
+            struct pendingCommand *cmd = prepCmd(cont, -1, -1);  
+            enq(cmd, &sendHead, &sendTail, mutex_send);            
+        }
     } else if (ev == MG_EV_WS_MSG) { 
         struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
         

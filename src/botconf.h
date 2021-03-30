@@ -17,7 +17,7 @@
 struct config {
     char *cockatriceUsername, *cockatricePassword, *cockatriceServer, 
          *authToken, *cert, *certkey, *bindAddr, *clientID, *roomName;
-    int success;
+    int authRequired, success;
 };
 
 struct config config;
@@ -69,7 +69,9 @@ void readProperty(char *line) {
         config.clientID = valueStr;   
     } else if (strncmp("roomName", propertyStr, BUFFER_LENGTH) == 0) {
         config.roomName = valueStr;   
-    } else {      
+    } else if (strncmp("authRequired", propertyStr, BUFFER_LENGTH) == 0) {
+        config.authRequired = atoi(valueStr);
+    } else {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: No setting with property '%s' found on line with value %s\n",
                propertyStr, valueStr);    
