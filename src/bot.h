@@ -60,6 +60,7 @@
 #include "session_commands.pb.h"
 #include "room_commands.pb.h"
 #include "commands.pb.h"
+#include "command_leave_game.pb.h"
 #include "command_replay_download.pb.h"
 #include "command_deck_select.pb.h"
 #include "command_ready_start.pb.h"
@@ -305,13 +306,15 @@ void handleResponse (ServerMessage *newServerMessage) {
             printw("ERROR: Bad response - no CMD found with ID: %d.\n",
                    response.cmd_id());
             attroff(RED_COLOUR_PAIR); 
-            refresh();                               
+            refresh();         
+            delete(newServerMessage);                      
         }        
     } else {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: Server response received with an empty response queue.\n");
         attroff(RED_COLOUR_PAIR);
         refresh();
+        delete(newServerMessage);
     }   
 }
 
@@ -371,7 +374,8 @@ void replayResponseDownload(const Response *response, void *param) {
         return;
     
     if (response->HasExtension(Response_ReplayDownload::ext)) {
-        Response_ReplayDownload replay = response->GetExtension(Response_ReplayDownload::ext);
+        Response_ReplayDownload replay = response
+                ->GetExtension(Response_ReplayDownload::ext);
         
         const char *replayData = replay.replay_data().c_str();
         int len = replay.replay_data().length();
@@ -459,6 +463,7 @@ void replayReady(const SessionEvent *sessionEvent) {
         CommandContainer cont;
         SessionCommand *c = cont.add_session_command(); 
         c->MutableExtension(Command_ReplayDownload::ext)->CopyFrom(replayDownload);
+        
         struct pendingCommand *cmd = prepCmd(cont, -1, -1);    
         cmd->callbackFunction = &replayResponseDownload;
         
@@ -477,59 +482,31 @@ void handleGameEvent(ServerMessage *newServerMessage) {
     int id = gameEventContainer.game_id();
     struct game *currentGame = getGameWithID(gamesHead, id);
     
-    if (currentGame != NULL) {        
+    if (currentGame != NULL) {
         int size = gameEventContainer.event_list_size();
-        for (int i = 0; i < size && !(currentGame->conceded 
-            || currentGame->deckLoaded || currentGame->readiedUp); i++) {
-            GameEvent g = gameEventContainer.event_list().Get(i);
-            if (g.HasExtension(Event_Join::ext)) {
-                if (!currentGame->deckLoaded) {                
-                    //Load a deck            
+        for (int i = 0; i < size; i++) {
+            GameEvent gameEvent = gameEventContainer.event_list().Get(i);
+            
+            if (gameEvent.HasExtension(Event_GameStateChanged::ext)) {
+                Event_GameStateChanged stateChange = gameEvent.GetExtension(
+                    Event_GameStateChanged::ext);
+                
+                // Game has ended - leave
+                if (!stateChange.game_started()) {
+                    // Leave game message
+                    Command_LeaveGame *leaveGame = new Command_LeaveGame();
                     
-                    currentGame->deckLoaded = 1;     
-                    Command_DeckSelect ds;
-                    ds.set_deck(DECK);
-                    ds.set_deck_id(DECK_ID);         
+                    CommandContainer cont;  
+                    cont.set_game_id(id);
+                    GameCommand *gc = cont.add_game_command();
+                    gc->MutableExtension(Command_LeaveGame::ext)
+                                            ->CopyFrom(*leaveGame);
+                    delete(leaveGame);
                     
-                    CommandContainer cont;
-                    GameCommand *c = cont.add_game_command();
-                    c->MutableExtension(Command_DeckSelect::ext)->CopyFrom(ds);
+                    struct pendingCommand *cmd = prepCmd(cont, -1, magicRoomID);
                     
-                    struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
-                    enq(cmd, &sendHead, &sendTail);   
-                    
-                    printw("INFO: Deck loaded for game %d\n", id);
-                } else if (currentGame->deckLoaded && !currentGame->readiedUp) {
-                    //Ready up
-                    
-                    currentGame->readiedUp = 1;                    
-                    Command_ReadyStart rs;
-                    rs.set_ready(1);
-                    
-                    CommandContainer cont;
-                    GameCommand *c = cont.add_game_command();
-                    c->MutableExtension(Command_ReadyStart::ext)->CopyFrom(rs);
-                    
-                    struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
-                    enq(cmd, &sendHead, &sendTail); 
-                    
-                    printw("INFO: Ready up for game %d\n", id);
-                }
-            } else if (g.HasExtension(Event_GameStateChanged::ext)) {
-                if (g.GetExtension(Event_GameStateChanged::ext).game_started()) {
-                    //Concede              
-                    
-                    currentGame->conceded = 1;                   
-                    Command_Concede cc;
-                    CommandContainer cont;
-                    GameCommand *c = cont.add_game_command();
-                    c->MutableExtension(Command_Concede::ext)->CopyFrom(cc);
-                    
-                    struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
                     enq(cmd, &sendHead, &sendTail);
-                    
-                    printw("INFO: Concede for game %d\n", id);   
-                }                        
+                }
             }
         }
     } else {
@@ -659,11 +636,14 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
         if (messageType == RESPONSE) {
             handleResponse(newServerMessage);            
         } else if (messageType == SESSION_EVENT) {   
-            handleSessionEvent(newServerMessage);            
+            handleSessionEvent(newServerMessage);   
+            delete(newServerMessage);            
         } else if (messageType == GAME_EVENT_CONTAINER) {   
-            handleGameEvent(newServerMessage);            
+            handleGameEvent(newServerMessage);     
+            delete(newServerMessage);          
         } else if (messageType == ROOM_EVENT) {   
-            handleRoomEvent(newServerMessage);            
+            handleRoomEvent(newServerMessage);   
+            delete(newServerMessage);            
         } else {
             attron(RED_COLOUR_PAIR);
             printw("ERROR: Unknown message received.\n");
@@ -671,10 +651,49 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
             refresh();  
         }
         
-        lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received
+        lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received             
+    } if (ev == MG_EV_POLL) {
+        //Send commands
+        if (hasNext(sendHead)) {           
+            struct pendingCommand *cmd = deq(&sendHead);   
+            
+            mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
+            
+            enq(cmd, &callbackHead, &callbackTail);
+            #if DEBUG
+            printw("DEBUG: Waiting for callback for cmd with ID: %d.\n",
+                   cmd->cmdID);
+            refresh();
+            #endif
+        }
         
-        delete(newServerMessage);        
-    } else if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
+        //Check for callback that has timed out
+        if (hasNext(callbackHead)) {
+            struct pendingCommand *cmd = peek(callbackHead);
+            
+            if (cmd != NULL) {
+                if (time(NULL) - cmd->timeSent >= TIMEOUT) {
+                    struct pendingCommand *cmdd = deq(&callbackHead);
+                    
+                    attron(YELLOW_COLOUR_PAIR);
+                    printw("INFO: Timeout for cmd with id %d\n",
+                           cmdd->cmdID);
+                    refresh();
+                    attroff(YELLOW_COLOUR_PAIR);
+                    
+                    executeCallback(cmdd, NULL);                        
+                }
+            }
+        }            
+        
+        //Send ping if needed
+        if (needsPing(lastPingTime)) {
+            sendPing();
+            lastPingTime = time(NULL);
+        }    
+    } 
+    
+    if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
             attron(RED_COLOUR_PAIR);
             printw("ERROR: Bot disconnected due to socket close.\n");      
             attroff(RED_COLOUR_PAIR);
@@ -710,48 +729,10 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
             
             // Create client
             while (running && !done && c != NULL) {
-                mg_mgr_poll(&mgr, 50);
-                
-                if (!done && running) {
-                    //Send command if possible
-                    if (hasNext(sendHead)) {           
-                        struct pendingCommand *cmd = deq(&sendHead);   
-                        
-                        mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
-                        
-                        enq(cmd, &callbackHead, &callbackTail);
-                        #if DEBUG
-                        printw("DEBUG: Waiting for callback for cmd with ID: %d.\n",
-                               cmd->cmdID);
-                        refresh();
-                        #endif
-                    }
-                    
-                    //Check for callback that has timed out
-                    if(hasNext(callbackHead)) {
-                        struct pendingCommand *cmd = peek(callbackHead);
-                        
-                        if (cmd != NULL) {
-                            if (time(NULL) - cmd->timeSent >= TIMEOUT) {
-                                struct pendingCommand *cmdd = deq(&callbackHead);
-                                attron(YELLOW_COLOUR_PAIR);
-                                printw("INFO: Timeout for cmd with id %d\n", cmdd->cmdID);
-                                refresh();
-                                attroff(YELLOW_COLOUR_PAIR);
-                                
-                                executeCallback(cmdd, NULL);                        
-                            }
-                        }
-                    }            
-                    
-                    //Send ping if needed
-                    if (needsPing(lastPingTime)) {
-                        sendPing();
-                        lastPingTime = time(NULL);
-                    }
-                }
+                mg_mgr_poll(&mgr, 100);
             }    
             
+            //Free all
             while (hasNext(sendHead)) {
                 struct pendingCommand *cmd = deq(&sendHead);
                 free(cmd->message);

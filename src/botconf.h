@@ -40,12 +40,16 @@ void readProperty(char *line) {
     for (int i = 0; i < propertyLen - 1; i++)  //null terminator
         propertyStr[i] = line[i];
     
+    propertyStr[propertyLen - 1] = 0;
+    
     int ii = 0;
     //Ends with new line
     for (int i = equalsSignPtr + 1; ii < valueLen - 1; i++) {
         valueStr[ii] = line[i];
         ii++;
     }
+    
+    valueStr[valueLen - 1] = 0;
         
     if (strncmp("username", propertyStr, BUFFER_LENGTH) == 0) {        
         config.cockatriceUsername = valueStr;      

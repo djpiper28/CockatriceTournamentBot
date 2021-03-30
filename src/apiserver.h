@@ -131,11 +131,12 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
     #endif
         
     if (valid) {
-        //Create message
+        // Create message
         Command_CreateGame *createGame = new Command_CreateGame();
         createGame->set_description(gameName);
         createGame->set_password(password);
-        createGame->set_max_players(playerCount + 1); //A slot for the bot
+        createGame->set_max_players(playerCount);
+        createGame->set_join_as_spectator(1);
         
         createGame->set_spectators_allowed(spectatorsAllowed);
         createGame->set_spectators_can_talk(spectatorsCanChat);
@@ -147,10 +148,12 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         CommandContainer cont;  
         RoomCommand *rc = cont.add_room_command();
         rc->MutableExtension(Command_CreateGame::ext)->CopyFrom(*createGame);
-            
+        delete(createGame);    
+        
         struct pendingCommand *cmd = prepCmd(cont, -1, magicRoomID);
         
-        struct gameCreateCallbackWaitParam *param = (struct gameCreateCallbackWaitParam *)
+        struct gameCreateCallbackWaitParam *param = (struct 
+                                gameCreateCallbackWaitParam *)
                                 malloc(sizeof(struct gameCreateCallbackWaitParam));        
         param->gameName = gameName;
         param->gameID = -1;
