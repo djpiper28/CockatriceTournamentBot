@@ -492,7 +492,7 @@ void handleGameEvent(ServerMessage *newServerMessage) {
                     Event_GameStateChanged::ext);
                 
                 // Game has ended - leave
-                if (!stateChange.game_started()) {
+                if (currentGame->started && !stateChange.game_started()) {
                     // Leave game message
                     Command_LeaveGame *leaveGame = new Command_LeaveGame();
                     
@@ -506,6 +506,8 @@ void handleGameEvent(ServerMessage *newServerMessage) {
                     struct pendingCommand *cmd = prepCmd(cont, -1, magicRoomID);
                     
                     enq(cmd, &sendHead, &sendTail);
+                } else if (stateChange.game_started()) {
+                    currentGame->started = 1;
                 }
             }
         }

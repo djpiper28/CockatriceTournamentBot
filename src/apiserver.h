@@ -38,12 +38,20 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
     printw("INFO: Game create command\n");
     refresh();
     
-    char *authToken = NULL, *gameName = NULL, *password = NULL;
-    int playerCount = -1, spectatorsAllowed = -1, spectatorsNeedPassword = -1,
-        spectatorsCanChat = -1, spectatorsCanSeeHands = -1, onlyRegistered = -1;
+    char *authToken = NULL, 
+         *gameName = NULL, 
+         *password = NULL;
+    int playerCount = -1, 
+        spectatorsAllowed = -1, 
+        spectatorsNeedPassword = -1,
+        spectatorsCanChat = -1, 
+        spectatorsCanSeeHands = -1, 
+        onlyRegistered = -1;
     
     //Get the data from the mg_http_message
-    int lineStart = 0, lineEnd = 0, firstEquals = 0;   
+    int lineStart = 0, 
+        lineEnd = 0, 
+        firstEquals = 0;   
     for (int i = 0; i < hm->message.len; i++) {
         if (hm->message.ptr[i] == '\n' || i == hm->message.len - 1) {
             lineEnd = i;
@@ -60,7 +68,11 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
             tmp[valueLen - 1] = 0;
             
             const char *propStartIndex = hm->message.ptr + lineStart;
+            
+            #define MAX_PROP_LEN 22
             int propLen = firstEquals - lineStart;
+            if (MAX_PROP_LEN < propLen)
+                propLen = MAX_PROP_LEN;
             
             if (strncmp(propStartIndex, "authtoken", propLen) == 0) {                
                 authToken = tmp;
@@ -70,7 +82,8 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
                 password = tmp;
             } else {
                 //Check is number
-                int isNum = valueLen < 3, number = -1;
+                int isNum = valueLen < 3, 
+                    number = -1;
                 for (int j = firstEquals + 1; j < lineEnd; j++) 
                     isNum &= hm->message.ptr[j] >= '0' && hm->message.ptr[j] <= '9';
                 
@@ -82,21 +95,27 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
                     isNum = 1;
                     number = 0;
                 } else if (isNum) {
+                    isNum = 1;
                     number = atoi(tmp);
                 }
                 
                 if (isNum) {
-                    if (strncmp(propStartIndex, "playerCount", propLen) == 0) {
+                    if (strncmp(propStartIndex, "playerCount",  propLen) == 0) {
                         playerCount = number;
-                    } else if (strncmp(propStartIndex, "spectatorsAllowed", propLen) == 0) {
+                    } else if (strncmp(propStartIndex, "spectatorsAllowed", 
+                                                                propLen) == 0) {
                         spectatorsAllowed = number;
-                    } else if (strncmp(propStartIndex, "spectatorsNeedPassword", propLen) == 0) {
+                    } else if (strncmp(propStartIndex, "spectatorsNeedPassword",
+                                                                propLen) == 0) {
                         spectatorsNeedPassword = number;
-                    } else if (strncmp(propStartIndex, "spectatorsCanChat", propLen) == 0) {
+                    } else if (strncmp(propStartIndex, "spectatorsCanChat",
+                                                                propLen) == 0) {
                         spectatorsCanChat = number;
-                    } else if (strncmp(propStartIndex, "spectatorsCanSeeHands", propLen) == 0) {
+                    } else if (strncmp(propStartIndex, "spectatorsCanSeeHands",
+                                                                propLen) == 0) {
                         spectatorsCanSeeHands = number;
-                    } else if (strncmp(propStartIndex, "onlyRegistered", propLen) == 0) {
+                    } else if (strncmp(propStartIndex, "onlyRegistered", 
+                                                                propLen) == 0) {
                         onlyRegistered = number;
                     }
                 } 
@@ -120,11 +139,12 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         
     //Check all fields have data
     int valid = authToken != NULL && gameName != NULL && password != NULL &&
-        playerCount != -1 && spectatorsAllowed != -1 && spectatorsNeedPassword != -1 &&
-        spectatorsCanChat != -1 && spectatorsCanSeeHands != -1 && onlyRegistered != -1;    
+        playerCount != -1 && spectatorsAllowed != -1 && spectatorsNeedPassword != -1 
+        && spectatorsCanChat != -1 && spectatorsCanSeeHands != -1 
+        && onlyRegistered != -1;    
             
     #if DEBUG
-    printw("DEBUG: gamename:%s\npassword:%s\nmaxplayers:%d\nspectatorsallowed:%d\nspectatorsneedpassword:%d\nspectatorscanchat:%d\nspectatorscanseehands:%d\nonlyregistered%d\n",
+    printw("DEBUG: Creating game: gamename:%s\npassword:%s\nmaxplayers:%d\nspectatorsallowed:%d\nspectatorsneedpassword:%d\nspectatorscanchat:%d\nspectatorscanseehands:%d\nonlyregistered:%d\n",
            gameName, password, playerCount, playerCount, spectatorsAllowed, 
            spectatorsNeedPassword, spectatorsCanChat, spectatorsCanSeeHands, onlyRegistered); 
     refresh();
@@ -155,11 +175,13 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         struct gameCreateCallbackWaitParam *param = (struct 
                                 gameCreateCallbackWaitParam *)
                                 malloc(sizeof(struct gameCreateCallbackWaitParam));        
+        
         param->gameName = gameName;
         param->gameID = -1;
         param->sendTime = time(NULL);
         
-        c->fn_data = (void *) param;        
+        c->fn_data = (void *) param; 
+        
         cmd->param = (void *) param;        
         cmd->isGame = 1;
         enq(cmd, &sendHead, &sendTail);

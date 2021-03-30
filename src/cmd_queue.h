@@ -75,13 +75,12 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue **head,
         return deq(head);
     }
     
-    struct pendingCommandQueue *current = *head, *last;
+    struct pendingCommandQueue *current = *head, 
+                               *last = NULL;
     struct pendingCommand *output = NULL;
-    int cont = 1;
+    int cont = current != NULL;
     
-    while (cont && current != NULL) {
-        int next = 0;
-        
+    while (cont) {        
         if (current->payload != NULL) {
             if (isGameEq(gameName, current->payload)) {
                 output = current->payload;
@@ -94,19 +93,15 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue **head,
                 free(current);
                 
                 cont = 0;                
-            } else {
-                next = 1;
             }
-        } else {
-            next = 1;
-        }
+        } 
         
-        if (next) {
-            if (current->next != NULL) {
+        if (cont) {
+            if (current->next == NULL) {
+                cont = 0;
+            } else {
                 last = current;
                 current = current->next;
-            } else {
-                cont = 0;
             }
         }        
     }

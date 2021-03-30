@@ -20,37 +20,37 @@ class TriceBot:
         
         body += "spectatorsAllowed="
         if spectatorsallowed:
-            body+="TRUE"
+            body += "1"
         else:
-            body +="FALSE"
+            body +="0"
         body += "\n"
             
         body += "spectatorsNeedPassword="
         if spectatorsneedpassword:
-            body+="TRUE"
+            body += "1"
         else:
-            body +="FALSE"
+            body += "0"
         body += "\n"
         
         body += "spectatorsCanChat="
         if spectatorscanchat:
-            body+="TRUE"
+            body += "1"
         else:
-            body +="FALSE"
+            body +="0"
         body += "\n"
         
         body += "spectatorsCanSeeHands="
         if spectatorscanseehands:
-            body+="TRUE"
+            body += "1"
         else:
-            body +="FALSE"
+            body +="0"
         body += "\n"
         
         body += "onlyRegistered="
         if onlyreistered:
-            body+="TRUE"
+            body += "1"
         else:
-            body +="FALSE"
+            body +="0"
             
         status = self.req("api/creategame/", body)
         

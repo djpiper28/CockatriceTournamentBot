@@ -16,7 +16,7 @@ struct gameCreateCallbackWaitParam {
 };
 
 struct game {
-    int gameID;
+    int gameID, started;
     long startTime;
 };
 
@@ -51,6 +51,7 @@ void freeGameList(struct gameList *g) {
 struct game *createGame(int gameID) {
     struct game *output = (struct game *) malloc(sizeof(struct game));
     output->gameID = gameID;
+    output->started = 0;
     return output;
 };
 
