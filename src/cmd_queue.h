@@ -58,7 +58,7 @@ struct pendingCommand *deq(struct pendingCommandQueue **head,
                            struct pendingCommandQueue **tail,
                            pthread_mutex_t mutex_queue) {  
     pthread_mutex_lock(&mutex_queue);    
-    struct pendingCommand *returnValue = deq_nts(head);
+    struct pendingCommand *returnValue = deq_nts(head, tail);
     pthread_mutex_unlock(&mutex_queue);
         
     return returnValue;
