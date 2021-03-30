@@ -88,6 +88,8 @@
 
 //Yummy global vars
 pthread_t pollingThreadBOT;
+static pthread_mutex_t mutex_send = PTHREAD_MUTEX_INITIALIZER,
+                       mutex_callback = PTHREAD_MUTEX_INITIALIZER;  
 static struct pendingCommandQueue *sendHead, *sendTail, *callbackHead, *callbackTail;
 static struct gameList *gamesHead;
 static int loggedIn, magicRoomID = -1;
@@ -158,7 +160,7 @@ void sendPing() {
     c->MutableExtension(Command_Ping::ext);
     struct pendingCommand *cmd = prepCmd(cont, -1, -1);
     
-    enq(cmd, &sendHead, &sendTail);
+    enq(cmd, &sendHead, &sendTail, mutex_send);
 }
 
 void loginResponse(const Response *response, void *param) {    
@@ -190,7 +192,7 @@ void loginResponse(const Response *response, void *param) {
             c->MutableExtension(Command_ListRooms::ext);
             
             struct pendingCommand *cmd = prepCmd(cont, -1, -1);  
-            enq(cmd, &sendHead, &sendTail);
+            enq(cmd, &sendHead, &sendTail, mutex_send);
             
             attron(COLOR_GREEN);
             printw("INFO: Logged in and prepping to join room.\n");
@@ -242,7 +244,7 @@ void sendLogin() {
     SessionCommand *c = cont.add_session_command(); 
     c->MutableExtension(Command_Login::ext)->CopyFrom(*cmdLogin);
     struct pendingCommand *cmd = prepCmd(cont, -1, -1);    
-    enq(cmd, &sendHead, &sendTail);
+    enq(cmd, &sendHead, &sendTail, mutex_send);
     
     //Free login data
     delete(cmdLogin);
@@ -285,7 +287,7 @@ void handleResponse (ServerMessage *newServerMessage) {
         
         struct pendingCommand *cmd = NULL;
         if (response.cmd_id() != -1) 
-            cmd = cmdForCMDId(&callbackHead, &callbackTail, response.cmd_id());   
+            cmd = cmdForCMDId(&callbackHead, &callbackTail, response.cmd_id(), mutex_callback);   
         
         if (response.HasExtension(Response_Login::ext)) 
             loginResponse(&response, NULL);            
@@ -336,7 +338,7 @@ void roomsListed(Event_ListRooms listRooms) {
             SessionCommand *c = cont.add_session_command(); 
             c->MutableExtension(Command_JoinRoom::ext)->CopyFrom(roomJoin);
             struct pendingCommand *cmd = prepCmd(cont, -1, -1);  
-            enq(cmd, &sendHead, &sendTail);            
+            enq(cmd, &sendHead, &sendTail, mutex_send);            
             
             found = 1;
         }
@@ -470,7 +472,7 @@ void replayReady(const SessionEvent *sessionEvent) {
         int *id = (int *) malloc(sizeof(int));
         *id = replay.replay_id();
         cmd->param = (void *) id;
-        enq(cmd, &sendHead, &sendTail);
+        enq(cmd, &sendHead, &sendTail, mutex_send);
     }
     
 }
@@ -505,7 +507,7 @@ void handleGameEvent(ServerMessage *newServerMessage) {
                     
                     struct pendingCommand *cmd = prepCmd(cont, -1, magicRoomID);
                     
-                    enq(cmd, &sendHead, &sendTail);
+                    enq(cmd, &sendHead, &sendTail, mutex_send);
                 } else if (stateChange.game_started()) {
                     currentGame->started = 1;
                 }
@@ -530,7 +532,8 @@ void handleGameCreate(const SessionEvent sessionEvent) {
         Event_GameJoined listGames = sessionEvent.GetExtension(Event_GameJoined::ext);
         
         struct pendingCommand *cmd = gameWithName(&callbackHead, &callbackTail,
-                                                  listGames.game_info().description().c_str());
+                                                  listGames.game_info().description().c_str(),
+                                                  mutex_callback);
         
         if (cmd != NULL) {
             struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *) 
@@ -657,11 +660,11 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
     } if (ev == MG_EV_POLL) {
         //Send commands
         if (hasNext(sendHead)) {           
-            struct pendingCommand *cmd = deq(&sendHead);   
+            struct pendingCommand *cmd = deq(&sendHead, mutex_send);   
             
             mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
             
-            enq(cmd, &callbackHead, &callbackTail);
+            enq(cmd, &callbackHead, &callbackTail, mutex_callback);
             #if DEBUG
             printw("DEBUG: Waiting for callback for cmd with ID: %d.\n",
                    cmd->cmdID);
@@ -675,7 +678,8 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
             
             if (cmd != NULL) {
                 if (time(NULL) - cmd->timeSent >= TIMEOUT) {
-                    struct pendingCommand *cmdd = deq(&callbackHead);
+                    struct pendingCommand *cmdd = deq(&callbackHead,
+                                                      mutex_callback);
                     
                     attron(YELLOW_COLOUR_PAIR);
                     printw("INFO: Timeout for cmd with id %d\n",
@@ -736,13 +740,13 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
             
             //Free all
             while (hasNext(sendHead)) {
-                struct pendingCommand *cmd = deq(&sendHead);
+                struct pendingCommand *cmd = deq(&sendHead, mutex_send);
                 free(cmd->message);
                 free(cmd);
             }
             
             while (hasNext(callbackHead)) {
-                struct pendingCommand *cmd = deq(&callbackHead);
+                struct pendingCommand *cmd = deq(&callbackHead, mutex_callback);
                 free(cmd->message);
                 free(cmd);
             }

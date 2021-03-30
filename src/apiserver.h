@@ -67,10 +67,12 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
             
             tmp[valueLen - 1] = 0;
             
-            const char *propStartIndex = hm->message.ptr + lineStart;
+            int propLen = firstEquals - lineStart;
+            char *propStartIndex = (char *) malloc(sizeof(char) * propLen);
+            
+            propStartIndex[propLen - 1] = 0;
             
             #define MAX_PROP_LEN 22
-            int propLen = firstEquals - lineStart;
             if (MAX_PROP_LEN < propLen)
                 propLen = MAX_PROP_LEN;
             
@@ -184,7 +186,7 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         
         cmd->param = (void *) param;        
         cmd->isGame = 1;
-        enq(cmd, &sendHead, &sendTail);
+        enq(cmd, &sendHead, &sendTail, mutex_send);
                     
         #if DEBUG
         printw("DEBUG: Game created.\n");
