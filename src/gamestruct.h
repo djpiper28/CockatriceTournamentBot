@@ -51,6 +51,9 @@ void freeGameList(struct gameList *g) {
 struct game *createGame(int gameID) {
     struct game *output = (struct game *) malloc(sizeof(struct game));
     output->gameID = gameID;
+    output->conceded = 0;
+    output->deckLoaded = 0;
+    output->readiedUp = 0;
     return output;
 };
 

@@ -28,7 +28,7 @@ parserArgumentsOpenCL=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunuse
 Name=Clang
 
 [CustomDefinesAndIncludes][ProjectPath0][Includes]
-1=/home/danny/CockatriceBot/buildtmp
+1=/home/danny/CockatriceTournamentBot/buildtmp
 
 [Launch]
 Launch Configurations=Launch Configuration 0

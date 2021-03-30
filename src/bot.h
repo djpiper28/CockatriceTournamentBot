@@ -27,6 +27,7 @@
 
 #include "event_connection_closed.pb.h"
 
+#include "event_join.pb.h"
 #include "event_game_joined.pb.h"
 #include "event_game_closed.pb.h"
 #include "event_notify_user.pb.h"
@@ -83,7 +84,6 @@
 </zone>\
 </cockatrice_deck>"
 #define DECK_ID 69
-//"fn9n4b5j"
 
 //Yummy global vars
 pthread_t pollingThreadBOT;
@@ -470,76 +470,68 @@ void replayReady(const SessionEvent *sessionEvent) {
     
 }
 
+
 void handleGameEvent(ServerMessage *newServerMessage) {    
     GameEventContainer gameEventContainer = newServerMessage->game_event_container();
     
     int id = gameEventContainer.game_id();
     struct game *currentGame = getGameWithID(gamesHead, id);
     
-    if (currentGame != NULL) {
-        // If game created load a deck
-        if (!currentGame->deckLoaded) {
-            currentGame->deckLoaded = 1;  
-            
-            //Load a deck            
-            Command_DeckSelect ds;
-            ds.set_deck(DECK);
-            ds.set_deck_id(DECK_ID);         
-            
-            CommandContainer cont;
-            GameCommand *c = cont.add_game_command();
-            c->MutableExtension(Command_DeckSelect::ext)->CopyFrom(ds);
-            
-            struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
-            enq(cmd, &sendHead, &sendTail);   
-            
-            printw("INFO: Deck loaded for game %d\n", id);
-        } else if (currentGame->deckLoaded && !currentGame->readiedUp) {
-            currentGame->readiedUp = 1;
-            
-            Command_ReadyStart rs;
-            rs.set_ready(1);
-            
-            CommandContainer cont;
-            GameCommand *c = cont.add_game_command();
-            c->MutableExtension(Command_ReadyStart::ext)->CopyFrom(rs);
-            
-            struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
-            enq(cmd, &sendHead, &sendTail); 
-            
-            printw("INFO: Ready up for game %d\n", id);
-        } else if (!currentGame->conceded) {
-            //Concede on game start
-            
-            int size = gameEventContainer.event_list_size();
-            for (int i = 0; i < size && !currentGame->conceded; i++) {
-                GameEvent g = gameEventContainer.event_list().Get(i);
-                if (g.HasExtension(Event_GameStateChanged::ext)) {
-                    if (g.GetExtension(Event_GameStateChanged::ext).game_started()) {
-                        //Concede                        
-                        currentGame->conceded = 1;
-                        
-                        Command_Concede cc;             
-                        
-                        CommandContainer cont;
-                        GameCommand *c = cont.add_game_command();
-                        c->MutableExtension(Command_Concede::ext)->CopyFrom(cc);
-                        
-                        struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
-                        enq(cmd, &sendHead, &sendTail);
-                        
-                        printw("INFO: Concede for game %d\n", id);   
-                    }                        
+    if (currentGame != NULL) {        
+        int size = gameEventContainer.event_list_size();
+        for (int i = 0; i < size && !(currentGame->conceded 
+            || currentGame->deckLoaded || currentGame->readiedUp); i++) {
+            GameEvent g = gameEventContainer.event_list().Get(i);
+            if (g.HasExtension(Event_Join::ext)) {
+                if (!currentGame->deckLoaded) {                
+                    //Load a deck            
+                    
+                    currentGame->deckLoaded = 1;     
+                    Command_DeckSelect ds;
+                    ds.set_deck(DECK);
+                    ds.set_deck_id(DECK_ID);         
+                    
+                    CommandContainer cont;
+                    GameCommand *c = cont.add_game_command();
+                    c->MutableExtension(Command_DeckSelect::ext)->CopyFrom(ds);
+                    
+                    struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
+                    enq(cmd, &sendHead, &sendTail);   
+                    
+                    printw("INFO: Deck loaded for game %d\n", id);
+                } else if (currentGame->deckLoaded && !currentGame->readiedUp) {
+                    //Ready up
+                    
+                    currentGame->readiedUp = 1;                    
+                    Command_ReadyStart rs;
+                    rs.set_ready(1);
+                    
+                    CommandContainer cont;
+                    GameCommand *c = cont.add_game_command();
+                    c->MutableExtension(Command_ReadyStart::ext)->CopyFrom(rs);
+                    
+                    struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
+                    enq(cmd, &sendHead, &sendTail); 
+                    
+                    printw("INFO: Ready up for game %d\n", id);
                 }
-            }            
-        } else {
-            //Check for game end
-            
-            #if DEBUG
-            printw("DEBUG: Game event with no action needed.\n");
-            refresh();
-            #endif
-        }        
+            } else if (g.HasExtension(Event_GameStateChanged::ext)) {
+                if (g.GetExtension(Event_GameStateChanged::ext).game_started()) {
+                    //Concede              
+                    
+                    currentGame->conceded = 1;                   
+                    Command_Concede cc;
+                    CommandContainer cont;
+                    GameCommand *c = cont.add_game_command();
+                    c->MutableExtension(Command_Concede::ext)->CopyFrom(cc);
+                    
+                    struct pendingCommand *cmd = prepCmd(cont, id, magicRoomID); 
+                    enq(cmd, &sendHead, &sendTail);
+                    
+                    printw("INFO: Concede for game %d\n", id);   
+                }                        
+            }
+        }
     } else {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: No game with id %d found.\n", id);

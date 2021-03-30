@@ -18,7 +18,7 @@ prep-src: src/* pb/*
 	cp -rf pb/buildtmp/* buildtmp/ && cp -rf src/* buildtmp/
 	
 build-prj: src/* pb/*
-	cd buildtmp && ${BASE_CC} && cd ../ && cp buildtmp/botExecutable botExecutable
+	cd buildtmp && ${BASE_CC} -DDEBUG=0 && cd ../ && cp buildtmp/botExecutable botExecutable
 
 build-debug:
 	make prep-src
