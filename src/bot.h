@@ -381,6 +381,7 @@ void replayResponseDownload(const Response *response, void *param) {
         
         const char *replayData = replay.replay_data().c_str();
         int len = replay.replay_data().length();
+        int made = 0;
         
         int *replayID = (int *) param;
         char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
@@ -389,23 +390,24 @@ void replayResponseDownload(const Response *response, void *param) {
         
         //Check is replay directory is made
         DIR* dir = opendir("replays");
-        if (dir) {
+        if (dir != NULL) {
             closedir(dir);
+            made = 0;
         } else if (ENOENT == errno) {
             //Make folder
             if (mkdir(REPLAY_DIR, S_IRWXU) != -1) {
-                
+                made = 1;
             } else {
                 attron(COLOR_RED);
                 printw("ERROR: Cannot create replay folder.\n");
                 attroff(COLOR_RED);
                 refresh();
                 
-                running = 0;
+                made = 0;                
             }
         }
         
-        if (running) {            
+        if (made) {            
             if (access(fileName, F_OK) != 0) {
                 FILE *replayFile = fopen(fileName, "wb+");
                 if (replayFile != NULL == 0 && access(fileName, W_OK) == 0) {
@@ -473,8 +475,7 @@ void replayReady(const SessionEvent *sessionEvent) {
         *id = replay.replay_id();
         cmd->param = (void *) id;
         enq(cmd, &sendHead, &sendTail, mutex_send);
-    }
-    
+    }    
 }
 
 
