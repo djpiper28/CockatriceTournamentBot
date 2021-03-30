@@ -26,7 +26,7 @@ Generate some ssl keys and slap them in the folder with the executable and then
 change the config file to have the correct names.
 
 ## Help it is borked
-compile with `make build-debug` and then send a log of what happened
+compile with `make build-debug` and then run it with `gdb` i.e: `gdb botExecutable` (then type r<enter> to run it and after the crash occurs type stop the program <ctrl> + c then type `thread apply all bt<enter>` and copy and paste all the text on screen (sensor the account details if they print).
 
 ## TODO:
 make it make a log or something idk
