@@ -32,12 +32,12 @@ int hasNext(struct pendingCommandQueue *head) {
     return head != NULL;
 }
 
-struct pendingCommand *deq(struct pendingCommandQueue **head, 
-                           pthread_mutex_t mutex_queue) {    
-    pthread_mutex_lock(&mutex_queue);
-    
+/* Not thread safe, to ensure thread safety run this in the same mutex as the
+ * queue being changed. Call deq for thread safe version
+ */
+struct pendingCommand *deq_nts(struct pendingCommandQueue **head, 
+                               struct pendingCommandQueue **tail) {   
     if (!hasNext(*head)) {
-        pthread_mutex_unlock(&mutex_queue);
         return NULL;
     } else {
         struct pendingCommandQueue *last = *head;
@@ -46,9 +46,22 @@ struct pendingCommand *deq(struct pendingCommandQueue **head,
         struct pendingCommand *returnValue = last->payload;
         free(last);
         
-        pthread_mutex_unlock(&mutex_queue);
+        if (*head == NULL) {
+            *tail = NULL;
+        }
+        
         return returnValue;
     }    
+}
+
+struct pendingCommand *deq(struct pendingCommandQueue **head,
+                           struct pendingCommandQueue **tail,
+                           pthread_mutex_t mutex_queue) {  
+    pthread_mutex_lock(&mutex_queue);    
+    struct pendingCommand *returnValue = deq_nts(head);
+    pthread_mutex_unlock(&mutex_queue);
+        
+    return returnValue;
 }
 
 int isGameEq(const char *gameName, struct pendingCommand *node) {
@@ -66,12 +79,12 @@ int isGameEq(const char *gameName, struct pendingCommand *node) {
 struct pendingCommand *gameWithName(struct pendingCommandQueue **head,
                                     struct pendingCommandQueue **tail,
                                     const char *gameName, 
-                                    pthread_mutex_t mutex_queue) {     
+                                    pthread_mutex_t mutex_queue) {  
+    pthread_mutex_lock(&mutex_queue);    
     if (isGameEq(gameName, (*head)->payload)) {
-        return deq(head, mutex_queue);
+        return deq_nts(head, tail);
     }
-    
-    pthread_mutex_lock(&mutex_queue);   
+      
     struct pendingCommandQueue *current = *head, 
                                *last = NULL;
     struct pendingCommand *output = NULL;
@@ -110,12 +123,12 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue **head,
 
 struct pendingCommand *cmdForCMDId(struct pendingCommandQueue **head,
                                    struct pendingCommandQueue **tail, int CMDId, 
-                                   pthread_mutex_t mutex_queue) {     
+                                   pthread_mutex_t mutex_queue) {   
+    pthread_mutex_lock(&mutex_queue);  
     if ((*head)->payload->cmdID == CMDId) {
-        return deq(head, mutex_queue);
+        return deq_nts(head, tail);
     }
     
-    pthread_mutex_lock(&mutex_queue);
     struct pendingCommandQueue *current = *head, *last;
     struct pendingCommand *output = NULL;
     int cont = 1;

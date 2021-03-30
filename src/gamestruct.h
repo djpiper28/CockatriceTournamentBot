@@ -5,9 +5,6 @@
 #include <pthread.h>
 #include "version_string.h"
 
-//TODO: mutex lock to each instance instead of all instances.
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  
-
 struct gameList {
     struct game *currentGame;
     struct gameList *nextGame;
@@ -58,8 +55,7 @@ struct game *createGame(int gameID) {
     return output;
 };
 
-struct game *getGameWithID(struct gameList *list, int gameID) {   
-    pthread_mutex_lock(&mutex);
+struct game *getGameWithID(struct gameList *list, int gameID) { 
     struct gameList *current = list;
     while (current != NULL && current->currentGame->gameID != gameID)
         current = current->nextGame;
@@ -67,12 +63,10 @@ struct game *getGameWithID(struct gameList *list, int gameID) {
     if (current == NULL)
         return NULL;
     
-    pthread_mutex_unlock(&mutex);
     return current->currentGame;
 }
 
-void addGame (struct gameList **list, struct game *gamePointer) {          
-    pthread_mutex_lock(&mutex);
+void addGame (struct gameList **list, struct game *gamePointer) {       
     
     if (list == NULL)
         return;
@@ -94,14 +88,10 @@ void addGame (struct gameList **list, struct game *gamePointer) {
         next->nextGame = NULL;
             
         current->nextGame = next;
-    }
-    
-    pthread_mutex_unlock(&mutex);
+    }    
 }
 
-void removeGame (struct gameList **list, struct game *gamePointer) {    
-    pthread_mutex_lock(&mutex);
-    
+void removeGame (struct gameList **list, struct game *gamePointer) {        
     if (list == NULL) {        
         return;
     } else {            
@@ -127,8 +117,6 @@ void removeGame (struct gameList **list, struct game *gamePointer) {
             }
         }
     }
-    
-    pthread_mutex_unlock(&mutex);
 }
 
 #endif

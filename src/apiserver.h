@@ -39,8 +39,8 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
     refresh();
     
     char *authToken = NULL, 
-         *gameName = NULL, 
-         *password = NULL;
+        *gameName = NULL, 
+        *password = NULL;
     int playerCount = -1, 
         spectatorsAllowed = -1, 
         spectatorsNeedPassword = -1,
@@ -49,85 +49,101 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         onlyRegistered = -1;
     
     //Get the data from the mg_http_message
-    int lineStart = 0, 
+    int lineStart = 0,
         lineEnd = 0, 
         firstEquals = 0;   
-    for (int i = 0; i < hm->message.len; i++) {
-        if (hm->message.ptr[i] == '\n' || i == hm->message.len - 1) {
-            lineEnd = i;
+    for (int i = 0; i < hm->body.len; i++) {
+        if (hm->body.ptr[i] == '=') {
+            firstEquals = i;
+        } else if (hm->body.ptr[i] == '\n' || i == hm->body.len - 1) {
+            lineEnd = i == hm->body.len - 1 ? i + 1 : i;
             
-            if (i == hm->message.len)
+            if (i == hm->body.len)
                 lineEnd++;
             
             //Read value into temp
             int valueLen = lineEnd - firstEquals /*+1 for null terminator -1 to remove \n*/;
             char *tmp = (char *) malloc(sizeof(char) * valueLen);
-            for (int j = firstEquals + 1; j < lineEnd; j++) 
-                tmp[j - firstEquals -1] = hm->message.ptr[j];            
-            
             tmp[valueLen - 1] = 0;
             
-            int propLen = firstEquals - lineStart;
-            char *propStartIndex = (char *) malloc(sizeof(char) * propLen);
-            
-            propStartIndex[propLen - 1] = 0;
-            
-            #define MAX_PROP_LEN 22
-            if (MAX_PROP_LEN < propLen)
-                propLen = MAX_PROP_LEN;
-            
-            if (strncmp(propStartIndex, "authtoken", propLen) == 0) {                
-                authToken = tmp;
-            } else if (strncmp(propStartIndex, "gamename", propLen) == 0) {                
-                gameName = tmp;
-            } else if (strncmp(propStartIndex, "password", propLen) == 0) {                
-                password = tmp;
-            } else {
-                //Check is number
-                int isNum = valueLen < 3, 
-                    number = -1;
-                for (int j = firstEquals + 1; j < lineEnd; j++) 
-                    isNum &= hm->message.ptr[j] >= '0' && hm->message.ptr[j] <= '9';
+            for (int j = firstEquals + 1, ii = 0; j < lineEnd; j++) {
+                tmp[ii] = hm->body.ptr[j];        
                 
-                //Read number
-                if (strncmp(tmp, "TRUE", valueLen)) {
-                    isNum = 1;
-                    number = 1;
-                } else if (strncmp(tmp, "FALSE", valueLen)) {
-                    isNum = 1;
-                    number = 0;
-                } else if (isNum) {
-                    isNum = 1;
-                    number = atoi(tmp);
-                }
-                
-                if (isNum) {
-                    if (strncmp(propStartIndex, "playerCount",  propLen) == 0) {
-                        playerCount = number;
-                    } else if (strncmp(propStartIndex, "spectatorsAllowed", 
-                                                                propLen) == 0) {
-                        spectatorsAllowed = number;
-                    } else if (strncmp(propStartIndex, "spectatorsNeedPassword",
-                                                                propLen) == 0) {
-                        spectatorsNeedPassword = number;
-                    } else if (strncmp(propStartIndex, "spectatorsCanChat",
-                                                                propLen) == 0) {
-                        spectatorsCanChat = number;
-                    } else if (strncmp(propStartIndex, "spectatorsCanSeeHands",
-                                                                propLen) == 0) {
-                        spectatorsCanSeeHands = number;
-                    } else if (strncmp(propStartIndex, "onlyRegistered", 
-                                                                propLen) == 0) {
-                        onlyRegistered = number;
-                    }
-                } 
-                
-                free(tmp);               
+                ii++;
             }
             
+            //Read prop tag into prop
+            int propLen = firstEquals - lineStart;
+            char *prop = (char *) malloc(sizeof(char) * propLen);
+            
+            //Error case
+            if (propLen == 0)
+                continue;
+            
+            prop[propLen - 1] = 0;
+            
+            for (int j = lineStart, ii = 0; j < firstEquals; j++) {
+                prop[ii] = hm->body.ptr[j];
+                
+                ii++;
+            }
+                   
+            // Inc line start
             lineStart = lineEnd + 1;
-        } else if (hm->message.ptr[i] == '=') {
-            firstEquals = i;
+            
+            // Check 
+             #define MAX_PROP_LEN 22
+             if (MAX_PROP_LEN < propLen)
+                propLen = MAX_PROP_LEN;
+                
+             if (strncmp(prop, "authtoken", propLen) == 0) {                
+                authToken = tmp;
+             } else if (strncmp(prop, "gamename", propLen) == 0) {                
+                    gameName = tmp;
+             } else if (strncmp(prop, "password", propLen) == 0) {                
+                    password = tmp;
+                } else {
+                    //Check is number
+                    int isNum = valueLen < 3, 
+                    number = -1;
+                    for (int j = firstEquals + 1; j < lineEnd; j++) 
+                        isNum &= hm->body.ptr[j] >= '0' && hm->body.ptr[j] <= '9';
+                    
+                    //Read number
+                    if (strncmp(tmp, "TRUE", valueLen)) {
+                        isNum = 1;
+                        number = 1;
+                    } else if (strncmp(tmp, "FALSE", valueLen)) {
+                        isNum = 1;
+                        number = 0;
+                    } else if (isNum) {
+                        isNum = 1;
+                        number = atoi(tmp);
+                    }
+                    
+                    if (isNum) {
+                        if (strncmp(prop, "playerCount", propLen) == 0) {
+                            playerCount = number;
+                        } else if (strncmp(prop, "spectatorsAllowed", 
+                                                                propLen) == 0) {
+                            spectatorsAllowed = number;
+                        } else if (strncmp(prop, "spectatorsNeedPassword",
+                                                                propLen) == 0) {
+                            spectatorsNeedPassword = number;
+                        } else if (strncmp(prop, "spectatorsCanChat",
+                                                                propLen) == 0) {
+                            spectatorsCanChat = number;
+                        } else if (strncmp(prop, "spectatorsCanSeeHands",
+                                                                propLen) == 0) {
+                            spectatorsCanSeeHands = number;
+                        } else if (strncmp(prop, "onlyRegistered", 
+                                                                propLen) == 0) {
+                            onlyRegistered = number;
+                        }
+                    } 
+                    
+                    free(tmp);    
+            }
         }
     }
         
@@ -147,8 +163,8 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
             
     #if DEBUG
     printw("DEBUG: Creating game: gamename:%s\npassword:%s\nmaxplayers:%d\nspectatorsallowed:%d\nspectatorsneedpassword:%d\nspectatorscanchat:%d\nspectatorscanseehands:%d\nonlyregistered:%d\n",
-           gameName, password, playerCount, playerCount, spectatorsAllowed, 
-           spectatorsNeedPassword, spectatorsCanChat, spectatorsCanSeeHands, onlyRegistered); 
+        gameName, password, playerCount, playerCount, spectatorsAllowed, 
+        spectatorsNeedPassword, spectatorsCanChat, spectatorsCanSeeHands, onlyRegistered); 
     refresh();
     #endif
         
@@ -212,7 +228,7 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
 }
 
 static void eventHandler (struct mg_connection *c, int event, 
-                             void *ev_data, void *fn_data) {
+                            void *ev_data, void *fn_data) {
     if (event == MG_EV_ACCEPT) {         
         mg_tls_init(c, &opts);        
     } else if (event == MG_EV_HTTP_MSG) {         
@@ -223,10 +239,10 @@ static void eventHandler (struct mg_connection *c, int event,
             mg_http_reply(c, 303, GITHUB_REPO);
         } else if (mg_http_match_uri(hm, "/api/version/")) {
             mg_http_reply(c, 200, "v%d.%d", 
-                          VERSION_MAJOR, VERSION_MINOR);  
+                        VERSION_MAJOR, VERSION_MINOR);  
         } else if (mg_http_match_uri(hm, "/api/checkauthkey/")) {
             mg_http_reply(c, 200, "%d", strncmp(hm->body.ptr,
-                                          config.authToken, BUFFER_LENGTH) == 0); 
+                                        config.authToken, BUFFER_LENGTH) == 0); 
         } else if (mg_http_match_uri(hm, "/api/creategame/")) { 
             createGame(c, hm, fn_data);
         } else if (mg_http_match_uri(hm, "/api/")) {
@@ -236,7 +252,7 @@ static void eventHandler (struct mg_connection *c, int event,
         }
     } else if (event == MG_EV_POLL && c->fn_data != NULL) {        
         struct gameCreateCallbackWaitParam *paramdata = (struct gameCreateCallbackWaitParam*) fn_data;
-                     
+                    
         if (paramdata->gameID != -1) { 
             #if DEBUG
             printw("DEBUG: Game made\n");
@@ -310,7 +326,7 @@ void startServer () {
     //opts.ca = config.ca;
     opts.cert = config.cert;
     opts.certkey = config.certkey;
-     
+    
     if (pthread_create(&pollingThreadT, NULL, pollingThread, NULL)) {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: Error creating thread\n");        

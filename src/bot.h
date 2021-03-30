@@ -660,7 +660,7 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
     } if (ev == MG_EV_POLL) {
         //Send commands
         if (hasNext(sendHead)) {           
-            struct pendingCommand *cmd = deq(&sendHead, mutex_send);   
+            struct pendingCommand *cmd = deq(&sendHead, &sendTail, mutex_send);   
             
             mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
             
@@ -679,6 +679,7 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
             if (cmd != NULL) {
                 if (time(NULL) - cmd->timeSent >= TIMEOUT) {
                     struct pendingCommand *cmdd = deq(&callbackHead,
+                                                      &callbackTail,
                                                       mutex_callback);
                     
                     attron(YELLOW_COLOUR_PAIR);
@@ -740,13 +741,14 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
             
             //Free all
             while (hasNext(sendHead)) {
-                struct pendingCommand *cmd = deq(&sendHead, mutex_send);
+                struct pendingCommand *cmd = deq(&sendHead, &sendTail, mutex_send);
                 free(cmd->message);
                 free(cmd);
             }
             
             while (hasNext(callbackHead)) {
-                struct pendingCommand *cmd = deq(&callbackHead, mutex_callback);
+                struct pendingCommand *cmd = deq(&callbackHead, &callbackTail, 
+                                                 mutex_callback);
                 free(cmd->message);
                 free(cmd);
             }
@@ -783,8 +785,8 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
         printw("Starting bot...\n");
         
         attron(COLOR_PAIR(YELLOW_COLOUR_PAIR));
-        printw("INFO: Target cockatrice version: \"%s\" (%s - %s)\n", VERSION_STRING,
-               VERSION_COMMIT, VERSION_DATE);
+        printw("INFO: Target cockatrice version: \"%s\" (%s - %s)\n", 
+               VERSION_STRING, VERSION_COMMIT, VERSION_DATE);
         attroff(COLOR_PAIR(YELLOW_COLOUR_PAIR));
         
         refresh();    
