@@ -9,6 +9,7 @@ in python called `tricebot.py`
 
 ## Config file
 The file (config.conf) should be in this format:
+
 ```yaml
 username=cockatrice username
 password=cockatrice password
@@ -21,7 +22,15 @@ clientID=what servertrice sees as your client id
 roomName=Magic
 authRequired=1
 ```
-change the data for what you want. (is whitespace sensitive)
+
+Change the data for what you want. (is whitespace sensitive)
+For duplicate property tags, the last line of the tag is used i.e:
+
+```yaml
+username=not this
+username=this is used
+
+```
 
 ## certfile and certkeyfile
 Generate some ssl keys and slap them in the folder with the executable and then

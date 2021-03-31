@@ -92,7 +92,7 @@ static pthread_mutex_t mutex_send = PTHREAD_MUTEX_INITIALIZER,
                        mutex_callback = PTHREAD_MUTEX_INITIALIZER;  
 static struct pendingCommandQueue *sendHead, *sendTail, *callbackHead, *callbackTail;
 static struct gameList *gamesHead;
-static int loggedIn, magicRoomID = -1;
+static int loggedIn, magicRoomID = -1, roomRequested;
 long lastPingTime = 0; 
 
 struct pendingCommand *prepCmd(CommandContainer cont, int gameID, int roomID){    
@@ -193,6 +193,8 @@ void loginResponse(const Response *response, void *param) {
             
             struct pendingCommand *cmd = prepCmd(cont, -1, -1);  
             enq(cmd, &sendHead, &sendTail, mutex_send);
+            
+            roomRequested = 1;
             
             attron(COLOR_GREEN);
             printw("INFO: Logged in and prepping to join room.\n");
@@ -392,14 +394,14 @@ void replayResponseDownload(const Response *response, void *param) {
         DIR* dir = opendir("replays");
         if (dir != NULL) {
             closedir(dir);
-            made = 0;
+            made = 1;
         } else if (ENOENT == errno) {
             //Make folder
             if (mkdir(REPLAY_DIR, S_IRWXU) != -1) {
                 made = 1;
             } else {
                 attron(COLOR_RED);
-                printw("ERROR: Cannot create replay folder.\n");
+                printw("ERROR: Cannot create replay folder (called %s).\n", REPLAY_DIR);
                 attroff(COLOR_RED);
                 refresh();
                 
@@ -624,18 +626,6 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
     } else if (ev == MG_EV_WS_OPEN) {
         printw("INFO: Connection started.\n");
         refresh();
-        
-        if (!config.authRequired) {
-            printw("INFO: Requesting room list\n");
-            
-            //Get room list
-            CommandContainer cont;     
-            SessionCommand *c = cont.add_session_command(); 
-            c->MutableExtension(Command_ListRooms::ext);
-            
-            struct pendingCommand *cmd = prepCmd(cont, -1, -1);  
-            enq(cmd, &sendHead, &sendTail, mutex_send);            
-        }
     } else if (ev == MG_EV_WS_MSG) { 
         struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
         
@@ -670,7 +660,21 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
         }
         
         lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received             
-    } if (ev == MG_EV_POLL) {
+    } if (ev == MG_EV_POLL) {    
+        if (!config.authRequired && !roomRequested) {
+            printw("INFO: Requesting room list\n");
+            
+            //Get room list
+            CommandContainer cont;     
+            SessionCommand *c = cont.add_session_command(); 
+            c->MutableExtension(Command_ListRooms::ext);
+            
+            struct pendingCommand *cmd = prepCmd(cont, -1, -1);  
+            enq(cmd, &sendHead, &sendTail, mutex_send);  
+            
+            roomRequested = 1;
+        }
+        
         //Send commands
         if (hasNext(sendHead)) {           
             struct pendingCommand *cmd = deq(&sendHead, &sendTail, mutex_send);   
@@ -720,103 +724,103 @@ static void botEventHandler(struct mg_connection *c, int ev, void *ev_data,
             refresh();
             *(int *) fn_data = 1;  
             // Signal that we're done
-        }  
+    }  
         
-        if (!running) {
-            c->is_closing = 1;        
+    if (!running) {
+        c->is_closing = 1;        
+    }
+        
+    refresh();                                
+}
+
+void *botThread(void *nothing) {
+    //Reconnect
+    while (running) {
+        struct mg_mgr mgr;
+        
+        int done = 0;   
+        loggedIn = 0;
+        magicRoomID = -1;
+        roomRequested = 0;
+        // Event handler flips it to true
+        
+        printw("INFO: Connecting to the server...\n");
+        refresh();
+        
+        struct mg_connection *c;
+        mg_mgr_init(&mgr);
+        c = mg_ws_connect(&mgr, config.cockatriceServer, botEventHandler,
+                          &done, NULL);  
+        
+        // Create client
+        while (running && !done && c != NULL) {
+            mg_mgr_poll(&mgr, 100);
+        }    
+        
+        //Free all
+        while (hasNext(sendHead)) {
+            struct pendingCommand *cmd = deq(&sendHead, &sendTail, mutex_send);
+            free(cmd->message);
+            free(cmd);
         }
         
-        refresh();
-    }
-    
-    void *botThread(void *nothing) {
-        //Reconnect
-        while (running) {
-            struct mg_mgr mgr;
-            
-            int done = 0;   
-            loggedIn = 0;
-            magicRoomID = -1;
-            // Event handler flips it to true
-            
-            printw("INFO: Connecting to the server...\n");
-            refresh();
-            
-            struct mg_connection *c;
-            mg_mgr_init(&mgr);
-            c = mg_ws_connect(&mgr, config.cockatriceServer, botEventHandler,
-                              &done, NULL);  
-            
-            // Create client
-            while (running && !done && c != NULL) {
-                mg_mgr_poll(&mgr, 100);
-            }    
-            
-            //Free all
-            while (hasNext(sendHead)) {
-                struct pendingCommand *cmd = deq(&sendHead, &sendTail, mutex_send);
-                free(cmd->message);
-                free(cmd);
-            }
-            
-            while (hasNext(callbackHead)) {
-                struct pendingCommand *cmd = deq(&callbackHead, &callbackTail, 
-                                                 mutex_callback);
-                free(cmd->message);
-                free(cmd);
-            }
-            
-            while (gamesHead != NULL) {
-                struct gameList *tmp = gamesHead;
-                gamesHead = gamesHead->nextGame;
-                
-                freeGameListNode(tmp);
-            }
-            
-            mg_mgr_free(&mgr); 
-            
-            printw("INFO: Bot thread stopped.\n");
-            refresh();   
+        while (hasNext(callbackHead)) {
+            struct pendingCommand *cmd = deq(&callbackHead, &callbackTail, 
+                                             mutex_callback);
+            free(cmd->message);
+            free(cmd);
         }
         
-        attron(RED_COLOUR_PAIR);
-        printw("INFO: Bot not restarting.\n");
-        attroff(RED_COLOUR_PAIR);
-        
-        pthread_exit(NULL);
-    }
-    
-    //Bot control functions
-    void stopBot() {
-        google::protobuf::ShutdownProtobufLibrary();    
-        
-        printw("Bot stopped.\n");
-        refresh();
-    }
-    
-    void startBot() {
-        printw("Starting bot...\n");
-        
-        attron(COLOR_PAIR(YELLOW_COLOUR_PAIR));
-        printw("INFO: Target cockatrice version: \"%s\" (%s - %s)\n", 
-               VERSION_STRING, VERSION_COMMIT, VERSION_DATE);
-        attroff(COLOR_PAIR(YELLOW_COLOUR_PAIR));
-        
-        refresh();    
-        
-        if (pthread_create(&pollingThreadBOT, NULL, botThread, NULL)) {        
-            attron(COLOR_PAIR(RED_COLOUR_PAIR));
-            printw("ERROR: Error creating bot thread\n");
-            attroff(COLOR_PAIR(RED_COLOUR_PAIR));
+        while (gamesHead != NULL) {
+            struct gameList *tmp = gamesHead;
+            gamesHead = gamesHead->nextGame;
             
-            refresh(); 
-            
-            exitCurses();
+            freeGameListNode(tmp);
         }
         
-        printw("Bot threads created.\nBot started.\n");
-        refresh();
+        mg_mgr_free(&mgr); 
+        
+        printw("INFO: Bot thread stopped.\n");
+        refresh();   
     }
     
-    #endif
+    attron(RED_COLOUR_PAIR);
+    printw("INFO: Bot not restarting.\n");
+    attroff(RED_COLOUR_PAIR);
     
+    pthread_exit(NULL);
+}
+
+//Bot control functions
+void stopBot() {
+    google::protobuf::ShutdownProtobufLibrary();    
+    
+    printw("Bot stopped.\n");
+    refresh();
+}
+
+void startBot() {
+    printw("Starting bot...\n");
+    
+    attron(COLOR_PAIR(YELLOW_COLOUR_PAIR));
+    printw("INFO: Target cockatrice version: \"%s\" (%s - %s)\n", 
+           VERSION_STRING, VERSION_COMMIT, VERSION_DATE);
+    attroff(COLOR_PAIR(YELLOW_COLOUR_PAIR));
+    
+    refresh();    
+    
+    if (pthread_create(&pollingThreadBOT, NULL, botThread, NULL)) {        
+        attron(COLOR_PAIR(RED_COLOUR_PAIR));
+        printw("ERROR: Error creating bot thread\n");
+        attroff(COLOR_PAIR(RED_COLOUR_PAIR));
+        
+        refresh(); 
+        
+        exitCurses();
+    }
+    
+    printw("Bot threads created.\nBot started.\n");
+    refresh();
+}
+
+#endif

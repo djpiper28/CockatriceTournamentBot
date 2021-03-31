@@ -142,7 +142,7 @@ void makeNewFile() {
         generatedAuthToken[TOKEN_LENGTH] = 0;
         
         fprintf(configFile,
-                "username=changeme\npassword=changeme\nserveraddress=ws://server.cockatrice.us:4748\nauthtoken=%s\ncertfile=server.pem\ncertkeyfile=server.pem\nbindAddr=https://0.0.0.0:8000\nclientID=changeme\nroomName=Magic\n",
+                "username=changeme\npassword=changeme\nserveraddress=ws://server.cockatrice.us:4748\nauthtoken=%s\ncertfile=server.pem\ncertkeyfile=server.pem\nbindAddr=https://0.0.0.0:8000\nclientID=changeme\nroomName=Magic\nauthRequired=0\n",
                 generatedAuthToken);       
         
         fclose (configFile);    //close file like a good boy
@@ -197,10 +197,11 @@ void readConf() {
     }
     
     attron(YELLOW_COLOUR_PAIR);
-    printw("INFO: Read config file::\n===============\nusername=%s\npassword=%s\nserveraddress=%s\nauthtoken=%s\ncertfile=%s\ncertkeyfile=%s\nbindAddr=%s\nclientID=%s\nroomName=%s\n===============\n", 
+    printw("INFO: Read config file::\n===============\nusername=%s\npassword=%s\nserveraddress=%s\nauthtoken=%s\ncertfile=%s\ncertkeyfile=%s\nbindAddr=%s\nclientID=%s\nroomName=%s\nauthRequired=%d\n===============\n", 
            config.cockatriceUsername, config.cockatricePassword,
            config.cockatriceServer, config.authToken, config.cert, 
-           config.certkey, config.bindAddr, config.clientID, config.roomName);
+           config.certkey, config.bindAddr, config.clientID, config.roomName,
+           config.authRequired);
     attroff(YELLOW_COLOUR_PAIR);
     
     refresh();
