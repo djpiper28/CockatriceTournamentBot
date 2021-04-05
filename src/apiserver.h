@@ -9,13 +9,13 @@
 #include "gamestruct.h"
 #include "version.h"
 #include "helppage.h"
-#include "running.h"
 #include "bot.h"
 #include "trice_structs.h"
 #include "mongoose.h"
 
 #include "room_commands.pb.h"
 #include "commands.pb.h"
+#include "game_commands.pb.h"
 #include "get_pb_extension.h"
 #include "response.pb.h"
 
@@ -29,6 +29,7 @@ struct apiServer {
     struct mg_tls_opts opts;
     struct triceBot *triceBot; 
     struct Config config;
+    int running;
 };
 
 void initServer(struct apiServer *server, 
@@ -36,6 +37,7 @@ void initServer(struct apiServer *server,
                 struct Config config) {
     server->config = config;
     server->triceBot = triceBot;
+    server->running = 0;
 }
 
 static void sendInvalidAuthTokenResponse(struct mg_connection *c) {
@@ -128,53 +130,53 @@ static void createGame(struct apiServer *api,
                     gameName = tmp;
              } else if (strncmp(prop, "password", propLen) == 0) {                
                     password = tmp;
-                } else {
-                    //Check is number
-                    int isNum = valueLen < 3, 
-                    number = -1;
-                    for (int j = firstEquals + 1; j < lineEnd; j++) 
-                        isNum &= hm->body.ptr[j] >= '0' && hm->body.ptr[j] <= '9';
-                    
-                    //Read number
-                    if (strncmp(tmp, "TRUE", valueLen)) {
-                        isNum = 1;
-                        number = 1;
-                    } else if (strncmp(tmp, "FALSE", valueLen)) {
-                        isNum = 1;
-                        number = 0;
-                    } else if (isNum) {
-                        isNum = 1;
-                        number = atoi(tmp);
-                    }
-                    
-                    if (isNum) {
-                        readNumberIfPropertiesMatch(number, 
-                                                    &playerCount, 
-                                                    "playerCount", 
-                                                    prop);
-                        readNumberIfPropertiesMatch(spectatorsAllowed, 
-                                                    &playerCount, 
-                                                    "spectatorsAllowed", 
-                                                    prop);
-                        readNumberIfPropertiesMatch(spectatorsNeedPassword, 
-                                                    &playerCount, 
-                                                    "spectatorsNeedPassword", 
-                                                    prop);
-                        readNumberIfPropertiesMatch(spectatorsCanChat, 
-                                                    &playerCount, 
-                                                    "spectatorsCanChat", 
-                                                    prop);
-                        readNumberIfPropertiesMatch(spectatorsCanSeeHands, 
-                                                    &playerCount, 
-                                                    "spectatorsCanSeeHands", 
-                                                    prop);
-                        readNumberIfPropertiesMatch(onlyRegistered, 
-                                                    &playerCount, 
-                                                    "onlyRegistered", 
-                                                    prop);
-                    } 
-                    
-                    free(tmp);    
+             } else {
+                 //Check is number
+                 int isNum = valueLen < 3, 
+                 number = -1;
+                 for (int j = firstEquals + 1; j < lineEnd; j++) 
+                     isNum &= hm->body.ptr[j] >= '0' && hm->body.ptr[j] <= '9';
+                 
+                 //Read number
+                 if (strncmp(tmp, "TRUE", valueLen)) {
+                     isNum = 1;
+                     number = 1;
+                 } else if (strncmp(tmp, "FALSE", valueLen)) {
+                     isNum = 1;
+                     number = 0;
+                 } else if (isNum) {
+                     isNum = 1;
+                     number = atoi(tmp);
+                 }
+                 
+                 if (isNum) {
+                     readNumberIfPropertiesMatch(number, 
+                                                 &playerCount, 
+                                                 "playerCount", 
+                                                 prop);
+                     readNumberIfPropertiesMatch(spectatorsAllowed, 
+                                                 &playerCount, 
+                                                 "spectatorsAllowed", 
+                                                 prop);
+                     readNumberIfPropertiesMatch(spectatorsNeedPassword, 
+                                                 &playerCount, 
+                                                 "spectatorsNeedPassword", 
+                                                 prop);
+                     readNumberIfPropertiesMatch(spectatorsCanChat, 
+                                                 &playerCount, 
+                                                 "spectatorsCanChat", 
+                                                 prop);
+                     readNumberIfPropertiesMatch(spectatorsCanSeeHands, 
+                                                 &playerCount, 
+                                                 "spectatorsCanSeeHands", 
+                                                 prop);
+                     readNumberIfPropertiesMatch(onlyRegistered, 
+                                                 &playerCount, 
+                                                 "onlyRegistered", 
+                                                 prop);
+                 } 
+                 
+                 free(tmp);    
             }
         }
     }
@@ -337,8 +339,8 @@ void *pollingThread (void *apiIn) {
         exitCurses();
     }
     
-    while (running) {
-        mg_mgr_poll(&mgr, 50);  
+    while (server->running) {
+        mg_mgr_poll(&mgr, 250);  
     }
         
     mg_mgr_free(&mgr);    
@@ -356,6 +358,7 @@ void startServer (struct apiServer *api) {
     //opts.ca = config.ca;
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
+    server->running = 1;
     
     if (pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api)) {
         attron(RED_COLOUR_PAIR);
@@ -371,7 +374,9 @@ void startServer (struct apiServer *api) {
     refresh();
 }
 
-void stopServer() {    
+void stopServer(struct apiServer *api) {
+    server->running = 0;
+    pthread_join(&api->pollingThreadT, NULL);
     printw("API Server stopped.\n");
     refresh();
 }

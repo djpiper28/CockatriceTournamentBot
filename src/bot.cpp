@@ -14,7 +14,6 @@
 #include "version.h"
 #include "version_string.h"
 #include "mongoose.h"
-#include "running.h"
 #include "get_pb_extension.h"
 #include "cmd_queue.h"
 #include "trice_structs.h"
@@ -873,7 +872,7 @@ static void *botThread(void *in) {
         
         // Create client
         while (b->running && c != NULL) {
-            mg_mgr_poll(&mgr, 100);
+            mg_mgr_poll(&mgr, 250);
         }    
         
         // Free all

@@ -2,27 +2,33 @@
 #include <stdlib.h> 
 #include <pthread.h>
 #include <string.h>
-#include <signal.h>
 #include "botconf.h"
 #include "ncursesinterface.h"
 #include "apiserver.h"
 #include "trice_structs.h"
 #include "bot.h"
-#include "running.h"
 
-void stopAll() {
+struct tournamentBot {
+    struct Config config;
+    struct triceBot b;
+    struct apiServer server;
+};
+
+void stopAll(struct triceBot *b, struct apiServer *server) {
     printw("Stopping bot...\n"); 
     refresh();
     
     running = 0;
     
-    stopServer();
-    stopBot();
+    stopServer(b);
+    stopBot(server);
     
     exitCurses();
 }
 
-void *listenerThread (void *nothing) {
+void *listenerThread (void *botIn) {
+    struct tournamentBot* bot = (struct tournamentBot *) botIn;
+    
     int listening = 1;
     char *commandBuffer = (char *) malloc(sizeof(char) * 1024);
     
@@ -39,15 +45,17 @@ void *listenerThread (void *nothing) {
     refresh();
     
     free(commandBuffer);    
-    stopAll();
+    stopAll(&bot->b, &bot->server);
     pthread_exit(NULL);
 }
 
-int startConsoleListener (pthread_t consoleListenerThread) {
-    printw("Starting console listener.\nStarted cockatrice bot.\n");
+int startConsoleListener (struct tournamentBot *bot) {
+    printw("Starting console listener.\n");
+    printw("Started cockatrice bot.\n");
     refresh();
         
-    if(pthread_create(&consoleListenerThread, NULL, listenerThread, NULL)) {
+    pthread_t consoleListenerThread;
+    if(pthread_create(&consoleListenerThread, NULL, listenerThread, (void *) bot)) {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: Error creating thread\n");
         attroff(RED_COLOUR_PAIR);
@@ -62,33 +70,22 @@ int startConsoleListener (pthread_t consoleListenerThread) {
     return 1;
 }
 
-void onIntt(int sig){ 
-    stopAll();
-}
-
 int main (int argc, char * args[]) {
     mg_log_set("0");
     
     initCurses(); 
     
-    struct Config config;
-    readConf(&config);
-        
-    running = 1;    
-    signal(SIGINT, onIntt); 
+    struct tournamentBot bot;
+    readConf(&bot.config);    
+    initBot(&bot.b, bot.config);
+    initServer(&bot.server, &bot.b, bot.config);
     
-    struct triceBot b;
-    initBot(&b, config);
-
-    struct apiServer server;
-    initServer(&server, &b, config);
+    startServer(&bot.server);
+    startBot(&bot.b);
     
-    startServer(&server);
-    startBot(&b);
-    
-    pthread_t consoleListenerThread;
-    if (!startConsoleListener(consoleListenerThread)) {
-        stopBot();
+    if (!startConsoleListener(&bot)) {
+        stopBot(&bot.b);
+        stopServer(&bot.server);
     }
     
     startCoolInterface();
