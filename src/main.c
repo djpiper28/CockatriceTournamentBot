@@ -45,7 +45,7 @@ void *listenerThread (void *botIn) {
     refresh();
     
     free(commandBuffer);    
-    stopAll(&bot->b, &bot->server);
+    stopAll(bot);
     pthread_exit(NULL);
 }
 

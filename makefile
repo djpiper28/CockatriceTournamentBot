@@ -1,7 +1,7 @@
 LIBS = -lncurses -lpthread -lprotobuf -lmbedtls -lmbedcrypto -lmbedx509
-MONGOOSE-ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1
+ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1 -DDOWNLOAD_REPLAYS 1
 DO_DEBUG = -DDEBUG=1 -g
-BASE_CC = g++ $(CFLAGS) ${LIBS} ${MONGOOSE-ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc
+BASE_CC = g++ $(CFLAGS) ${LIBS} ${ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc
 
 build:
 	make prep-src	

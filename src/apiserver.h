@@ -195,43 +195,19 @@ static void createGame(struct apiServer *api,
         && spectatorsNeedPassword != -1 && spectatorsCanChat != -1 
         && spectatorsCanSeeHands != -1 && onlyRegistered != -1;    
                     
-    if (valid) {
-        // Create message
-        Command_CreateGame createGame;
-        createGame.set_description(gameName);
-        createGame.set_password(password);
-        createGame.set_max_players(playerCount);
-        createGame.set_join_as_spectator(1);
-        
-        createGame.set_spectators_allowed(spectatorsAllowed);
-        createGame.set_spectators_can_talk(spectatorsCanChat);
-        createGame.set_spectators_need_password(spectatorsNeedPassword);
-        createGame.set_spectators_see_everything(spectatorsCanSeeHands);
-        
-        createGame.set_only_registered(onlyRegistered);
-        
-        CommandContainer cont;  
-        RoomCommand *rc = cont.add_room_command();
-        rc->MutableExtension(Command_CreateGame::ext)->CopyFrom(createGame);
-        
-        struct pendingCommand *cmd = prepCmd(api->triceBot,
-                                             cont, 
-                                             -1, 
-                                             api->triceBot->magicRoomID);
-        
-        struct gameCreateCallbackWaitParam *param = (struct 
-                                gameCreateCallbackWaitParam *)
-                                malloc(sizeof(struct gameCreateCallbackWaitParam));        
-        
-        param->gameName = gameName;
-        param->gameID = -1;
-        param->sendTime = time(NULL);
-        
-        c->fn_data = (void *) param; 
-        
-        cmd->param = (void *) param;        
-        cmd->isGame = 1;
-        enq(cmd, &api->triceBot->sendQueue);                        
+    if (valid) {        
+        c->fn_data = (void *) sendCreateGameCommand(api->triceBot,
+                                                    gameName,
+                                                    password,
+                                                    playerCount,
+                                                    1,
+                                                    spectatorsAllowed,
+                                                    spectatorsCanChat,
+                                                    spectatorsNeedPassword,
+                                                    spectatorsCanSeeHands,
+                                                    onlyRegistered,
+                                                    0,
+                                                    NULL);              
     } else {
         if (gameName != NULL)
             free(gameName);
@@ -260,7 +236,8 @@ static void eventHandler (struct mg_connection *c,
                           void *fn_data) {
     struct apiServer *api = (struct apiServer *) fn_data;
     
-    if (event == MG_EV_ACCEPT) {         
+    if (event == MG_EV_ACCEPT) {
+        c->fn_data = NULL;
         mg_tls_init(c, &api->opts);        
     } else if (event == MG_EV_HTTP_MSG) {         
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
@@ -273,7 +250,8 @@ static void eventHandler (struct mg_connection *c,
                         VERSION_MAJOR, VERSION_MINOR);  
         } else if (mg_http_match_uri(hm, "/api/checkauthkey/")) {
             mg_http_reply(c, 200, "%d", strncmp(hm->body.ptr,
-                                        api->config.authToken, BUFFER_LENGTH) == 0); 
+                                                api->config.authToken, 
+                                                BUFFER_LENGTH) == 0); 
         } else if (mg_http_match_uri(hm, "/api/creategame/")) { 
             createGame(api, c, hm, fn_data);
         } else if (mg_http_match_uri(hm, "/api/")) {
@@ -281,8 +259,9 @@ static void eventHandler (struct mg_connection *c,
         } else {
             send404(c);
         }
-    } else if (event == MG_EV_POLL && c->fn_data != NULL) {        
-        struct gameCreateCallbackWaitParam *paramdata = (struct gameCreateCallbackWaitParam*) c->fn_data;
+    } else if (event == MG_EV_POLL && c->fn_data != NULL && c->is_accepted) {        
+        struct gameCreateCallbackWaitParam *paramdata = 
+                (struct gameCreateCallbackWaitParam*) c->fn_data;
                     
         if (paramdata->gameID != -1) { 
             #if DEBUG
@@ -290,7 +269,8 @@ static void eventHandler (struct mg_connection *c,
             refresh();
             #endif  
             
-            printw("INFO: Sending 200 as game created\n"); 
+            printw("INFO: Sending reply as game creation for %d was a success\n",
+                   paramdata->gameID); 
             refresh();
             
             char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
@@ -313,7 +293,8 @@ static void eventHandler (struct mg_connection *c,
         refresh();
     } else if (event == MG_EV_CLOSE || event == MG_EV_ERROR) {
         if (fn_data != NULL) {        
-            struct gameCreateCallbackWaitParam *paramdata = (struct gameCreateCallbackWaitParam*) fn_data;          
+            struct gameCreateCallbackWaitParam *paramdata = 
+                    (struct gameCreateCallbackWaitParam*) fn_data;          
                 free(paramdata->gameName);
                 free(paramdata);
                 c->fn_data = NULL;

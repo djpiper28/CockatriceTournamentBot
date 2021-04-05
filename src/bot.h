@@ -1,3 +1,6 @@
+#ifndef BOT_H_
+#define BOT_H_
+
 #include "bot.cpp"
 
 //Type defs moved to trice_structs.h due to circlular references
@@ -62,3 +65,5 @@ int startBot(struct triceBot *b);
  * should be called by the library host to shutdown the library
  */ 
 void killProtoufLib();
+
+#endif

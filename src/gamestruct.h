@@ -8,7 +8,9 @@
 //Used for game create callback
 struct gameCreateCallbackWaitParam {   
     char *gameName;
-    int gameID, sendTime;
+    int   gameID, 
+          sendTime;
+    void (*callbackFn) (struct gameCreateCallbackWaitParam *);
 };
 
 //Game list
