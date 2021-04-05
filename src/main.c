@@ -6,6 +6,7 @@
 #include "botconf.h"
 #include "ncursesinterface.h"
 #include "apiserver.h"
+#include "trice_structs.h"
 #include "bot.h"
 #include "running.h"
 
@@ -68,14 +69,22 @@ void onIntt(int sig){
 int main (int argc, char * args[]) {
     mg_log_set("0");
     
-    initCurses();        
-    readConf();
+    initCurses(); 
+    
+    struct Config config;
+    readConf(&config);
         
     running = 1;    
     signal(SIGINT, onIntt); 
     
-    startServer();
-    startBot();
+    struct triceBot b;
+    initBot(&b, config);
+
+    struct apiServer server;
+    initServer(&server, &b, config);
+    
+    startServer(&server);
+    startBot(&b);
     
     pthread_t consoleListenerThread;
     if (!startConsoleListener(consoleListenerThread)) {

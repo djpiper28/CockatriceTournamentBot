@@ -11,6 +11,7 @@
 #include "helppage.h"
 #include "running.h"
 #include "bot.h"
+#include "trice_structs.h"
 #include "mongoose.h"
 
 #include "room_commands.pb.h"
@@ -23,24 +24,47 @@ struct response {
     int len;
 };
 
-pthread_t pollingThreadT;
-struct mg_tls_opts opts;
+struct apiServer {
+    pthread_t pollingThreadT;
+    struct mg_tls_opts opts;
+    struct triceBot *triceBot; 
+    struct Config config;
+};
 
-void sendInvalidAuthTokenResponse(struct mg_connection *c) {
+void initServer(struct apiServer *server, 
+                struct triceBot *triceBot, 
+                struct Config config) {
+    server->config = config;
+    server->triceBot = triceBot;
+}
+
+static void sendInvalidAuthTokenResponse(struct mg_connection *c) {
     mg_http_reply(c, 401, "invalid auth token");
 }
 
-void send404(struct mg_connection *c) {
+static void send404(struct mg_connection *c) {
     mg_http_reply(c, 404, "Error 404");  
 }
 
-void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_data) {
+static void readNumberIfPropertiesMatch(int number, 
+                                        int *dest, 
+                                        const char *property, 
+                                        char *readProperty) {
+    if (strncmp(property, readProperty, BUFFER_LENGTH) == 0) {
+        *dest = number;
+    }
+}
+
+static void createGame(struct apiServer *api, 
+                       struct mg_connection *c, 
+                       struct mg_http_message *hm, 
+                       void *fn_data) {
     printw("INFO: Game create command\n");
     refresh();
     
     char *authToken = NULL, 
-        *gameName = NULL, 
-        *password = NULL;
+         *gameName = NULL, 
+         *password = NULL;
     int playerCount = -1, 
         spectatorsAllowed = -1, 
         spectatorsNeedPassword = -1,
@@ -53,6 +77,8 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         lineEnd = 0, 
         firstEquals = 0;   
     for (int i = 0; i < hm->body.len; i++) {
+        //TODO: Make these into functions
+        
         if (hm->body.ptr[i] == '=') {
             firstEquals = i;
         } else if (hm->body.ptr[i] == '\n' || i == hm->body.len - 1) {
@@ -122,24 +148,30 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
                     }
                     
                     if (isNum) {
-                        if (strncmp(prop, "playerCount", propLen) == 0) {
-                            playerCount = number;
-                        } else if (strncmp(prop, "spectatorsAllowed", 
-                                                                propLen) == 0) {
-                            spectatorsAllowed = number;
-                        } else if (strncmp(prop, "spectatorsNeedPassword",
-                                                                propLen) == 0) {
-                            spectatorsNeedPassword = number;
-                        } else if (strncmp(prop, "spectatorsCanChat",
-                                                                propLen) == 0) {
-                            spectatorsCanChat = number;
-                        } else if (strncmp(prop, "spectatorsCanSeeHands",
-                                                                propLen) == 0) {
-                            spectatorsCanSeeHands = number;
-                        } else if (strncmp(prop, "onlyRegistered", 
-                                                                propLen) == 0) {
-                            onlyRegistered = number;
-                        }
+                        readNumberIfPropertiesMatch(number, 
+                                                    &playerCount, 
+                                                    "playerCount", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(spectatorsAllowed, 
+                                                    &playerCount, 
+                                                    "spectatorsAllowed", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(spectatorsNeedPassword, 
+                                                    &playerCount, 
+                                                    "spectatorsNeedPassword", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(spectatorsCanChat, 
+                                                    &playerCount, 
+                                                    "spectatorsCanChat", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(spectatorsCanSeeHands, 
+                                                    &playerCount, 
+                                                    "spectatorsCanSeeHands", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(onlyRegistered, 
+                                                    &playerCount, 
+                                                    "onlyRegistered", 
+                                                    prop);
                     } 
                     
                     free(tmp);    
@@ -149,46 +181,41 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         
     //Check authtoken
     if (authToken != NULL) {
-        if (strncmp(authToken, config.authToken, BUFFER_LENGTH) != 0) {
+        if (strncmp(authToken, api->config.authToken, BUFFER_LENGTH) != 0) {
             sendInvalidAuthTokenResponse(c);
             return;
         }
     }
         
     //Check all fields have data
-    int valid = authToken != NULL && gameName != NULL && password != NULL &&
-        playerCount != -1 && spectatorsAllowed != -1 && spectatorsNeedPassword != -1 
-        && spectatorsCanChat != -1 && spectatorsCanSeeHands != -1 
-        && onlyRegistered != -1;    
-            
-    #if DEBUG
-    printw("DEBUG: Creating game: gamename:%s\npassword:%s\nmaxplayers:%d\nspectatorsallowed:%d\nspectatorsneedpassword:%d\nspectatorscanchat:%d\nspectatorscanseehands:%d\nonlyregistered:%d\n",
-        gameName, password, playerCount, playerCount, spectatorsAllowed, 
-        spectatorsNeedPassword, spectatorsCanChat, spectatorsCanSeeHands, onlyRegistered); 
-    refresh();
-    #endif
-        
+    int valid = authToken != NULL && gameName != NULL && password != NULL 
+        && playerCount != -1 && spectatorsAllowed != -1 
+        && spectatorsNeedPassword != -1 && spectatorsCanChat != -1 
+        && spectatorsCanSeeHands != -1 && onlyRegistered != -1;    
+                    
     if (valid) {
         // Create message
-        Command_CreateGame *createGame = new Command_CreateGame();
-        createGame->set_description(gameName);
-        createGame->set_password(password);
-        createGame->set_max_players(playerCount);
-        createGame->set_join_as_spectator(1);
+        Command_CreateGame createGame;
+        createGame.set_description(gameName);
+        createGame.set_password(password);
+        createGame.set_max_players(playerCount);
+        createGame.set_join_as_spectator(1);
         
-        createGame->set_spectators_allowed(spectatorsAllowed);
-        createGame->set_spectators_can_talk(spectatorsCanChat);
-        createGame->set_spectators_need_password(spectatorsNeedPassword);
-        createGame->set_spectators_see_everything(spectatorsCanSeeHands);
+        createGame.set_spectators_allowed(spectatorsAllowed);
+        createGame.set_spectators_can_talk(spectatorsCanChat);
+        createGame.set_spectators_need_password(spectatorsNeedPassword);
+        createGame.set_spectators_see_everything(spectatorsCanSeeHands);
         
-        createGame->set_only_registered(onlyRegistered);
+        createGame.set_only_registered(onlyRegistered);
         
         CommandContainer cont;  
         RoomCommand *rc = cont.add_room_command();
-        rc->MutableExtension(Command_CreateGame::ext)->CopyFrom(*createGame);
-        delete(createGame);    
+        rc->MutableExtension(Command_CreateGame::ext)->CopyFrom(createGame);
         
-        struct pendingCommand *cmd = prepCmd(cont, -1, magicRoomID);
+        struct pendingCommand *cmd = prepCmd(api->triceBot,
+                                             cont, 
+                                             -1, 
+                                             api->triceBot->magicRoomID);
         
         struct gameCreateCallbackWaitParam *param = (struct 
                                 gameCreateCallbackWaitParam *)
@@ -202,13 +229,11 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
         
         cmd->param = (void *) param;        
         cmd->isGame = 1;
-        enq(cmd, &sendHead, &sendTail, mutex_send);
-                    
-        #if DEBUG
-        printw("DEBUG: Game created.\n");
-        refresh();
-        #endif        
-    }    
+        enq(cmd, &api->triceBot->sendQueue);                        
+    } else {
+        if (gameName != NULL)
+            free(gameName);
+    }  
         
     //Free the temp vars
     if (authToken != NULL)
@@ -227,31 +252,35 @@ void createGame(struct mg_connection *c, struct mg_http_message *hm, void *fn_da
     } 
 }
 
-static void eventHandler (struct mg_connection *c, int event, 
-                            void *ev_data, void *fn_data) {
+static void eventHandler (struct mg_connection *c,
+                          int event,
+                          void *ev_data,
+                          void *fn_data) {
+    struct apiServer *api = (struct apiServer *) fn_data;
+    
     if (event == MG_EV_ACCEPT) {         
-        mg_tls_init(c, &opts);        
+        mg_tls_init(c, &api->opts);        
     } else if (event == MG_EV_HTTP_MSG) {         
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
                 
         if (mg_http_match_uri(hm, "/github/")) {
-            //TODO: http redirect or something lmao
+            //TODO: http redirect or something
             mg_http_reply(c, 303, GITHUB_REPO);
         } else if (mg_http_match_uri(hm, "/api/version/")) {
             mg_http_reply(c, 200, "v%d.%d", 
                         VERSION_MAJOR, VERSION_MINOR);  
         } else if (mg_http_match_uri(hm, "/api/checkauthkey/")) {
             mg_http_reply(c, 200, "%d", strncmp(hm->body.ptr,
-                                        config.authToken, BUFFER_LENGTH) == 0); 
+                                        api->config.authToken, BUFFER_LENGTH) == 0); 
         } else if (mg_http_match_uri(hm, "/api/creategame/")) { 
-            createGame(c, hm, fn_data);
+            createGame(api, c, hm, fn_data);
         } else if (mg_http_match_uri(hm, "/api/")) {
             mg_http_reply(c, 200, HELP_STR);  
         } else {
             send404(c);
         }
     } else if (event == MG_EV_POLL && c->fn_data != NULL) {        
-        struct gameCreateCallbackWaitParam *paramdata = (struct gameCreateCallbackWaitParam*) fn_data;
+        struct gameCreateCallbackWaitParam *paramdata = (struct gameCreateCallbackWaitParam*) c->fn_data;
                     
         if (paramdata->gameID != -1) { 
             #if DEBUG
@@ -263,7 +292,7 @@ static void eventHandler (struct mg_connection *c, int event,
             refresh();
             
             char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
-            sprintf(data, "gameid=%d", paramdata->gameID);                    
+            snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);                    
             mg_http_reply(c, 200, data);  
             c->fn_data = NULL;
             
@@ -290,13 +319,14 @@ static void eventHandler (struct mg_connection *c, int event,
     }
 }
 
-void *pollingThread (void *nothing) {
+void *pollingThread (void *apiIn) {
     struct mg_mgr mgr;
     struct mg_connection *c;
+    struct apiServer *api = (struct apiServer *) apiIn;
     
     mg_mgr_init(&mgr);
     
-    c = mg_http_listen(&mgr, config.bindAddr, eventHandler, NULL);
+    c = mg_http_listen(&mgr, api->config.bindAddr, eventHandler, apiIn);
     
     if (c == NULL) {
         attron(RED_COLOUR_PAIR);
@@ -319,15 +349,15 @@ void *pollingThread (void *nothing) {
     pthread_exit(NULL);
 }
 
-void startServer () {
+void startServer (struct apiServer *api) {
     printw("Starting API...\nStarting server API server thread...\n");
     refresh();    
     
     //opts.ca = config.ca;
-    opts.cert = config.cert;
-    opts.certkey = config.certkey;
+    api->opts.cert = api->config.cert;
+    api->opts.certkey = api->config.certkey;
     
-    if (pthread_create(&pollingThreadT, NULL, pollingThread, NULL)) {
+    if (pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api)) {
         attron(RED_COLOUR_PAIR);
         printw("ERROR: Error creating thread\n");        
         attroff(RED_COLOUR_PAIR);
