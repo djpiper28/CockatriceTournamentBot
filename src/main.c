@@ -12,16 +12,16 @@ struct tournamentBot {
     struct Config config;
     struct triceBot b;
     struct apiServer server;
+    int running;
 };
 
-void stopAll(struct triceBot *b, struct apiServer *server) {
+void stopAll(struct tournamentBot *bot) {
     printw("Stopping bot...\n"); 
     refresh();
     
-    running = 0;
-    
-    stopServer(b);
-    stopBot(server);
+    bot->running = 0;    
+    stopServer(&bot->server);
+    stopBot(&bot->b);
     
     exitCurses();
 }
@@ -76,6 +76,7 @@ int main (int argc, char * args[]) {
     initCurses(); 
     
     struct tournamentBot bot;
+    bot.running = 1;
     readConf(&bot.config);    
     initBot(&bot.b, bot.config);
     initServer(&bot.server, &bot.b, bot.config);
@@ -88,5 +89,5 @@ int main (int argc, char * args[]) {
         stopServer(&bot.server);
     }
     
-    startCoolInterface();
+    startCoolInterface(&bot.running);
 }

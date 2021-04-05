@@ -339,7 +339,7 @@ void *pollingThread (void *apiIn) {
         exitCurses();
     }
     
-    while (server->running) {
+    while (api->running) {
         mg_mgr_poll(&mgr, 250);  
     }
         
@@ -358,7 +358,7 @@ void startServer (struct apiServer *api) {
     //opts.ca = config.ca;
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
-    server->running = 1;
+    api->running = 1;
     
     if (pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api)) {
         attron(RED_COLOUR_PAIR);
@@ -375,8 +375,8 @@ void startServer (struct apiServer *api) {
 }
 
 void stopServer(struct apiServer *api) {
-    server->running = 0;
-    pthread_join(&api->pollingThreadT, NULL);
+    api->running = 0;
+    pthread_join(api->pollingThreadT, NULL);
     printw("API Server stopped.\n");
     refresh();
 }

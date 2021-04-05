@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include "gamestruct.h"
 #include "version.h"
-#include "running.h"
 
 #define WHITE_COLOUR_PAIR COLOR_PAIR(0)
 #define RED_COLOUR_PAIR COLOR_PAIR(1)
@@ -65,13 +64,13 @@ void exitCurses() {
     exit(0);
 }
 
-void startCoolInterface() {    
+void startCoolInterface(int *running) {    
     attron(GREEN_COLOUR_PAIR);
     printw("INFO: Started successfully.\n");
     refresh();
     attroff(GREEN_COLOUR_PAIR);
     
-    while (running);
+    while (*running);
     exitCurses();
 }
 
