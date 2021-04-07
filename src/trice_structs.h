@@ -5,6 +5,7 @@
 #include "botconf.h"
 #include "gamestruct.h"
 #include "response.pb.h"
+#include "mongoose.h"
 
 #include "event_add_to_list.pb.h"
 #include "event_remove_from_list.pb.h"
@@ -65,12 +66,6 @@ void (*fn) (struct triceBot *, type);
 #define MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(fn)\
 void (*fn) (struct triceBot *);
 
-enum disconnectReason {
-    SERVER_KICK,
-    SERVER_DISCONNECT,
-    WEBSOCKET_CLOSE
-};
-
 struct triceBot {
     struct Config config;
     
@@ -87,25 +82,39 @@ struct triceBot {
     long lastPingTime; 
     
     //Event Function Pointers for session events    
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerIdentifictaion, Event_ServerIdentification)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerCompleteList, Event_ServerCompleteList)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerMessage, Event_ServerMessage)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerShutdown, Event_ServerShutdown)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventConnectionClosed, Event_ConnectionClosed)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserMessage, Event_UserMessage)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventListRooms, Event_ListRooms)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventAddToList, Event_AddToList)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventRemoveFromList, Event_RemoveFromList)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserJoined, Event_UserJoined)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserLeft, Event_UserLeft)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventGameJoined, Event_GameJoined)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventNotifyUser, Event_NotifyUser)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventReplayAdded, Event_ReplayAdded)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,
+                                           Event_ServerIdentification)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerCompleteList,
+                                           Event_ServerCompleteList)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerMessage,
+                                           Event_ServerMessage)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerShutdown,
+                                           Event_ServerShutdown)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventConnectionClosed,
+                                           Event_ConnectionClosed)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserMessage,
+                                           Event_UserMessage)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventListRooms,
+                                           Event_ListRooms)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventAddToList,
+                                           Event_AddToList)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventRemoveFromList,
+                                           Event_RemoveFromList)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserJoined,
+                                           Event_UserJoined)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserLeft,
+                                           Event_UserLeft)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventGameJoined,
+                                           Event_GameJoined)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventNotifyUser,
+                                           Event_NotifyUser)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventReplayAdded,
+                                           Event_ReplayAdded)
     
     //Bot state changes
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onBotDisconnect, disconnectReason)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(onBotReconnect)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(onBotDisconnect)
     MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(onBotConnect)
+    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(onBotConnectionError)
 };
 
 //macros to gen functions
@@ -132,23 +141,49 @@ void set_##fn (\
  * there is a set_onEvent.* function that is thread safe. They are made with 
  * macros to ensure that they are consistent
  */ 
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerIdentifictaion, Event_ServerIdentification)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerCompleteList, Event_ServerCompleteList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerMessage, Event_ServerMessage)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerShutdown, Event_ServerShutdown)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserMessage, Event_UserMessage)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventListRooms, Event_ListRooms)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventAddToList, Event_AddToList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventRemoveFromList, Event_RemoveFromList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserJoined, Event_UserJoined)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserLeft, Event_UserLeft)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventGameJoined, Event_GameJoined)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventNotifyUser, Event_NotifyUser)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventReplayAdded, Event_ReplayAdded)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerIdentifictaion,
+                                          Event_ServerIdentification)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerCompleteList,
+                                          Event_ServerCompleteList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerMessage, 
+                                          Event_ServerMessage)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerShutdown, 
+                                          Event_ServerShutdown)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserMessage, 
+                                          Event_UserMessage)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventListRooms, 
+                                          Event_ListRooms)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventAddToList, 
+                                          Event_AddToList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventRemoveFromList, 
+                                          Event_RemoveFromList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserJoined, 
+                                          Event_UserJoined)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserLeft, 
+                                          Event_UserLeft)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventGameJoined, 
+                                          Event_GameJoined)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventNotifyUser, 
+                                          Event_NotifyUser)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventReplayAdded, 
+                                          Event_ReplayAdded)
 
 //Setters for bot state updates
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onBotDisconnect, disconnectReason)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotReconnect)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotDisconnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnect)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnectionError)
+
+struct response {
+    char *data;
+    int len;
+};
+
+struct apiServer {
+    pthread_t pollingThreadT;
+    struct mg_tls_opts opts;
+    struct triceBot *triceBot; 
+    struct Config config;
+    int running;
+};
 
 #endif

@@ -1,4 +1,4 @@
-LIBS = -lncurses -lpthread -lprotobuf -lmbedtls -lmbedcrypto -lmbedx509
+LIBS = -lncurses -pthread -lpthread -lprotobuf -lmbedtls -lmbedcrypto -lmbedx509
 ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1
 DO_DEBUG = -DDEBUG=1 -g
 BASE_CC = g++ $(CFLAGS) ${LIBS} ${ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc *.cpp

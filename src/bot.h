@@ -1,7 +1,9 @@
 #ifndef BOT_H_
 #define BOT_H_
 
-#include "bot.cpp"
+#include "trice_structs.h"
+#include "commands.pb.h"
+#include "response.pb.h"
 
 //Type defs moved to trice_structs.h due to circlular references
 
@@ -48,6 +50,31 @@ void sendPing(struct triceBot *b);
 void replayResponseDownload(struct triceBot *b,
                             const Response *response, 
                             void *param);
+
+/**
+ * This method sends a create game command
+ * WARNING If the callback is NULL then the param struct is not freed as it 
+ * assumes that a thread is polling it see apiServer for example.
+ * Otherwise the callback is called and then the data is freed.
+ * 
+ * TL;DR.
+ * Callback should not be NULL.
+ * If callback is NULL then the param is leaked.
+ */ 
+//These are long type names
+struct gameCreateCallbackWaitParam * 
+sendCreateGameCommand(struct triceBot *b, 
+                      char *gameName,
+                      char *password,
+                      int playerCount,    
+                      int joinAsSpectator, 
+                      int spectatorsAllowed,                                                         
+                      int spectatorsCanChat,
+                      int spectatorsNeedPassword,
+                      int spectatorsCanSeeHands,
+                      int onlyRegistered,
+                      int onlyBuddies,                                                          
+                      void (*callbackFn) (struct gameCreateCallbackWaitParam *));
 
 /**
  * Stops the bot

@@ -1,5 +1,6 @@
 #ifndef BOT_
 #define BOT_
+
 #include <stdlib.h>
 #include <ncurses.h>
 #include <pthread.h>
@@ -77,6 +78,20 @@
 #define GAME_EVENT_CONTAINER 2
 #define ROOM_EVENT 3
 #define REPLAY_DIR "replays"
+
+/**
+ * This macro is to reduce code repetition in the session event method which
+ * checks if the pointer is not null then copies it; unlocks the mutex and;
+ * finally calls the pointer for the extension of the session event.
+ */ 
+#define MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(fn)\
+if (b->fn != NULL) {\
+    void (*fn) (struct triceBot *b)\
+    = b->fn;\
+    pthread_mutex_unlock(&b->mutex);\
+    \
+    fn(b);\
+}
 
 //Type defs moved to trice_structs.h due to circlular references
 
@@ -716,14 +731,6 @@ if (b->fn != NULL) {\
        sessionEvent.GetExtension(type::ext));\
 }
 
-/**
- * Calls the handler for each session event
- * CFLAGS for this method
- * Set DOWNLOAD_REPLAYS to 0 if you do not want replays to be automatically downloaded
- * Set LOGIN_AUTOMATICALLY to 0 if you do not  want to automatically login
- * Set JOIN_ROOM_AUTOMATICALLY to 0 if you do not want to automatically join a room
- * All of these CFLAGS default to 1
- */ 
 #ifndef DOWNLOAD_REPLAYS
 #define DOWNLOAD_REPLAYS 1
 #endif
@@ -736,6 +743,15 @@ if (b->fn != NULL) {\
 #define JOIN_ROOM_AUTOMATICALLY 1
 #endif
 
+/**
+ * Calls the handler for each session event
+ * CFLAGS for this method
+ * Set DOWNLOAD_REPLAYS to 0 if you do not want replays to be automatically downloaded
+ * Set LOGIN_AUTOMATICALLY to 0 if you do not  want to automatically login
+ * Set JOIN_ROOM_AUTOMATICALLY to 0 if you do not want to automatically join a room
+ * All of these CFLAGS default to 1
+ * The macros that are specific to this function are above ^^
+ */ 
 static void handleSessionEvent(struct triceBot *b,
                                ServerMessage *newServerMessage) {
     //Call session event function in new fork
@@ -868,7 +884,9 @@ static void botEventHandler(struct mg_connection *c,
     if (ev == MG_EV_ERROR) {
         attron(COLOR_PAIR(RED_COLOUR_PAIR));
         printw("ERROR: Websocket error in bot thread.\n");        
-        attroff(COLOR_PAIR(RED_COLOUR_PAIR));        
+        attroff(COLOR_PAIR(RED_COLOUR_PAIR));
+        
+        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnectionError) 
     } else if (ev == MG_EV_WS_OPEN) {
         printw("INFO: Connection started.\n");
         refresh();
@@ -977,8 +995,6 @@ static void botEventHandler(struct mg_connection *c,
 
 /**
  * Run on a thread created by startBot
- * TODO: make it call a function on disconnect, the result of which should 
- * decide if it reconnects
  */ 
 static void *botThread(void *in) {
     struct triceBot *b = (struct triceBot *) in;
@@ -1005,10 +1021,17 @@ static void *botThread(void *in) {
         mg_mgr_init(&mgr);
         c = mg_ws_connect(&mgr, b->config.cockatriceServer, botEventHandler, b, NULL);  
         
-        // Create client
-        while (b->running && c != NULL) {
-            mg_mgr_poll(&mgr, 250);
-        }    
+        if (c == NULL) {
+            MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnectionError)
+        } else {
+            MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotDisconnect)
+            
+            while (b->running) {
+                mg_mgr_poll(&mgr, 250);
+            }
+            
+            MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotDisconnect)
+        }
         
         // Free all
         freeGameList(&b->gameList);
