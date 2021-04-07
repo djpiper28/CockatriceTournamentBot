@@ -1,10 +1,10 @@
-#ifndef CURSESINTERFACE_
-#define CURSESINTERFACE_
-
 #include <ncurses.h>
 #include <stdlib.h>
 #include "gamestruct.h"
 #include "version.h"
+
+#ifndef CURSESINTERFACE_
+#define CURSESINTERFACE_
 
 #define WHITE_COLOUR_PAIR COLOR_PAIR(0)
 #define RED_COLOUR_PAIR COLOR_PAIR(1)

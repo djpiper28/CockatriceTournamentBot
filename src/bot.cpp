@@ -1,5 +1,6 @@
 #ifndef BOT_
 #define BOT_
+#include "bot.h"
 
 #include <stdlib.h>
 #include <ncurses.h>
@@ -18,46 +19,38 @@
 #include "get_pb_extension.h"
 #include "cmd_queue.h"
 #include "trice_structs.h"
+#include "botcflags.h"
 
 //Pb imports
 #include "room_event.pb.h"
 #include "session_event.pb.h"
 #include "server_message.pb.h"
-
 #include "event_add_to_list.pb.h"
 #include "event_remove_from_list.pb.h"
 #include "event_connection_closed.pb.h"
-
 #include "event_join.pb.h"
 #include "event_game_joined.pb.h"
 #include "event_game_closed.pb.h"
 #include "event_notify_user.pb.h"
 #include "event_game_state_changed.pb.h"
-
 #include "event_replay_added.pb.h"
-
 #include "event_server_complete_list.pb.h"
 #include "event_server_identification.pb.h"
 #include "event_server_message.pb.h"
 #include "event_server_shutdown.pb.h"
-
 #include "event_list_rooms.pb.h"
 #include "event_list_games.pb.h"
 #include "event_room_say.pb.h"
 #include "event_join_room.pb.h"
 #include "event_leave_room.pb.h"
-
 #include "event_user_joined.pb.h"
 #include "event_user_left.pb.h"
 #include "event_user_message.pb.h"
-
 #include "response_login.pb.h"
 #include "response_replay_download.pb.h"
-
 #include "game_event_container.pb.h"
 #include "game_event_context.pb.h"
 #include "game_event.pb.h"
-
 #include "session_commands.pb.h"
 #include "room_commands.pb.h"
 #include "game_commands.pb.h"
@@ -67,9 +60,7 @@
 #include "command_deck_select.pb.h"
 #include "command_ready_start.pb.h"
 #include "command_concede.pb.h"
-
 #include "serverinfo_replay_match.pb.h"
-#include "bot.h"
 
 #define ID_LENGTH 16
 #define RESPONSE 0
@@ -735,18 +726,6 @@ sendCreateGameCommand(struct triceBot *b,
     
     return param;
 }
-
-#ifndef DOWNLOAD_REPLAYS
-#define DOWNLOAD_REPLAYS 1
-#endif
-
-#ifndef LOGIN_AUTOMATICALLY
-#define LOGIN_AUTOMATICALLY 1
-#endif
-
-#ifndef JOIN_ROOM_AUTOMATICALLY
-#define JOIN_ROOM_AUTOMATICALLY 1
-#endif
 
 /**
  * Calls the handler for each session event

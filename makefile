@@ -11,9 +11,11 @@ prep-src: src/* pb/*
 	make gendocs
 	
 	if [ ! -d "buildtmp/" ]; then mkdir buildtmp/; fi
-
 	if [ ! -d "pb/buildtmp/" ]; then mkdir pb/buildtmp/; fi
 
+	rm -rf builtmp/*.c builtmp/*.h builtmp/*.cpp builtmp/*.cc
+	rm -rf pb/builtmp/
+	
 	cd pb && find . | grep -o [^/]*\\.proto | xargs protoc --cpp_out=buildtmp/
 
 	cd src/ && python3 helpToSrc.py

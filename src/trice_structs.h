@@ -1,5 +1,5 @@
-#ifndef TRICE_STRUCTS_
-#define TRICE_STRUCTS_
+#ifndef TRICE_STRUCTS_H_
+#define TRICE_STRUCTS_H_
 
 #include <pthread.h>
 #include "botconf.h"
@@ -10,26 +10,21 @@
 #include "event_add_to_list.pb.h"
 #include "event_remove_from_list.pb.h"
 #include "event_connection_closed.pb.h"
-
 #include "event_join.pb.h"
 #include "event_game_joined.pb.h"
 #include "event_game_closed.pb.h"
 #include "event_notify_user.pb.h"
 #include "event_game_state_changed.pb.h"
-
 #include "event_replay_added.pb.h"
-
 #include "event_server_complete_list.pb.h"
 #include "event_server_identification.pb.h"
 #include "event_server_message.pb.h"
 #include "event_server_shutdown.pb.h"
-
 #include "event_list_rooms.pb.h"
 #include "event_list_games.pb.h"
 #include "event_room_say.pb.h"
 #include "event_join_room.pb.h"
 #include "event_leave_room.pb.h"
-
 #include "event_user_joined.pb.h"
 #include "event_user_left.pb.h"
 #include "event_user_message.pb.h"
@@ -125,24 +120,11 @@ struct triceBot {
 };
 
 //macros to gen functions
-#define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(fn, type)\
-void set_##fn (\
-               void (*event) (struct triceBot *, type),\
-               struct triceBot *b) {\
-    pthread_mutex_lock(&b->mutex);\
-    b->fn = event;\
-    pthread_mutex_unlock(&b->mutex);\
-}
+#define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(fn, type)\
+void set_##fn (void (*event) (struct triceBot *, type), struct triceBot *b);
 
-#define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(fn)\
-void set_##fn (\
-               void (*event) (struct triceBot *),\
-               struct triceBot *b) {\
-    pthread_mutex_lock(&b->mutex);\
-    b->fn = event;\
-    pthread_mutex_unlock(&b->mutex);\
-}
-
+#define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(fn)\
+void set_##fn (void (*event) (struct triceBot *), struct triceBot *b);
 /**
  * For each of the onEvent.* (regex) function pointers in the triceBot structure
  * there is a set_onEvent.* function that is thread safe. They are made with 
@@ -150,44 +132,43 @@ void set_##fn (\
  */ 
 
 //Server events
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerIdentifictaion,
-                                          Event_ServerIdentification)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerCompleteList,
-                                          Event_ServerCompleteList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerMessage, 
-                                          Event_ServerMessage)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerShutdown, 
-                                          Event_ServerShutdown)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserMessage, 
-                                          Event_UserMessage)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventListRooms, 
-                                          Event_ListRooms)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventAddToList, 
-                                          Event_AddToList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventRemoveFromList, 
-                                          Event_RemoveFromList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserJoined, 
-                                          Event_UserJoined)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventUserLeft, 
-                                          Event_UserLeft)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventGameJoined, 
-                                          Event_GameJoined)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventNotifyUser, 
-                                          Event_NotifyUser)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventReplayAdded, 
-                                          Event_ReplayAdded)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerIdentifictaion,
+                                              Event_ServerIdentification)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerCompleteList,
+                                              Event_ServerCompleteList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerMessage, 
+                                              Event_ServerMessage)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerShutdown, 
+                                              Event_ServerShutdown)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserMessage, 
+                                              Event_UserMessage)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventListRooms, 
+                                              Event_ListRooms)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventAddToList, 
+                                              Event_AddToList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventRemoveFromList, 
+                                              Event_RemoveFromList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserJoined, 
+                                              Event_UserJoined)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserLeft, 
+                                              Event_UserLeft)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventGameJoined, 
+                                              Event_GameJoined)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventNotifyUser, 
+                                              Event_NotifyUser)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventReplayAdded, 
+                                              Event_ReplayAdded)
 
 //Room events
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventJoinRoom,
-                                       Event_JoinRoom)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventLeaveRoom,
-                                       Event_LeaveRoom)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventRoomSay,
-                                       Event_RoomSay)
-
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventJoinRoom,
+                                              Event_JoinRoom)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventLeaveRoom,
+                                              Event_LeaveRoom)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventRoomSay,
+                                              Event_RoomSay)
 //Setters for bot state updates
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotDisconnect)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnect)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnectionError)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotDisconnect)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotConnect)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotConnectionError)
 
 #endif

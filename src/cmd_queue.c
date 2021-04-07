@@ -1,5 +1,6 @@
 #ifndef QUEUE_
 #define QUEUE_
+#include "cmd_queue.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,8 +9,6 @@
 #include "gamestruct.h"
 #include "botconf.h"
 #include "trice_structs.h"
-
-#include "cmd_queue.h"
 
 //Type defs moved to trice_structs.h due to circlular references
 

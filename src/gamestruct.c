@@ -1,11 +1,10 @@
 #ifndef GAMESTRUCT_
 #define GAMESTRUCT_
+#include "gamestruct.h"
 
 #include <stdlib.h>
 #include <pthread.h>
 #include <pthread.h>
-
-#include "gamestruct.h"
 
 // Init the game list structure
 void initGameList(struct gameList *gl) {

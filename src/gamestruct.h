@@ -1,6 +1,8 @@
 #ifndef GAMESTRUCT_H_
 #define GAMESTRUCT_H_
 
+#include <pthread.h>
+
 //Used for game create callback
 struct gameCreateCallbackWaitParam {   
     char *gameName;
@@ -26,12 +28,7 @@ struct game {
 };
 
 // Add to non-circular linked-list
-struct game *createGame(int gameID) {
-    struct game *output = (struct game *) malloc(sizeof(struct game));
-    output->gameID = gameID;
-    output->started = 0;
-    return output;
-};
+struct game *createGame(int gameID);
 
 // Init the game list structure
 void initGameList(struct gameList *gl);

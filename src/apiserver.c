@@ -1,5 +1,6 @@
 #ifndef APISERVER_
 #define APISERVER_
+#include "apiserver.h"
 
 #include <stdlib.h>
 #include <ncurses.h>
@@ -9,8 +10,8 @@
 #include "gamestruct.h"
 #include "version.h"
 #include "helppage.h"
-#include "bot.h"
 #include "trice_structs.h"
+#include "bot.h"
 #include "mongoose.h"
 
 #include "room_commands.pb.h"
@@ -18,7 +19,6 @@
 #include "game_commands.pb.h"
 #include "get_pb_extension.h"
 #include "response.pb.h"
-#include "apiserver.h"
 
 void initServer(struct apiServer *server, 
                 struct triceBot *triceBot, 
