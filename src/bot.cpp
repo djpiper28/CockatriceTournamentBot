@@ -3,7 +3,6 @@
 #include "bot.h"
 
 #include <stdlib.h>
-#include <ncurses.h>
 #include <pthread.h>
 #include <string.h>
 #include <stdio.h>
@@ -11,9 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "botconf.h"
-#include "ncursesinterface.h"
 #include "gamestruct.h"
-#include "version.h"
 #include "version_string.h"
 #include "mongoose.h"
 #include "get_pb_extension.h"
@@ -73,10 +70,11 @@
  * This macro is to reduce code repetition in the session event method which
  * checks if the pointer is not null then copies it; unlocks the mutex and;
  * finally calls the pointer for the extension of the session event.
- * WARNING mutex must be locked before macro
+ * WARNING mutex must be unlocked before macro
  */ 
 #define MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(fn)\
 if (b->fn != NULL) {\
+    pthread_mutex_lock(&b->mutex);\
     void (*fn) (struct triceBot *b)\
     = b->fn;\
     pthread_mutex_unlock(&b->mutex);\
@@ -89,12 +87,13 @@ if (b->fn != NULL) {\
  * This macro is to reduce code repetition in the session event method which
  * checks if the pointer is not null then copies it; unlocks the mutex and;
  * finally calls the pointer for the extension of the session event.
- * WARNING mutex must be locked before macro
+ * WARNING mutex must be unlocked before macro
  * WARNING the event variable must be called event which has the .GetExtension
  * method.
  */ 
 #define MACRO_CALL_FUNCTION_PTR_FOR_EVENT(fn, type)\
 if (b->fn != NULL) {\
+    pthread_mutex_lock(&b->mutex);\
     void (*fn) (struct triceBot *b,\
     type event)\
     = b->fn;\
@@ -225,26 +224,12 @@ static void loginResponse(struct triceBot *b,
                           void *param) {    
     pthread_mutex_lock(&b->mutex);   
     
-    #if DEBUG
-    printw("DEBUG: Login response received.\n");
-    refresh();   
-    #endif
-    
     if (response != NULL) {    
         if (response->HasExtension(Response_Login::ext)) {    
             Response_Login resp = response->GetExtension(Response_Login::ext);
             
             if (response->response_code() == Response::RespOk) {
                 b->loggedIn = 1;
-                
-                attron(GREEN_COLOUR_PAIR);
-                printw("INFO: Logged in successfully (%d)\n",
-                    response->response_code());
-                refresh();  
-                attroff(GREEN_COLOUR_PAIR);                       
-                
-                
-                printw("INFO: Requesting room list\n");
                 
                 //Get room list
                 CommandContainer cont;     
@@ -255,27 +240,11 @@ static void loginResponse(struct triceBot *b,
                 enq(cmd, &b->sendQueue);
                 
                 b->roomRequested = 1;
-                
-                attron(COLOR_GREEN);
-                printw("INFO: Logged in and prepping to join room.\n");
-                attroff(COLOR_GREEN);
-            } else if (response->response_code() != Response::RespOk) {
-                attron(RED_COLOUR_PAIR);
-                printw("ERROR: Error logging in. Code: %d, Reason: %s at (unix) %d\n",
-                       response->response_code(), 
-                       resp.denied_reason_str().c_str(),
-                       resp.denied_end_time());
-                attroff(RED_COLOUR_PAIR);
-                refresh();
-                                                
+            } else if (response->response_code() != Response::RespOk) {                     
                 b->running = 0;
                 b->loggedIn = 0;
             }   
         } else {
-            attron(RED_COLOUR_PAIR);
-            printw("ERROR: Invalid login response.\n");
-            attroff(RED_COLOUR_PAIR);
-            refresh();
         }
     }    
     
@@ -286,10 +255,7 @@ static void loginResponse(struct triceBot *b,
 static void sendLogin(struct triceBot *b) {
     pthread_mutex_lock(&b->mutex);
     
-    //Login
-    printw("INFO: Preparing login.\n");        
-    Command_Login cmdLogin;
-    
+    Command_Login cmdLogin;    
     cmdLogin.set_user_name(b->config.cockatriceUsername);
     cmdLogin.set_password(b->config.cockatricePassword);
     cmdLogin.set_clientid(b->config.clientID);
@@ -315,9 +281,6 @@ static void sendLogin(struct triceBot *b) {
     struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);    
     enq(cmd, &b->sendQueue);
         
-    printw("INFO: Login msg queued.\n");
-    refresh();
-    
     pthread_mutex_unlock(&b->mutex);
 }
 
@@ -328,17 +291,8 @@ static void executeCallback(struct triceBot *b,
                             struct pendingCommand *cmd, 
                             const Response *response) {
     if (cmd->callbackFunction != NULL) {
-        #if DEBUG
-        printw("DEBUG: Callback call for function with address %d.\n", cmd->callbackFunction); 
-        refresh();   
-        #endif
         cmd->callbackFunction(b, response, cmd->param);    
-    } else {
-        #if DEBUG           
-        printw("DEBUG: NULL function pointer.\n");
-        refresh();   
-        #endif
-    }        
+    }      
     
     //Free command - we don't like leaky memory
     if (cmd->message != NULL)
@@ -355,15 +309,7 @@ static void handleResponse (struct triceBot *b,
                             ServerMessage *newServerMessage) {
     //Response
     if (hasNext(&b->callbackQueue)) {                   
-        const Response response = newServerMessage->response();                      
-        
-        if (DEBUG || response.response_code() == -1) {
-            printw("DEBUG: Callback received with cmdId: %d and response code:%d debug str: %s.\n",
-                   response.cmd_id(), 
-                   response.response_code(), 
-                   response.ShortDebugString().c_str());
-            refresh();
-        }
+        const Response response = newServerMessage->response(); 
         
         struct pendingCommand *cmd = NULL;
         if (response.cmd_id() != -1) 
@@ -372,7 +318,8 @@ static void handleResponse (struct triceBot *b,
         if (response.HasExtension(Response_Login::ext)) 
             loginResponse(b, &response, NULL);            
         
-        if (cmd != NULL) {       
+        if (cmd != NULL) { 
+            //Fork and execute callback
             if (fork() == 0) {
                 #if DEBUG   
                 printw("DEBUG: CMD found with ID: %d.\n",
@@ -382,19 +329,8 @@ static void handleResponse (struct triceBot *b,
                 executeCallback(b, cmd, &response);
                 exit(0); //Leave the thread                
             }            
-        } else {
-            attron(RED_COLOUR_PAIR);
-            printw("ERROR: Bad response - no CMD found with ID: %d.\n",
-                   response.cmd_id());
-            attroff(RED_COLOUR_PAIR); 
-            refresh();                            
-        }        
-    } else {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: Server response received with an empty response queue.\n");
-        attroff(RED_COLOUR_PAIR);
-        refresh();
-    }   
+        }       
+    }
 }
 
 /**
@@ -411,8 +347,6 @@ static void roomsListed(struct triceBot *b,
         
         if (strncmp(b->config.roomName, room.name().c_str(), BUFFER_LENGTH) == 0) {
             //Send room join cmd
-            printw("INFO: joining a room...\n");
-            
             Command_JoinRoom roomJoin;
             roomJoin.set_room_id(room.room_id());
             b->magicRoomID = room.room_id();
@@ -436,7 +370,6 @@ static void handleRoomEvent(struct triceBot *b,
                      ServerMessage *newServerMessage) {
     const RoomEvent event = newServerMessage->room_event();    
     
-    pthread_mutex_lock(&b->mutex);
     if (event.HasExtension(Event_JoinRoom::ext)) {
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventJoinRoom,
                                           Event_JoinRoom)
@@ -446,13 +379,12 @@ static void handleRoomEvent(struct triceBot *b,
     } else if (event.HasExtension(Event_RoomSay::ext)) {        
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventRoomSay,
                                           Event_RoomSay)   
-    } else {        
-        pthread_mutex_unlock(&b->mutex);
     }
 }
 
 /**
  * Downloads a replay to ./replays/
+ * -> Fails silently
  */ 
 void replayResponseDownload(struct triceBot *b,
                             const Response *response, 
@@ -470,7 +402,7 @@ void replayResponseDownload(struct triceBot *b,
         int *replayID = (int *) param;
         char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
         
-        snprintf(fileName, BUFFER_LENGTH,"%s/replay%d.cod", REPLAY_DIR, *replayData);        
+        snprintf(fileName, BUFFER_LENGTH,"%s/replay%d.cod", REPLAY_DIR, *replayID);        
         
         //Check is replay directory is made
         DIR* dir = opendir(REPLAY_DIR);
@@ -479,16 +411,7 @@ void replayResponseDownload(struct triceBot *b,
             made = 1;
         } else if (ENOENT == errno) {
             //Make folder
-            if (mkdir(REPLAY_DIR, S_IRWXU) != -1) {
-                made = 1;
-            } else {
-                attron(COLOR_RED);
-                printw("ERROR: Cannot create replay folder (called replays).\n");
-                attroff(COLOR_RED);
-                refresh();
-                
-                made = 0;                
-            }
+            made = mkdir(REPLAY_DIR, S_IRWXU) != -1;
         }
         
         if (made) {            
@@ -499,32 +422,13 @@ void replayResponseDownload(struct triceBot *b,
                         fputc(replayData[i], replayFile);
                     
                     fclose (replayFile);    //close file like a good boy
-                    attron(YELLOW_COLOUR_PAIR);
-                    printw("INFO: Created replay file %s\n", fileName);
-                    refresh();
-                    attroff(YELLOW_COLOUR_PAIR);
-                } else {                    
-                    attron(COLOR_RED);
-                    printw("ERROR: Cannot create replay file.\n");
-                    attroff(COLOR_RED);
-                    refresh();
                 }
-            } else {                
-                attron(COLOR_RED);
-                printw("ERROR: Replay file exists, not overwritten.\n");
-                attroff(COLOR_RED);
-                refresh();
             }
         }
         
         if (fileName != NULL)
             free(fileName);        
-    } else {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: Invalid replay download response.\n");
-        attroff(RED_COLOUR_PAIR);
-        refresh();
-    }
+    } 
     
     if (param != NULL)
         free(param);
@@ -540,12 +444,8 @@ void replayResponseDownload(struct triceBot *b,
 static void replayReady(struct triceBot *b,
                         const Event_ReplayAdded replayAdded) {    
     ServerInfo_ReplayMatch replays = replayAdded.match_info();
-    int gameID = replays.game_id();
-    
-    printw("INFO: Replays (\"%s\") in room %s added", replays.game_name().c_str(), 
-           replays.room_name().c_str());
-    
     int size = replays.replay_list_size();    
+    
     //Download all replays
     for (int i = 0; i < size; i++) {
         ServerInfo_Replay replay = replays.replay_list().Get(i);
@@ -604,13 +504,7 @@ static void handleGameEvent(struct triceBot *b,
                 }
             }
         }
-    } else {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: No game with id %d found.\n", id);
-        attroff(RED_COLOUR_PAIR);
     }
-    
-    refresh();
 }
 
 /**
@@ -647,8 +541,6 @@ static void handleGameCreate(struct triceBot *b,
                 }   
             }
             
-        } else {
-            printw("ERROR: No callback found for game.\n");
         }
         
         free(game);
@@ -739,15 +631,12 @@ sendCreateGameCommand(struct triceBot *b,
 static void handleSessionEvent(struct triceBot *b,
                                ServerMessage *newServerMessage) {
     //Call session event function in new fork
-    pthread_mutex_lock(&b->mutex);
     const SessionEvent event = newServerMessage->session_event();
     
     if (event.HasExtension(Event_ServerIdentification::ext)) {
         #if LOGIN_AUTOMATICALLY
         //Login when the server asks
-        pthread_mutex_unlock(&b->mutex);
         sendLogin(b);  
-        pthread_mutex_lock(&b->mutex); 
         #endif
         
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventServerIdentifictaion, 
@@ -768,11 +657,9 @@ static void handleSessionEvent(struct triceBot *b,
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventUserMessage,
                                           Event_UserMessage)
     } else if (event.HasExtension(Event_ListRooms::ext)) {   
-        #if JOIN_ROOM_AUTOMATICALLY
-        pthread_mutex_unlock(&b->mutex);   
+        #if JOIN_ROOM_AUTOMATICALLY  
         roomsListed(b, 
-                    event.GetExtension(Event_ListRooms::ext));   
-        pthread_mutex_lock(&b->mutex);       
+                    event.GetExtension(Event_ListRooms::ext));        
         #endif
         
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventListRooms,
@@ -806,19 +693,13 @@ static void handleSessionEvent(struct triceBot *b,
                                           Event_NotifyUser)
     } else if (event.HasExtension(Event_ReplayAdded::ext)) {   
         #if DOWNLOAD_REPLAYS
-        pthread_mutex_unlock(&b->mutex);   
         replayReady(b, 
                     event.GetExtension(Event_ReplayAdded::ext));
-        pthread_mutex_lock(&b->mutex);   
         #endif
         
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventReplayAdded,
                                           Event_ReplayAdded)
-    } else {
-        pthread_mutex_unlock(&b->mutex);
     }
-    
-    refresh();
 }
 
 /**
@@ -831,28 +712,15 @@ static void botEventHandler(struct mg_connection *c,
     struct triceBot *b = (struct triceBot *) fn_data;
     
     if (ev == MG_EV_ERROR) {
-        attron(COLOR_PAIR(RED_COLOUR_PAIR));
-        printw("ERROR: Websocket error in bot thread.\n");        
-        attroff(COLOR_PAIR(RED_COLOUR_PAIR));
-        
         MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnectionError) 
-    } else if (ev == MG_EV_WS_OPEN) {
-        printw("INFO: Connection started.\n");
-        refresh();
+    } else if (ev == MG_EV_WS_OPEN) {        
+        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnect)        
     } else if (ev == MG_EV_WS_MSG) { 
         struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
         
         ServerMessage newServerMessage;
         newServerMessage.ParseFromArray(wm->data.ptr, wm->data.len);
         int messageType = newServerMessage.message_type();
-        
-        #if DEBUG
-        attron(GREEN_COLOUR_PAIR);
-        printw("DEBUG: Message received with op code :%d and debug str: %s\n", 
-               wm->flags, newServerMessage->ShortDebugString().c_str());
-        attroff(GREEN_COLOUR_PAIR);
-        refresh();
-        #endif
         
         /**
          * Call handler in a fork such that the main thread is not blocked by user
@@ -867,18 +735,14 @@ static void botEventHandler(struct mg_connection *c,
                 handleGameEvent(b, &newServerMessage);     
             } else if (messageType == ROOM_EVENT) {   
                 handleRoomEvent(b, &newServerMessage);   
-            } else {
-                refresh();  
-            }
+            } 
             
             exit(0); //exit fork
         }
         
         b->lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received             
     } if (ev == MG_EV_POLL) {
-        if (!b->config.authRequired && !b->roomRequested) {
-            printw("INFO: Requesting room list\n");
-            
+        if (!b->config.authRequired && !b->roomRequested) {            
             //Get room list
             CommandContainer cont;     
             SessionCommand *c = cont.add_session_command(); 
@@ -897,11 +761,6 @@ static void botEventHandler(struct mg_connection *c,
             mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
             
             enq(cmd, &b->callbackQueue);
-            #if DEBUG
-            printw("DEBUG: Waiting for callback for cmd with ID: %d.\n",
-                   cmd->cmdID);
-            refresh();
-            #endif
         }
         
         //Check for callback that has timed out
@@ -911,13 +770,6 @@ static void botEventHandler(struct mg_connection *c,
             if (cmd != NULL) {
                 if (time(NULL) - cmd->timeSent >= TIMEOUT) {
                     struct pendingCommand *cmdd = deq(&b->callbackQueue);
-                    
-                    attron(YELLOW_COLOUR_PAIR);
-                    printw("INFO: Timeout for cmd with id %d\n",
-                           cmdd->cmdID);
-                    refresh();
-                    attroff(YELLOW_COLOUR_PAIR);
-                    
                     executeCallback(b, cmdd, NULL);                        
                 }
             }
@@ -931,11 +783,6 @@ static void botEventHandler(struct mg_connection *c,
     } 
     
     if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
-            attron(RED_COLOUR_PAIR);
-            printw("ERROR: Bot disconnected due to socket close.\n");      
-            attroff(RED_COLOUR_PAIR);
-            
-            refresh();
             b->running = 0;
             // Signal that we're done
     }  
@@ -943,9 +790,7 @@ static void botEventHandler(struct mg_connection *c,
     //Close connection if the bot has been told to halt
     if (! b->running) {
         c->is_closing = 1;        
-    }
-        
-    refresh();                                
+    }                            
 }
 
 /**
@@ -957,52 +802,47 @@ static void *botThread(void *in) {
     //Reconnect while running
     pthread_mutex_lock(&b->mutex);
     b->running = 1;
+    pthread_mutex_unlock(&b->mutex);
     
-    while (b->running) {
-        struct mg_mgr mgr;
-        
+    //Init data
+    struct mg_mgr mgr;
+    
+    pthread_mutex_lock(&b->mutex);
+    b->loggedIn = 0;
+    b->magicRoomID = -1;
+    b->roomRequested = 0;
+    b->id = 0;
+    pthread_mutex_unlock(&b->mutex);
+    
+    // Event handler flips it to true  
+    struct mg_connection *c;
+    mg_mgr_init(&mgr);
+    c = mg_ws_connect(&mgr, b->config.cockatriceServer, botEventHandler, b, NULL);  
+    
+    if (c == NULL) {
+        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnectionError)
+    } else {
         pthread_mutex_lock(&b->mutex);
-        b->loggedIn = 0;
-        b->magicRoomID = -1;
-        b->roomRequested = 0;
-        b->id = 0;
+        int cont = b->running;        
         pthread_mutex_unlock(&b->mutex);
-        // Event handler flips it to true
         
-        printw("INFO: Connecting to the server...\n");
-        refresh();
-        
-        struct mg_connection *c;
-        mg_mgr_init(&mgr);
-        c = mg_ws_connect(&mgr, b->config.cockatriceServer, botEventHandler, b, NULL);  
-        
-        if (c == NULL) {
-            MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnectionError)
-        } else {
-            MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotDisconnect)
+        while (cont) {
+            mg_mgr_poll(&mgr, 250);
             
-            while (b->running) {
-                mg_mgr_poll(&mgr, 250);
-            }
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotDisconnect)
+            pthread_mutex_lock(&b->mutex);
+            cont = b->running;
+            pthread_mutex_unlock(&b->mutex);
         }
         
-        // Free all
-        freeGameList(&b->gameList);
-        freePendingCommandQueue(&b->sendQueue);
-        freePendingCommandQueue(&b->callbackQueue);
-        
-        mg_mgr_free(&mgr); 
-        
-        printw("INFO: Bot thread stopped.\n");
-        refresh();   
+        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotDisconnect)
     }
     
-    attron(RED_COLOUR_PAIR);
-    printw("INFO: Bot not restarting.\n");
-    attroff(RED_COLOUR_PAIR);
+    //Free data
+    freeGameList(&b->gameList);
+    freePendingCommandQueue(&b->sendQueue);
+    freePendingCommandQueue(&b->callbackQueue);
     
+    mg_mgr_free(&mgr);     
     pthread_exit(NULL);
 }
 
@@ -1013,10 +853,8 @@ void stopBot(struct triceBot *b) {
     pthread_mutex_lock(&b->mutex);
     b->running = 0;    
     pthread_mutex_unlock(&b->mutex);
-    pthread_join(b->pollingThreadBOT, NULL);
     
-    printw("Bot stopped.\n");
-    refresh();
+    pthread_join(b->pollingThreadBOT, NULL);
 }
 
 /**
@@ -1042,30 +880,7 @@ void freeBot(struct triceBot *b) {
  * returns 0 if it had an error
  */ 
 int startBot(struct triceBot *b) {
-    printw("Starting bot...\n");
-    
-    attron(COLOR_PAIR(YELLOW_COLOUR_PAIR));
-    printw("INFO: Target cockatrice version: \"%s\" (%s - %s)\n", 
-           VERSION_STRING, VERSION_COMMIT, VERSION_DATE);
-    attroff(COLOR_PAIR(YELLOW_COLOUR_PAIR));
-    
-    refresh();    
-    
-    if (pthread_create(&b->pollingThreadBOT, NULL, botThread, (void *) b)) {
-        attron(COLOR_PAIR(RED_COLOUR_PAIR));
-        printw("ERROR: Error creating bot thread\n");
-        attroff(COLOR_PAIR(RED_COLOUR_PAIR));
-        
-        refresh(); 
-        
-        exitCurses();
-        return 0;
-    }
-    
-    printw("Bot threads created.\nBot started.\n");
-    refresh();
-    
-    return 1;
+    return pthread_create(&b->pollingThreadBOT, NULL, botThread, (void *) b);
 }
 
 /**

@@ -11,6 +11,7 @@ struct response {
 
 struct apiServer {
     pthread_t pollingThreadT;
+    pthread_mutex_t bottleneck;
     struct mg_tls_opts opts;
     struct triceBot *triceBot; 
     struct Config config;
@@ -22,7 +23,7 @@ void initServer(struct apiServer *server,
                 struct triceBot *triceBot, 
                 struct Config config);
 
-void startServer (struct apiServer *api);
+int startServer (struct apiServer *api);
 
 void stopServer (struct apiServer *api);
 

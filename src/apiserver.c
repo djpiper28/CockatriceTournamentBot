@@ -3,10 +3,8 @@
 #include "apiserver.h"
 
 #include <stdlib.h>
-#include <ncurses.h>
 #include <pthread.h>
 #include "botconf.h"
-#include "ncursesinterface.h"
 #include "gamestruct.h"
 #include "version.h"
 #include "helppage.h"
@@ -49,9 +47,6 @@ static void serverCreateGameCommand(struct apiServer *api,
                        struct mg_connection *c, 
                        struct mg_http_message *hm, 
                        void *fn_data) {
-    printw("INFO: Game create command\n");
-    refresh();
-    
     char *authToken = NULL, 
          *gameName = NULL, 
          *password = NULL;
@@ -207,11 +202,6 @@ static void serverCreateGameCommand(struct apiServer *api,
         free(password);
     
     if (!valid) {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: Invalid create game message received (%s)\n", hm->message.ptr);
-        attroff(RED_COLOUR_PAIR);
-        refresh();
-        
         send404(c);
         return;
     } 
@@ -251,15 +241,6 @@ static void eventHandler (struct mg_connection *c,
                 (struct gameCreateCallbackWaitParam*) c->fn_data;
                     
         if (paramdata->gameID != -1) { 
-            #if DEBUG
-            printw("DEBUG: Game made\n");
-            refresh();
-            #endif  
-            
-            printw("INFO: Sending reply as game creation for %d was a success\n",
-                paramdata->gameID); 
-            refresh();
-            
             char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
             snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);                    
             mg_http_reply(c, 200, data);  
@@ -268,24 +249,10 @@ static void eventHandler (struct mg_connection *c,
             free(data);
             freeGameCreateCallbackWaitParam(paramdata);
         } else if (time(NULL) - paramdata->sendTime > TIMEOUT) {
-            #if DEBUG
-            printw("DEBUG: Timeout on game creation\n");
-            refresh();
-            #endif  
-            
-            printw("INFO: Sending 408 as game timeout\n");
             mg_http_reply(c, 408, "error");  
-        }
-        
-        refresh();
+        }        
     } else if (event == MG_EV_CLOSE || event == MG_EV_ERROR) {
-        if (fn_data != NULL) {        
-            struct gameCreateCallbackWaitParam *paramdata = 
-                    (struct gameCreateCallbackWaitParam*) fn_data;          
-                free(paramdata->gameName);
-                free(paramdata);
-                c->fn_data = NULL;
-        }
+        //TODO: Handle error state
     }
 }
 
@@ -299,54 +266,39 @@ static void *pollingThread (void *apiIn) {
     c = mg_http_listen(&mgr, api->config.bindAddr, eventHandler, apiIn);
     
     if (c == NULL) {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: Error creating https server for api handler.\n");
-        attroff(RED_COLOUR_PAIR);
-        
-        refresh();
-        exitCurses();
+        //TODO: Handle error state
     }
     
-    while (api->running) {
+    pthread_mutex_lock(&api->bottleneck);    
+    int cont = api->running;
+    pthread_mutex_unlock(&api->bottleneck);
+    
+    while (cont) {   
         mg_mgr_poll(&mgr, 250);  
+        
+        pthread_mutex_lock(&api->bottleneck); 
+        cont = api->running;    
+        pthread_mutex_unlock(&api->bottleneck);
     }
         
     mg_mgr_free(&mgr);    
-    
-    printw("Stopped API server thread...");
-    refresh();
-    
     pthread_exit(NULL);
 }
 
-void startServer (struct apiServer *api) {
-    printw("Starting API...\nStarting server API server thread...\n");
-    refresh();    
-    
-    //opts.ca = config.ca;
+int startServer (struct apiServer *api) {  
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
     api->running = 1;
     
-    if (pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api)) {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: Error creating thread\n");        
-        attroff(RED_COLOUR_PAIR);
-        
-        refresh(); 
-        
-        exitCurses();
-    }
-    
-    printw("API server thread created.\nAPI server started.\n");
-    refresh();
+    return pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api);
 }
 
-void stopServer (struct apiServer *api) {
+void stopServer (struct apiServer *api) {    
+    pthread_mutex_lock(&api->bottleneck);
     api->running = 0;
+    pthread_mutex_unlock(&api->bottleneck);
+    
     pthread_join(api->pollingThreadT, NULL);
-    printw("API Server stopped.\n");
-    refresh();
 }
 
 #endif

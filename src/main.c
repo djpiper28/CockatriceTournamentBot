@@ -3,10 +3,10 @@
 #include <pthread.h>
 #include <string.h>
 #include "botconf.h"
-#include "ncursesinterface.h"
 #include "apiserver.h"
 #include "trice_structs.h"
 #include "bot.h"
+#include "version.h"
 
 struct tournamentBot {
     struct Config config;
@@ -16,65 +16,56 @@ struct tournamentBot {
 };
 
 void stopAll(struct tournamentBot *bot) {
-    printw("Stopping bot...\n"); 
-    refresh();
+    printf("Stopping bot\n"); 
     
     bot->running = 0;    
     stopServer(&bot->server);
     stopBot(&bot->b);
-    
-    exitCurses();
 }
 
-void *listenerThread (void *botIn) {
-    struct tournamentBot* bot = (struct tournamentBot *) botIn;
-    
+#define LEN 1024
+void startConsoleListener (struct tournamentBot *bot) {
     int listening = 1;
-    char *commandBuffer = (char *) malloc(sizeof(char) * 1024);
+    char *commandBuffer = (char *) malloc(sizeof(char) * LEN);
     
     while (listening) {
-        getstr(commandBuffer);
+        fgets(commandBuffer, LEN, stdin);
         
         //Parse command
-        if (strncmp ("exit", commandBuffer, 1024) == 0) {
+        if (strncmp ("exit", commandBuffer, LEN) == 0) {
             listening = 0;
         }
     }
     
-    printw("Stopped console listener thread.\n");
-    refresh();
-    
     free(commandBuffer);    
     stopAll(bot);
-    pthread_exit(NULL);
 }
 
-int startConsoleListener (struct tournamentBot *bot) {
-    printw("Starting console listener.\n");
-    printw("Started cockatrice bot.\n");
-    refresh();
-        
-    pthread_t consoleListenerThread;
-    if(pthread_create(&consoleListenerThread, NULL, listenerThread, (void *) bot)) {
-        attron(RED_COLOUR_PAIR);
-        printw("ERROR: Error creating thread\n");
-        attroff(RED_COLOUR_PAIR);
-        
-        refresh();        
-        return 0;
-    }
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
+
+#if DEBUG
+#define MACRO_DEBUG_FOR_EVENT(fn, type)
+void DebugFor##fn (struct triceBot *b, type event) {    
+    time_t rawtime;    
+    struct tm *info; 
+    char buffer[80];   
+    time(&rawtime);    
+    info = localtime( &rawtime );    
+    strftime(buffer, 80, "%x - %H:%M:%S %Z", info);
     
-    printw("Started console listener thread.\n");
-    refresh();
-      
-    return 1;
+    printf("[DEBUG] / %s : %s\n", buffer, event.DebugString().c_str());
 }
 
 int main (int argc, char * args[]) {
+    printf("INFO: %s\n-> by djpiper28 see https://www.github.com/djpiper28/%s for git repo.\n-> Version %d.%d\n",
+           PROG_NAME, GITHUB_REPO, VERSION_MAJOR, VERSION_MINOR);
+    printf("Starting bot\n");
+    
     mg_log_set("0");
-    
-    initCurses(); 
-    
+        
     struct tournamentBot bot;
     bot.running = 1;
     readConf(&bot.config);    
@@ -84,10 +75,7 @@ int main (int argc, char * args[]) {
     startServer(&bot.server);
     startBot(&bot.b);
     
-    if (!startConsoleListener(&bot)) {
-        stopBot(&bot.b);
-        stopServer(&bot.server);
-    }
+    #endif
     
-    startCoolInterface(&bot.running);
+    startConsoleListener(&bot);
 }

@@ -7,7 +7,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUFFER_LENGTH 1024
 #define TOKEN_LENGTH 32
 #define HEX_BIT_MASK 0xF
 

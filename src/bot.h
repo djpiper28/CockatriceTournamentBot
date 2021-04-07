@@ -48,6 +48,7 @@ void sendPing(struct triceBot *b);
 
 /**
  * Downloads a replay to ./replays/
+ * -> fails silently
  */ 
 void replayResponseDownload(struct triceBot *b,
                             const Response *response, 
