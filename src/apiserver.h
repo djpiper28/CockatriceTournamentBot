@@ -58,15 +58,15 @@ static void readNumberIfPropertiesMatch(int number,
 }
 
 static void createGame(struct apiServer *api, 
-                       struct mg_connection *c, 
-                       struct mg_http_message *hm, 
-                       void *fn_data) {
+                    struct mg_connection *c, 
+                    struct mg_http_message *hm, 
+                    void *fn_data) {
     printw("INFO: Game create command\n");
     refresh();
     
     char *authToken = NULL, 
-         *gameName = NULL, 
-         *password = NULL;
+        *gameName = NULL, 
+        *password = NULL;
     int playerCount = -1, 
         spectatorsAllowed = -1, 
         spectatorsNeedPassword = -1,
@@ -115,68 +115,68 @@ static void createGame(struct apiServer *api,
                 
                 ii++;
             }
-                   
+                
             // Inc line start
             lineStart = lineEnd + 1;
             
             // Check 
-             #define MAX_PROP_LEN 22
-             if (MAX_PROP_LEN < propLen)
+            #define MAX_PROP_LEN 22
+            if (MAX_PROP_LEN < propLen)
                 propLen = MAX_PROP_LEN;
                 
-             if (strncmp(prop, "authtoken", propLen) == 0) {                
+            if (strncmp(prop, "authtoken", propLen) == 0) {                
                 authToken = tmp;
-             } else if (strncmp(prop, "gamename", propLen) == 0) {                
+            } else if (strncmp(prop, "gamename", propLen) == 0) {                
                     gameName = tmp;
-             } else if (strncmp(prop, "password", propLen) == 0) {                
+            } else if (strncmp(prop, "password", propLen) == 0) {                
                     password = tmp;
-             } else {
-                 //Check is number
-                 int isNum = valueLen < 3, 
-                 number = -1;
-                 for (int j = firstEquals + 1; j < lineEnd; j++) 
-                     isNum &= hm->body.ptr[j] >= '0' && hm->body.ptr[j] <= '9';
-                 
-                 //Read number
-                 if (strncmp(tmp, "TRUE", valueLen)) {
-                     isNum = 1;
-                     number = 1;
-                 } else if (strncmp(tmp, "FALSE", valueLen)) {
-                     isNum = 1;
-                     number = 0;
-                 } else if (isNum) {
-                     isNum = 1;
-                     number = atoi(tmp);
-                 }
-                 
-                 if (isNum) {
-                     readNumberIfPropertiesMatch(number, 
-                                                 &playerCount, 
-                                                 "playerCount", 
-                                                 prop);
-                     readNumberIfPropertiesMatch(spectatorsAllowed, 
-                                                 &playerCount, 
-                                                 "spectatorsAllowed", 
-                                                 prop);
-                     readNumberIfPropertiesMatch(spectatorsNeedPassword, 
-                                                 &playerCount, 
-                                                 "spectatorsNeedPassword", 
-                                                 prop);
-                     readNumberIfPropertiesMatch(spectatorsCanChat, 
-                                                 &playerCount, 
-                                                 "spectatorsCanChat", 
-                                                 prop);
-                     readNumberIfPropertiesMatch(spectatorsCanSeeHands, 
-                                                 &playerCount, 
-                                                 "spectatorsCanSeeHands", 
-                                                 prop);
-                     readNumberIfPropertiesMatch(onlyRegistered, 
-                                                 &playerCount, 
-                                                 "onlyRegistered", 
-                                                 prop);
-                 } 
-                 
-                 free(tmp);    
+            } else {
+                //Check is number
+                int isNum = valueLen < 3, 
+                number = -1;
+                for (int j = firstEquals + 1; j < lineEnd; j++) 
+                    isNum &= hm->body.ptr[j] >= '0' && hm->body.ptr[j] <= '9';
+                
+                //Read number
+                if (strncmp(tmp, "TRUE", valueLen)) {
+                    isNum = 1;
+                    number = 1;
+                } else if (strncmp(tmp, "FALSE", valueLen)) {
+                    isNum = 1;
+                    number = 0;
+                } else if (isNum) {
+                    isNum = 1;
+                    number = atoi(tmp);
+                }
+                
+                if (isNum) {
+                    readNumberIfPropertiesMatch(number, 
+                                                &playerCount, 
+                                                "playerCount", 
+                                                prop);
+                    readNumberIfPropertiesMatch(spectatorsAllowed, 
+                                                &playerCount, 
+                                                "spectatorsAllowed", 
+                                                prop);
+                    readNumberIfPropertiesMatch(spectatorsNeedPassword, 
+                                                &playerCount, 
+                                                "spectatorsNeedPassword", 
+                                                prop);
+                    readNumberIfPropertiesMatch(spectatorsCanChat, 
+                                                &playerCount, 
+                                                "spectatorsCanChat", 
+                                                prop);
+                    readNumberIfPropertiesMatch(spectatorsCanSeeHands, 
+                                                &playerCount, 
+                                                "spectatorsCanSeeHands", 
+                                                prop);
+                    readNumberIfPropertiesMatch(onlyRegistered, 
+                                                &playerCount, 
+                                                "onlyRegistered", 
+                                                prop);
+                } 
+                
+                free(tmp);    
             }
         }
     }
@@ -195,7 +195,7 @@ static void createGame(struct apiServer *api,
         && spectatorsNeedPassword != -1 && spectatorsCanChat != -1 
         && spectatorsCanSeeHands != -1 && onlyRegistered != -1;    
                     
-    if (valid) {        
+    if (valid)       
         c->fn_data = (void *) sendCreateGameCommand(api->triceBot,
                                                     gameName,
                                                     password,
@@ -207,13 +207,12 @@ static void createGame(struct apiServer *api,
                                                     spectatorsCanSeeHands,
                                                     onlyRegistered,
                                                     0,
-                                                    NULL);              
-    } else {
-        if (gameName != NULL)
-            free(gameName);
-    }  
-        
+                                                    NULL);
+    
     //Free the temp vars
+    if (gameName != NULL) {
+    free(gameName);    }  
+        
     if (authToken != NULL)
         free(authToken);
     if (password != NULL)
@@ -231,9 +230,9 @@ static void createGame(struct apiServer *api,
 }
 
 static void eventHandler (struct mg_connection *c,
-                          int event,
-                          void *ev_data,
-                          void *fn_data) {
+                        int event,
+                        void *ev_data,
+                        void *fn_data) {
     struct apiServer *api = (struct apiServer *) fn_data;
     
     if (event == MG_EV_ACCEPT) {
@@ -270,7 +269,7 @@ static void eventHandler (struct mg_connection *c,
             #endif  
             
             printw("INFO: Sending reply as game creation for %d was a success\n",
-                   paramdata->gameID); 
+                paramdata->gameID); 
             refresh();
             
             char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
@@ -355,7 +354,7 @@ void startServer (struct apiServer *api) {
     refresh();
 }
 
-void stopServer(struct apiServer *api) {
+void stopServer (struct apiServer *api) {
     api->running = 0;
     pthread_join(api->pollingThreadT, NULL);
     printw("API Server stopped.\n");

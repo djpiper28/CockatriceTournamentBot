@@ -1,7 +1,7 @@
 LIBS = -lncurses -lpthread -lprotobuf -lmbedtls -lmbedcrypto -lmbedx509
-ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1 -DDOWNLOAD_REPLAYS 1
+ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1
 DO_DEBUG = -DDEBUG=1 -g
-BASE_CC = g++ $(CFLAGS) ${LIBS} ${ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc
+BASE_CC = g++ $(CFLAGS) ${LIBS} ${ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc *.cpp
 
 build:
 	make prep-src	
@@ -17,16 +17,15 @@ prep-src: src/* pb/*
 
 	cp -rf pb/buildtmp/* buildtmp/ && cp -rf src/* buildtmp/
 	
-build-prj: src/* pb/*
-	cd buildtmp && ${BASE_CC} -DDEBUG=0 && cd ../ && cp buildtmp/botExecutable botExecutable
+build-prj: src/* pb/* buildtmp/*
+	cd buildtmp/ && ${BASE_CC} -DDEBUG=0 && cd ../ && cp buildtmp/botExecutable botExecutable
 
 build-debug:
 	make prep-src
-	cd buildtmp && ${BASE_CC} ${DO_DEBUG} && cd ../ && cp buildtmp/botExecutable botExecutable
-
+	cd buildtmp/ && ${BASE_CC} ${DO_DEBUG} && cd ../ && cp buildtmp/botExecutable botExecutable
 	
 gendocs:
 	cd src/ && python3 helpToSrc.py
 	
 clean:
-	rm -rf buildtmp/ && rm -rf pb/buildtmp/
+	rm -rf buildtmp/ pb/buildtmp/
