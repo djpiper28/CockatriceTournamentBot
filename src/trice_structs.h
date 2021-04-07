@@ -60,10 +60,10 @@ struct pendingCommandQueue {
  * A good interactive tester for macro expansions is https://godbolt.org/ with
  * gcc arguments of -E
  */ 
-#define MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(fn, type)\
+#define MACRO_CREATE_EVENT_FUNCTION_PTR(fn, type)\
 void (*fn) (struct triceBot *, type);
 
-#define MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(fn)\
+#define MACRO_CREATE_EVENT_FUNCTION_PTR_1(fn)\
 void (*fn) (struct triceBot *);
 
 struct triceBot {
@@ -82,39 +82,46 @@ struct triceBot {
     long lastPingTime; 
     
     //Event Function Pointers for session events    
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,
-                                           Event_ServerIdentification)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerCompleteList,
-                                           Event_ServerCompleteList)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerMessage,
-                                           Event_ServerMessage)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventServerShutdown,
-                                           Event_ServerShutdown)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventConnectionClosed,
-                                           Event_ConnectionClosed)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserMessage,
-                                           Event_UserMessage)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventListRooms,
-                                           Event_ListRooms)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventAddToList,
-                                           Event_AddToList)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventRemoveFromList,
-                                           Event_RemoveFromList)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserJoined,
-                                           Event_UserJoined)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventUserLeft,
-                                           Event_UserLeft)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventGameJoined,
-                                           Event_GameJoined)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventNotifyUser,
-                                           Event_NotifyUser)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR(onEventReplayAdded,
-                                           Event_ReplayAdded)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,
+                                    Event_ServerIdentification)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerCompleteList,
+                                    Event_ServerCompleteList)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerMessage,
+                                    Event_ServerMessage)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerShutdown,
+                                    Event_ServerShutdown)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventConnectionClosed,
+                                    Event_ConnectionClosed)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventUserMessage,
+                                    Event_UserMessage)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventListRooms,
+                                    Event_ListRooms)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventAddToList,
+                                    Event_AddToList)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventRemoveFromList,
+                                    Event_RemoveFromList)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventUserJoined,
+                                    Event_UserJoined)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventUserLeft,
+                                    Event_UserLeft)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventGameJoined,
+                                    Event_GameJoined)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventNotifyUser,
+                                    Event_NotifyUser)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventReplayAdded,
+                                    Event_ReplayAdded)
     
+    //Event Function Pointers for room events
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventJoinRoom,
+                                    Event_JoinRoom)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventLeaveRoom,
+                                    Event_LeaveRoom)
+    MACRO_CREATE_EVENT_FUNCTION_PTR(onEventRoomSay,
+                                    Event_RoomSay)
     //Bot state changes
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(onBotDisconnect)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(onBotConnect)
-    MACRO_CREATE_SERVER_EVENT_FUNCTION_PTR_1(onBotConnectionError)
+    MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotDisconnect)
+    MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnect)
+    MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnectionError)
 };
 
 //macros to gen functions
@@ -141,6 +148,8 @@ void set_##fn (\
  * there is a set_onEvent.* function that is thread safe. They are made with 
  * macros to ensure that they are consistent
  */ 
+
+//Server events
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerIdentifictaion,
                                           Event_ServerIdentification)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventServerCompleteList,
@@ -168,22 +177,17 @@ MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventNotifyUser,
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventReplayAdded, 
                                           Event_ReplayAdded)
 
+//Room events
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventJoinRoom,
+                                       Event_JoinRoom)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventLeaveRoom,
+                                       Event_LeaveRoom)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(onEventRoomSay,
+                                       Event_RoomSay)
+
 //Setters for bot state updates
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotDisconnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnectionError)
-
-struct response {
-    char *data;
-    int len;
-};
-
-struct apiServer {
-    pthread_t pollingThreadT;
-    struct mg_tls_opts opts;
-    struct triceBot *triceBot; 
-    struct Config config;
-    int running;
-};
 
 #endif

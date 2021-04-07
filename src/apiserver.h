@@ -4,6 +4,20 @@
 #include "trice_structs.h"
 #include "botconf.h"
 
+struct response {
+    char *data;
+    int len;
+};
+
+struct apiServer {
+    pthread_t pollingThreadT;
+    struct mg_tls_opts opts;
+    struct triceBot *triceBot; 
+    struct Config config;
+    int running;
+};
+
+
 void initServer(struct apiServer *server, 
                 struct triceBot *triceBot, 
                 struct Config config);

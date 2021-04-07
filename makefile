@@ -1,7 +1,7 @@
 LIBS = -lncurses -pthread -lpthread -lprotobuf -lmbedtls -lmbedcrypto -lmbedx509
 ARGS = -DMG_ENABLE_MBEDTLS=1 -DMG_ENABLE_OPENSSL=1 -DMG_ENABLE_IPV6=1
 DO_DEBUG = -DDEBUG=1 -g
-BASE_CC = g++ $(CFLAGS) ${LIBS} ${ARGS} -pipe -x c++ -o botExecutable *.h *.c *.cc *.cpp
+BASE_CC = g++ $(CFLAGS) ${LIBS} ${ARGS} -x c++ -o botExecutable *.h *.c *.cc *.cpp
 
 build:
 	make prep-src	
@@ -9,9 +9,12 @@ build:
 
 prep-src: src/* pb/*	
 	make gendocs
-	rm -rf buildtmp/ && mkdir buildtmp/
+	
+	if [ ! -d "buildtmp/" ]; then mkdir buildtmp/; fi
 
-	cd pb && rm -rf buildtmp/ && mkdir buildtmp/ &&	find . | grep -o [^/]*\\.proto | xargs protoc --cpp_out=buildtmp/
+	if [ ! -d "pb/buildtmp/" ]; then mkdir pb/buildtmp/; fi
+
+	cd pb && find . | grep -o [^/]*\\.proto | xargs protoc --cpp_out=buildtmp/
 
 	cd src/ && python3 helpToSrc.py
 

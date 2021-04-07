@@ -69,10 +69,9 @@
 #include "command_concede.pb.h"
 
 #include "serverinfo_replay_match.pb.h"
+#include "bot.h"
 
 #define ID_LENGTH 16
-#define PING_FREQUENCY 5
-#define TIMEOUT PING_FREQUENCY
 #define RESPONSE 0
 #define SESSION_EVENT 1
 #define GAME_EVENT_CONTAINER 2
@@ -83,6 +82,7 @@
  * This macro is to reduce code repetition in the session event method which
  * checks if the pointer is not null then copies it; unlocks the mutex and;
  * finally calls the pointer for the extension of the session event.
+ * WARNING mutex must be locked before macro
  */ 
 #define MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(fn)\
 if (b->fn != NULL) {\
@@ -91,6 +91,26 @@ if (b->fn != NULL) {\
     pthread_mutex_unlock(&b->mutex);\
     \
     fn(b);\
+}
+
+
+/**
+ * This macro is to reduce code repetition in the session event method which
+ * checks if the pointer is not null then copies it; unlocks the mutex and;
+ * finally calls the pointer for the extension of the session event.
+ * WARNING mutex must be locked before macro
+ * WARNING the event variable must be called event which has the .GetExtension
+ * method.
+ */ 
+#define MACRO_CALL_FUNCTION_PTR_FOR_EVENT(fn, type)\
+if (b->fn != NULL) {\
+    void (*fn) (struct triceBot *b,\
+    type event)\
+    = b->fn;\
+    pthread_mutex_unlock(&b->mutex);\
+    \
+    fn(b,\
+       event.GetExtension(type::ext));\
 }
 
 //Type defs moved to trice_structs.h due to circlular references
@@ -423,20 +443,20 @@ static void roomsListed(struct triceBot *b,
 //Join the room in config
 static void handleRoomEvent(struct triceBot *b,
                      ServerMessage *newServerMessage) {
-    const RoomEvent roomEvent = newServerMessage->room_event();
+    const RoomEvent event = newServerMessage->room_event();    
     
-    if (roomEvent.HasExtension(Event_JoinRoom::ext)) {
-        Event_JoinRoom join = roomEvent.GetExtension(Event_JoinRoom::ext);
-    } else if (roomEvent.HasExtension(Event_LeaveRoom::ext)) {
-        Event_LeaveRoom leave = roomEvent.GetExtension(Event_LeaveRoom::ext);        
-    } else if (roomEvent.HasExtension(Event_RoomSay::ext)) {
-        Event_RoomSay roomSay = roomEvent.GetExtension(Event_RoomSay::ext);
-        #if DEBUG
-        printw("INFO: Room message: (%s) %s\n", 
-               roomSay.name().c_str(),
-               roomSay.message().c_str());
-        refresh();
-        #endif
+    pthread_mutex_lock(&b->mutex);
+    if (event.HasExtension(Event_JoinRoom::ext)) {
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventJoinRoom,
+                                          Event_JoinRoom)
+    } else if (event.HasExtension(Event_LeaveRoom::ext)) {
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventLeaveRoom,
+                                          Event_LeaveRoom)       
+    } else if (event.HasExtension(Event_RoomSay::ext)) {        
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventRoomSay,
+                                          Event_RoomSay)   
+    } else {        
+        pthread_mutex_unlock(&b->mutex);
     }
 }
 
@@ -558,6 +578,7 @@ static void replayReady(struct triceBot *b,
 
 /**
  * Called when a game event occurs
+ * TODO: game event functions
  */ 
 static void handleGameEvent(struct triceBot *b,
                             ServerMessage *newServerMessage) {    
@@ -622,17 +643,17 @@ static void handleGameCreate(struct triceBot *b,
             game->gameID = listGames.game_info().game_id();    
             
             if (game->callbackFn != NULL) {
+                /**
+                 * WARNING THE USER IS ASSUMED TO HAVE A POLLING THREAD 
+                 * OTHERWISE AND WILL LEAK MEMORY IF THE USER DOES NOT FREE
+                 * IT.
+                 */
                 if (fork() == 0) {                    
                     game->callbackFn(game);
                     free(game->gameName);
                     free(game);
                     exit(0);
                 }   
-                /**
-                 * WARNING THE USER IS ASSUMED TO HAVE A POLLING THREAD 
-                 * OTHERWISE AND WILL LEAK MEMORY IF THE USER DOES NOT FREE
-                 * IT.
-                 */
             }
             
         } else {
@@ -715,22 +736,6 @@ sendCreateGameCommand(struct triceBot *b,
     return param;
 }
 
-/**
- * This macro is to reduce code repetition in the session event method which
- * checks if the pointer is not null then copies it; unlocks the mutex and;
- * finally calls the pointer for the extension of the session event.
- */ 
-#define MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(fn, type)\
-if (b->fn != NULL) {\
-    void (*fn) (struct triceBot *b,\
-                type event)\
-    = b->fn;\
-    pthread_mutex_unlock(&b->mutex);\
-    \
-    fn(b,\
-       sessionEvent.GetExtension(type::ext));\
-}
-
 #ifndef DOWNLOAD_REPLAYS
 #define DOWNLOAD_REPLAYS 1
 #endif
@@ -755,121 +760,86 @@ if (b->fn != NULL) {\
 static void handleSessionEvent(struct triceBot *b,
                                ServerMessage *newServerMessage) {
     //Call session event function in new fork
-    if (fork() == 0) {
+    pthread_mutex_lock(&b->mutex);
+    const SessionEvent event = newServerMessage->session_event();
+    
+    if (event.HasExtension(Event_ServerIdentification::ext)) {
+        #if LOGIN_AUTOMATICALLY
+        //Login when the server asks
+        pthread_mutex_unlock(&b->mutex);
+        sendLogin(b);  
+        pthread_mutex_lock(&b->mutex); 
+        #endif
+        
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventServerIdentifictaion, 
+                                          Event_ServerIdentification)
+    } else if (event.HasExtension(Event_ServerCompleteList::ext)) {
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventServerCompleteList,
+                                          Event_ServerCompleteList)
+    } else if (event.HasExtension(Event_ServerMessage::ext)) { 
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventServerMessage,
+                                          Event_ServerMessage) 
+    } else if (event.HasExtension(Event_ServerShutdown::ext)) {     
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventServerShutdown,
+                                          Event_ServerShutdown)
+    } else if (event.HasExtension(Event_ConnectionClosed::ext)) {  
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventConnectionClosed,
+                                          Event_ConnectionClosed)
+    } else if (event.HasExtension(Event_UserMessage::ext)) {  
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventUserMessage,
+                                          Event_UserMessage)
+    } else if (event.HasExtension(Event_ListRooms::ext)) {   
+        #if JOIN_ROOM_AUTOMATICALLY
+        pthread_mutex_unlock(&b->mutex);   
+        roomsListed(b, 
+                    event.GetExtension(Event_ListRooms::ext));   
+        pthread_mutex_lock(&b->mutex);       
+        #endif
+        
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventListRooms,
+                                          Event_ListRooms)
+    } else if (event.HasExtension(Event_AddToList::ext)) {  
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventAddToList,
+                                          Event_AddToList)
+    } else if (event.HasExtension(Event_RemoveFromList::ext)) {   
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventRemoveFromList,
+                                          Event_RemoveFromList)
+    } else if (event.HasExtension(Event_UserJoined::ext)) {    
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventUserJoined,
+                                          Event_UserJoined)
+    } else if (event.HasExtension(Event_UserLeft::ext)) {    
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventUserLeft,
+                                          Event_UserLeft)
+    } else if (event.HasExtension(Event_GameJoined::ext)) {              
+        /**
+         * Due to cockatrice spaghetti this is going to have to trigger the
+         * callback for the create game command   
+         */ 
+        pthread_mutex_unlock(&b->mutex);
+        handleGameCreate(b, 
+                         event.GetExtension(Event_GameJoined::ext));
         pthread_mutex_lock(&b->mutex);
-        const SessionEvent sessionEvent = newServerMessage->session_event();
         
-        attron(YELLOW_COLOUR_PAIR);
-        if (sessionEvent.HasExtension(Event_ServerIdentification::ext)) {
-            printw("INFO: Server identification event received.\n");
-                        
-            #if LOGIN_AUTOMATICALLY
-            //Login when the server asks
-            pthread_mutex_unlock(&b->mutex);
-            sendLogin(b);  
-            pthread_mutex_lock(&b->mutex); 
-            #endif
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventServerIdentifictaion, 
-                                                      Event_ServerIdentification)
-        } else if (sessionEvent.HasExtension(Event_ServerCompleteList::ext)) {
-            printw("INFO: Server complete list event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventServerCompleteList,
-                                                      Event_ServerCompleteList)
-        } else if (sessionEvent.HasExtension(Event_ServerMessage::ext)) { 
-            printw("INFO: Server message event received.\n");    
-                  
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventServerMessage,
-                                                      Event_ServerMessage) 
-        } else if (sessionEvent.HasExtension(Event_ServerShutdown::ext)) {                
-            printw("INFO: Server shutdown event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventServerShutdown,
-                                                      Event_ServerShutdown)
-        } else if (sessionEvent.HasExtension(Event_ConnectionClosed::ext)) {  
-            printw("INFO: Connection closed event received.\n"); 
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventConnectionClosed,
-                                                      Event_ConnectionClosed)
-        } else if (sessionEvent.HasExtension(Event_UserMessage::ext)) {                        
-            printw("INFO: User message event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventUserMessage,
-                                                      Event_UserMessage)
-        } else if (sessionEvent.HasExtension(Event_ListRooms::ext)) {                
-            printw("INFO: List rooms event received.\n");
-            
-            #if JOIN_ROOM_AUTOMATICALLY
-            pthread_mutex_unlock(&b->mutex);   
-            roomsListed(b, 
-                        sessionEvent.GetExtension(Event_ListRooms::ext));   
-            pthread_mutex_lock(&b->mutex);       
-            #endif
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventListRooms,
-                                                      Event_ListRooms)
-        } else if (sessionEvent.HasExtension(Event_AddToList::ext)) {                
-            printw("INFO: Add to list event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventAddToList,
-                                                      Event_AddToList)
-        } else if (sessionEvent.HasExtension(Event_RemoveFromList::ext)) {                
-            printw("INFO: Remove from list event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventRemoveFromList,
-                                                      Event_RemoveFromList)
-        } else if (sessionEvent.HasExtension(Event_UserJoined::ext)) {                
-            printw("INFO: User join event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventUserJoined,
-                                                      Event_UserJoined)
-        } else if (sessionEvent.HasExtension(Event_UserLeft::ext)) {                
-            printw("INFO: User leave event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventUserLeft,
-                                                      Event_UserLeft)
-        } else if (sessionEvent.HasExtension(Event_GameJoined::ext)) {                
-            printw("INFO: Game joined event received.\n");
-            
-            /**
-             * Due to cockatrice spaghetti this is going to have to trigger the
-             * callback for the create game command   
-             */ 
-            pthread_mutex_unlock(&b->mutex);
-            handleGameCreate(b, 
-                             sessionEvent.GetExtension(Event_GameJoined::ext));
-            pthread_mutex_lock(&b->mutex);
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventGameJoined,
-                                                      Event_GameJoined)
-        } else if (sessionEvent.HasExtension(Event_NotifyUser::ext)) {                
-            printw("INFO: Notify user event received.\n");
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventNotifyUser,
-                                                      Event_NotifyUser)
-        } else if (sessionEvent.HasExtension(Event_ReplayAdded::ext)) {                
-            printw("INFO: Replay ready event received.\n");
-            
-            #if DOWNLOAD_REPLAYS
-            pthread_mutex_unlock(&b->mutex);   
-            replayReady(b, 
-                        sessionEvent.GetExtension(Event_ReplayAdded::ext));
-            pthread_mutex_lock(&b->mutex);   
-            #endif
-            
-            MACRO_CALL_FUNCTION_PTR_FOR_SESSION_EVENT(onEventReplayAdded,
-                                                      Event_ReplayAdded)
-        } else {
-            attron(RED_COLOUR_PAIR);
-            printw("ERROR: Unknown session event received.\n");
-            attroff(RED_COLOUR_PAIR);
-        }
-        attroff(YELLOW_COLOUR_PAIR);
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventGameJoined,
+                                          Event_GameJoined)
+    } else if (event.HasExtension(Event_NotifyUser::ext)) { 
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventNotifyUser,
+                                          Event_NotifyUser)
+    } else if (event.HasExtension(Event_ReplayAdded::ext)) {   
+        #if DOWNLOAD_REPLAYS
+        pthread_mutex_unlock(&b->mutex);   
+        replayReady(b, 
+                    event.GetExtension(Event_ReplayAdded::ext));
+        pthread_mutex_lock(&b->mutex);   
+        #endif
         
-        refresh();
-        exit(0); //Exit fork
+        MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventReplayAdded,
+                                          Event_ReplayAdded)
+    } else {
+        pthread_mutex_unlock(&b->mutex);
     }
+    
+    refresh();
 }
 
 /**
@@ -905,19 +875,24 @@ static void botEventHandler(struct mg_connection *c,
         refresh();
         #endif
         
-        if (messageType == RESPONSE) {
-            handleResponse(b, &newServerMessage);            
-        } else if (messageType == SESSION_EVENT) {   
-            handleSessionEvent(b, &newServerMessage);  
-        } else if (messageType == GAME_EVENT_CONTAINER) {   
-            handleGameEvent(b, &newServerMessage);     
-        } else if (messageType == ROOM_EVENT) {   
-            handleRoomEvent(b, &newServerMessage);   
-        } else {
-            attron(RED_COLOUR_PAIR);
-            printw("ERROR: Unknown message received.\n");
-            attroff(RED_COLOUR_PAIR);
-            refresh();  
+        /**
+         * Call handler in a fork such that the main thread is not blocked by user
+         * code
+         */
+        if (fork() == 0) { 
+            if (messageType == RESPONSE) {
+                handleResponse(b, &newServerMessage);            
+            } else if (messageType == SESSION_EVENT) {   
+                handleSessionEvent(b, &newServerMessage);  
+            } else if (messageType == GAME_EVENT_CONTAINER) {   
+                handleGameEvent(b, &newServerMessage);     
+            } else if (messageType == ROOM_EVENT) {   
+                handleRoomEvent(b, &newServerMessage);   
+            } else {
+                refresh();  
+            }
+            
+            exit(0); //exit fork
         }
         
         b->lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received             
@@ -986,6 +961,7 @@ static void botEventHandler(struct mg_connection *c,
             // Signal that we're done
     }  
         
+    //Close connection if the bot has been told to halt
     if (! b->running) {
         c->is_closing = 1;        
     }

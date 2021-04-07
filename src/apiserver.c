@@ -18,6 +18,7 @@
 #include "game_commands.pb.h"
 #include "get_pb_extension.h"
 #include "response.pb.h"
+#include "apiserver.h"
 
 void initServer(struct apiServer *server, 
                 struct triceBot *triceBot, 

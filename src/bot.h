@@ -6,6 +6,8 @@
 #include "response.pb.h"
 
 //Type defs moved to trice_structs.h due to circlular references
+#define PING_FREQUENCY 5
+#define TIMEOUT PING_FREQUENCY
 
 /**
  * struct triceBot *b -> pointer to the bot to init
