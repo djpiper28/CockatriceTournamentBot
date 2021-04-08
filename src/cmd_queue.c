@@ -15,6 +15,8 @@
 //Init method for the command queue
 void initPendingCommandQueue(struct pendingCommandQueue *q) {
     q->mutex = PTHREAD_MUTEX_INITIALIZER;
+    q->head = NULL;
+    q->tail = NULL;
 }
 
 //Queue methods
@@ -173,7 +175,7 @@ void enq(struct pendingCommand *cmd,
     node->payload = cmd;
     node->next    = NULL;    
     
-    if (!hasNext(queue)) {
+    if (!hasNextNTS(queue)) {
         queue->head = node;
         queue->tail = node;
     } else {        
@@ -187,7 +189,7 @@ void enq(struct pendingCommand *cmd,
 struct pendingCommand *peek(struct pendingCommandQueue *queue) {
     pthread_mutex_lock(&queue->mutex);
     
-    struct pendingCommand *out = hasNext(queue) ? queue->head->payload : NULL;
+    struct pendingCommand *out = hasNextNTS(queue) ? queue->head->payload : NULL;
     
     pthread_mutex_unlock(&queue->mutex);    
     return out;
@@ -201,7 +203,7 @@ void freePendingCommandQueue(struct pendingCommandQueue *queue) {
     }
     
     pthread_mutex_unlock(&queue->mutex);   
-    pthread_mutex_unlock(&queue->mutex);   
+    pthread_mutex_destroy(&queue->mutex);   
 }
 
 #endif

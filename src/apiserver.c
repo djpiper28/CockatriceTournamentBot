@@ -21,9 +21,14 @@
 void initServer(struct apiServer *server, 
                 struct triceBot *triceBot, 
                 struct Config config) {
+    server->bottleneck = PTHREAD_MUTEX_INITIALIZER;
     server->config = config;
     server->triceBot = triceBot;
     server->running = 0;
+}
+
+void freeServer(struct apiServer *api) {
+    pthread_mutex_destroy(&api->bottleneck);
 }
 
 static void sendInvalidAuthTokenResponse(struct mg_connection *c) {
@@ -286,9 +291,11 @@ static void *pollingThread (void *apiIn) {
 }
 
 int startServer (struct apiServer *api) {  
+    pthread_mutex_lock(&api->bottleneck);
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
     api->running = 1;
+    pthread_mutex_unlock(&api->bottleneck);
     
     return pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api);
 }

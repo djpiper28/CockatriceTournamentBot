@@ -9,6 +9,7 @@
 // Init the game list structure
 void initGameList(struct gameList *gl) {
     gl->mutex = PTHREAD_MUTEX_INITIALIZER;
+    gl->gamesHead = NULL;
 }
 
 // Resource free stuff
@@ -31,7 +32,6 @@ void freeGameListNode(struct gameList *g, struct gameListNode *gl) {
     pthread_mutex_unlock(&g->mutex);
 }
 
-
 void freeGameList(struct gameList *g) {
     pthread_mutex_lock(&g->mutex);
     
@@ -48,6 +48,15 @@ void freeGameList(struct gameList *g) {
     
     pthread_mutex_unlock(&g->mutex);
     pthread_mutex_destroy(&g->mutex);
+}
+
+struct game *createGame(int gameID) {
+    struct game *g = (struct game *) malloc(sizeof(struct game *));
+    g->gameID = gameID;
+    g->started = 0;
+    g->startTime = -1;
+    
+    return g;
 }
 
 struct game *getGameWithID(struct gameList *g, int gameID) { 

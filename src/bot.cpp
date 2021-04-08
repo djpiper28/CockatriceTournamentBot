@@ -145,17 +145,7 @@ static struct pendingCommand *prepCmdNTS(struct triceBot *b,
     pending->timeSent = time(NULL);
     pending->isGame   = 0;
     pending->callbackFunction = NULL;
-    
-    #if DEBUG
-    char *msg = strToHex(data, msgLength);
-    printw("DEBUG: About to send a message: >>\"%s\"<<\n",
-           msg);
-    printw("With cmdId: %d and debug str: %s\n", 
-           id, cont.DebugString().c_str());
-    refresh();
-    free(msg);        
-    #endif
-            
+                
     b->cmdID ++;
     //id is in range 0 to 01111...111
     b->cmdID %= 0x7FFFFFFF;
@@ -320,12 +310,7 @@ static void handleResponse (struct triceBot *b,
         
         if (cmd != NULL) { 
             //Fork and execute callback
-            if (fork() == 0) {
-                #if DEBUG   
-                printw("DEBUG: CMD found with ID: %d.\n",
-                       response.cmd_id());
-                refresh();    
-                #endif    
+            if (fork() == 0) { 
                 executeCallback(b, cmd, &response);
                 exit(0); //Leave the thread                
             }            
@@ -337,9 +322,7 @@ static void handleResponse (struct triceBot *b,
  * Called when a room listed event is called
  */ 
 static void roomsListed(struct triceBot *b,
-                        Event_ListRooms listRooms) {
-    pthread_mutex_lock(&b->mutex);
-    
+                        Event_ListRooms listRooms) {    
     int size = listRooms.room_list_size();
     int found = 0;
     for (int i = 0; i < size && !found; i++) {
@@ -360,9 +343,7 @@ static void roomsListed(struct triceBot *b,
             
             found = 1;
         }
-    }
-    
-    pthread_mutex_unlock(&b->mutex);
+    }    
 }
 
 //Join the room in config
@@ -511,12 +492,7 @@ static void handleGameEvent(struct triceBot *b,
  * Called when a game is created
  */ 
 static void handleGameCreate(struct triceBot *b,
-                             const Event_GameJoined listGames) {
-    #if DEBUG
-    printw("DEBUG: Finding game that matches the id.\n");
-    refresh();
-    #endif
-    
+                             const Event_GameJoined listGames) {    
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
                                               listGames.game_info().description().c_str());
     
@@ -562,23 +538,23 @@ static void handleGameCreate(struct triceBot *b,
 //These are long type names
 struct gameCreateCallbackWaitParam * 
 sendCreateGameCommand(struct triceBot *b, 
-                       char *gameName,
-                       char *password,
-                       int playerCount,    
-                       int joinAsSpectator, 
-                       int spectatorsAllowed,                                                         
-                       int spectatorsCanChat,
-                       int spectatorsNeedPassword,
-                       int spectatorsCanSeeHands,
-                       int onlyRegistered,
-                       int onlyBuddies,                                                          
-                       void (*callbackFn) (struct gameCreateCallbackWaitParam *)) {
+                      char *gameName,
+                      char *password,
+                      int playerCount,    
+                      int joinAsSpectator, 
+                      int spectatorsAllowed,                                                         
+                      int spectatorsCanChat,
+                      int spectatorsNeedPassword,
+                      int spectatorsCanSeeHands,
+                      int onlyRegistered,
+                      int onlyBuddies,                                                          
+                      void (*callbackFn) (struct gameCreateCallbackWaitParam *)) {
     Command_CreateGame createGame;
     int length;
     for (length = 0; gameName[length] != 0; length++);
     
     char *gameNameCopy = (char *) malloc(sizeof(char) * length + 1);
-    for (int i = 0; i < length; i++)
+    for (int i = 0; i < length && i < BUFFER_LENGTH; i++)
         gameNameCopy[i] = gameName[i];
         
     createGame.set_description(gameNameCopy);
@@ -681,10 +657,8 @@ static void handleSessionEvent(struct triceBot *b,
          * Due to cockatrice spaghetti this is going to have to trigger the
          * callback for the create game command   
          */ 
-        pthread_mutex_unlock(&b->mutex);
         handleGameCreate(b, 
                          event.GetExtension(Event_GameJoined::ext));
-        pthread_mutex_lock(&b->mutex);
         
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventGameJoined,
                                           Event_GameJoined)
@@ -808,6 +782,10 @@ static void *botThread(void *in) {
     struct mg_mgr mgr;
     
     pthread_mutex_lock(&b->mutex);
+    initPendingCommandQueue(&b->callbackQueue);
+    initPendingCommandQueue(&b->sendQueue);
+    initGameList(&b->gameList);
+    
     b->loggedIn = 0;
     b->magicRoomID = -1;
     b->roomRequested = 0;

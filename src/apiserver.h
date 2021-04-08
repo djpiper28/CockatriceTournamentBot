@@ -23,6 +23,8 @@ void initServer(struct apiServer *server,
                 struct triceBot *triceBot, 
                 struct Config config);
 
+void freeServer(struct apiServer *api);
+
 int startServer (struct apiServer *api);
 
 void stopServer (struct apiServer *api);
