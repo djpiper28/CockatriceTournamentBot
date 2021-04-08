@@ -38,7 +38,7 @@ void startConsoleListener (struct tournamentBot *bot) {
         if (strncmp ("exit", commandBuffer, LEN) == 0) {
             listening = 0;
         } else {
-            printf("[Error]: No command %s found.\n", commandBuffer);
+            printf("[Error]: No command '%s' found.\n", commandBuffer);
         }
     }
     
@@ -82,25 +82,27 @@ MACRO_DEBUG_FOR_EVENT(onEventServerCompleteList,
                       Event_ServerCompleteList)
 MACRO_DEBUG_FOR_EVENT(onEventServerMessage,
                       Event_ServerMessage)
-MACRO_DEBUG_FOR_EVENT(onEventServerShutdown, 
+MACRO_DEBUG_FOR_EVENT(onEventServerShutdown,
                       Event_ServerShutdown)
+MACRO_DEBUG_FOR_EVENT(onEventConnectionClosed,
+                      Event_ConnectionClosed)
 MACRO_DEBUG_FOR_EVENT(onEventUserMessage,
                       Event_UserMessage)
-MACRO_DEBUG_FOR_EVENT(onEventListRooms, 
+MACRO_DEBUG_FOR_EVENT(onEventListRooms,
                       Event_ListRooms)
-MACRO_DEBUG_FOR_EVENT(onEventAddToList, 
+MACRO_DEBUG_FOR_EVENT(onEventAddToList,
                       Event_AddToList)
-MACRO_DEBUG_FOR_EVENT(onEventRemoveFromList, 
+MACRO_DEBUG_FOR_EVENT(onEventRemoveFromList,
                       Event_RemoveFromList)
-MACRO_DEBUG_FOR_EVENT(onEventUserJoined,  
+MACRO_DEBUG_FOR_EVENT(onEventUserJoined,
                       Event_UserJoined)
-MACRO_DEBUG_FOR_EVENT(onEventUserLeft, 
+MACRO_DEBUG_FOR_EVENT(onEventUserLeft,
                       Event_UserLeft)
-MACRO_DEBUG_FOR_EVENT(onEventGameJoined, 
+MACRO_DEBUG_FOR_EVENT(onEventGameJoined,
                       Event_GameJoined)
-MACRO_DEBUG_FOR_EVENT(onEventNotifyUser, 
+MACRO_DEBUG_FOR_EVENT(onEventNotifyUser,
                       Event_NotifyUser)
-MACRO_DEBUG_FOR_EVENT(onEventReplayAdded, 
+MACRO_DEBUG_FOR_EVENT(onEventReplayAdded,
                       Event_ReplayAdded)
 
 //Room events
@@ -116,29 +118,36 @@ MACRO_DEBUG_FOR_STATE_CHANGE(onBotDisconnect)
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnect)
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnectionError)
 
-
 #define MACRO_DEBUG_FOR_EVENT_CALL(fn) set_##fn(&DebugFor##fn, b);
 
 void addDebugFunctions(struct triceBot *b) {
-    //Server events
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventServerIdentifictaion)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventServerCompleteList)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventServerMessage)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventServerShutdown)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventUserMessage)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventListRooms)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventAddToList)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventRemoveFromList)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventUserJoined)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventUserLeft)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventGameJoined)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventNotifyUser)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventReplayAdded)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventServerIdentifictaion)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventServerCompleteList)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventServerMessage)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventServerShutdown)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventConnectionClosed)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventUserMessage,)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventListRooms)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventAddToList)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventRemoveFromList)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventUserJoined)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventUserLeft)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventGameJoined)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventNotifyUser)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventReplayAdded)
     
     //Room events
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventJoinRoom)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventLeaveRoom)
-    MACRO_DEBUG_FOR_EVENT_CALL (onEventRoomSay)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventJoinRoom,
+                          Event_JoinRoom)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventLeaveRoom,
+                          Event_LeaveRoom)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventRoomSay,
+                          Event_RoomSay)
+    
+    //State changes
+    MACRO_DEBUG_FOR_EVENT_CALL(onBotDisconnect)
+    MACRO_DEBUG_FOR_EVENT_CALL(onBotConnect)
+    MACRO_DEBUG_FOR_EVENT_CALL(onBotConnectionError)
 }
 
 #endif

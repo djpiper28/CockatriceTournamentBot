@@ -10,6 +10,12 @@
 #define TIMEOUT PING_FREQUENCY
 
 /**
+ * All bot operations are thread safe allowing for it to be controlled by
+ * another thread. All callbacks and event functions are ran on the bot thread. 
+ * you may wish to consider starting a new thread for long operations.
+ */ 
+
+/**
  * struct triceBot *b -> pointer to the bot to init
  * struct Config config -> bot configuration
  */ 

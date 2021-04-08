@@ -37,6 +37,7 @@ void freeGameList(struct gameList *g) {
     
     struct gameListNode *current = g->gamesHead;
     
+    if (current != NULL)
     while (current->nextGame != NULL) {     
         struct gameListNode *tmp = current;   
            

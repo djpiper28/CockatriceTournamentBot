@@ -315,27 +315,34 @@ static void handleResponse (struct triceBot *b,
  */ 
 static void roomsListed(struct triceBot *b,
                         Event_ListRooms listRooms) {    
-    int size = listRooms.room_list_size();
-    int found = 0;
-    for (int i = 0; i < size && !found; i++) {
-        ServerInfo_Room room = listRooms.room_list().Get(i);
-        
-        if (strncmp(b->config.roomName, room.name().c_str(), BUFFER_LENGTH) == 0) {
-            //Send room join cmd
-            Command_JoinRoom roomJoin;
-            roomJoin.set_room_id(room.room_id());
-            b->magicRoomID = room.room_id();
+    pthread_mutex_lock(&b->mutex);
+    
+    if (b->magicRoomID == -1) {
+        int size = listRooms.room_list_size();
+        int found = 0;
+        for (int i = 0; i < size && !found; i++) {
+            ServerInfo_Room room = listRooms.room_list().Get(i);
             
-            CommandContainer cont;
-            SessionCommand *c = cont.add_session_command(); 
-            c->MutableExtension(Command_JoinRoom::ext)->CopyFrom(roomJoin);
-            
-            struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);  
-            enq(cmd, &b->sendQueue);            
-            
-            found = 1;
-        }
-    }    
+            if (strncmp(b->config.roomName, room.name().c_str(), BUFFER_LENGTH) == 0) {
+                //Send room join cmd
+                Command_JoinRoom roomJoin;
+                roomJoin.set_room_id(room.room_id());
+                b->magicRoomID = room.room_id();
+                
+                CommandContainer cont;
+                SessionCommand *c = cont.add_session_command(); 
+                c->MutableExtension(Command_JoinRoom::ext)->CopyFrom(roomJoin);
+                
+                struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);  
+                enq(cmd, &b->sendQueue);            
+                
+                found = 1;
+                printf("[INFO]: Automatic room join being sent.\n");    
+            }
+        }    
+    }  
+    
+    pthread_mutex_unlock(&b->mutex);
 }
 
 //Join the room in config
@@ -478,6 +485,8 @@ static void handleGameEvent(struct triceBot *b,
             }
         }
     }
+    
+    //TODO: game events
 }
 
 /**
@@ -629,7 +638,6 @@ static void handleSessionEvent(struct triceBot *b,
         #if JOIN_ROOM_AUTOMATICALLY  
         roomsListed(b, 
                     event.GetExtension(Event_ListRooms::ext));    
-        printf("[INFO]: Automatic room join being sent.\n");    
         #endif
         
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventListRooms,
@@ -682,8 +690,7 @@ static void botEventHandler(struct mg_connection *c,
     
     if (ev == MG_EV_ERROR) {
         MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotConnectionError) 
-    } else if (ev == MG_EV_WS_OPEN) {        
-        MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotConnect)        
+    } else if (ev == MG_EV_WS_OPEN) {              
     } else if (ev == MG_EV_WS_MSG) { 
         struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
         
@@ -799,6 +806,8 @@ static void *botThread(void *in) {
         pthread_mutex_lock(&b->mutex);
         int cont = b->running;        
         pthread_mutex_unlock(&b->mutex);
+        
+        MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotConnect)  
         
         while (cont) {
             mg_mgr_poll(&mgr, 250);

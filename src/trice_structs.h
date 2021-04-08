@@ -36,7 +36,7 @@ struct pendingCommand {
         cmdID = -1, 
         timeSent = -1, 
         isGame = 0;
-    void (*callbackFunction)(struct triceBot *b, const Response *resp, void *param);
+    void (*callbackFunction) (struct triceBot *b, const Response *resp, void *param);
 };
 
 struct pendingCommandQueueNode {
@@ -113,6 +113,41 @@ struct triceBot {
                                     Event_LeaveRoom)
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventRoomSay,
                                     Event_RoomSay)
+    
+    //Game events
+    /*
+    JOIN = 1000;
+    LEAVE = 1001;
+    GAME_CLOSED = 1002;
+    GAME_HOST_CHANGED = 1003;
+    KICKED = 1004;
+    GAME_STATE_CHANGED = 1005;
+    PLAYER_PROPERTIES_CHANGED = 1007;
+    GAME_SAY = 1009;
+    CREATE_ARROW = 2000;
+    DELETE_ARROW = 2001;
+    CREATE_COUNTER = 2002;
+    SET_COUNTER = 2003;
+    DEL_COUNTER = 2004;
+    DRAW_CARDS = 2005;
+    REVEAL_CARDS = 2006;
+    SHUFFLE = 2007;
+    ROLL_DIE = 2008;
+    MOVE_CARD = 2009;
+    FLIP_CARD = 2010;
+    DESTROY_CARD = 2011;
+    ATTACH_CARD = 2012;
+    CREATE_TOKEN = 2013;
+    SET_CARD_ATTR = 2014;
+    SET_CARD_COUNTER = 2015;
+    SET_ACTIVE_PLAYER = 2016;
+    SET_ACTIVE_PHASE = 2017;
+    DUMP_ZONE = 2018;
+    STOP_DUMP_ZONE = 2019;
+    CHANGE_ZONE_PROPERTIES = 2020;
+    REVERSE_TURN = 2021;
+    */
+    
     //Bot state changes
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotDisconnect)
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnect)
