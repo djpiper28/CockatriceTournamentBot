@@ -72,13 +72,12 @@
  * finally calls the pointer for the extension of the session event.
  * WARNING mutex must be unlocked before macro
  */ 
-#define MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(fn)\
-if (b->fn != NULL) {\
-    pthread_mutex_lock(&b->mutex);\
-    void (*fn) (struct triceBot *b)\
-    = b->fn;\
-    pthread_mutex_unlock(&b->mutex);\
-    \
+#define MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(fn)\
+pthread_mutex_lock(&b->mutex);\
+void (*fn) (struct triceBot *b) = b->fn;\
+pthread_mutex_unlock(&b->mutex);\
+\
+if (fn != NULL) {\
     fn(b);\
 }
 
@@ -92,15 +91,12 @@ if (b->fn != NULL) {\
  * method.
  */ 
 #define MACRO_CALL_FUNCTION_PTR_FOR_EVENT(fn, type)\
-if (b->fn != NULL) {\
-    pthread_mutex_lock(&b->mutex);\
-    void (*fn) (struct triceBot *b,\
-    type event)\
-    = b->fn;\
-    pthread_mutex_unlock(&b->mutex);\
-    \
-    fn(b,\
-       event.GetExtension(type::ext));\
+pthread_mutex_lock(&b->mutex);\
+void (*fn) (struct triceBot *b, type event) = b->fn;\
+pthread_mutex_unlock(&b->mutex);\
+\
+if (fn != NULL) {\
+    fn(b, event.GetExtension(type::ext));\
 }
 
 //Type defs moved to trice_structs.h due to circlular references
@@ -109,7 +105,7 @@ if (b->fn != NULL) {\
  * struct triceBot *b -> pointer to the bot to init
  * struct Config config -> bot configuration
  */ 
-void initBot(struct triceBot *b, 
+void initBot(struct triceBot *b,
              struct Config config) {
     b->mutex = PTHREAD_MUTEX_INITIALIZER;
     b->config = config;
@@ -309,11 +305,7 @@ static void handleResponse (struct triceBot *b,
             loginResponse(b, &response, NULL);            
         
         if (cmd != NULL) { 
-            //Fork and execute callback
-            if (fork() == 0) { 
-                executeCallback(b, cmd, &response);
-                exit(0); //Leave the thread                
-            }            
+            executeCallback(b, cmd, &response);         
         }       
     }
 }
@@ -612,6 +604,7 @@ static void handleSessionEvent(struct triceBot *b,
     if (event.HasExtension(Event_ServerIdentification::ext)) {
         #if LOGIN_AUTOMATICALLY
         //Login when the server asks
+        printf("[INFO]: Automatic login being sent.\n");
         sendLogin(b);  
         #endif
         
@@ -635,7 +628,8 @@ static void handleSessionEvent(struct triceBot *b,
     } else if (event.HasExtension(Event_ListRooms::ext)) {   
         #if JOIN_ROOM_AUTOMATICALLY  
         roomsListed(b, 
-                    event.GetExtension(Event_ListRooms::ext));        
+                    event.GetExtension(Event_ListRooms::ext));    
+        printf("[INFO]: Automatic room join being sent.\n");    
         #endif
         
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventListRooms,
@@ -668,7 +662,8 @@ static void handleSessionEvent(struct triceBot *b,
     } else if (event.HasExtension(Event_ReplayAdded::ext)) {   
         #if DOWNLOAD_REPLAYS
         replayReady(b, 
-                    event.GetExtension(Event_ReplayAdded::ext));
+                    event.GetExtension(Event_ReplayAdded::ext));        
+        printf("[INFO]: Automatic replay download being sent.\n");
         #endif
         
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventReplayAdded,
@@ -686,9 +681,9 @@ static void botEventHandler(struct mg_connection *c,
     struct triceBot *b = (struct triceBot *) fn_data;
     
     if (ev == MG_EV_ERROR) {
-        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnectionError) 
+        MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotConnectionError) 
     } else if (ev == MG_EV_WS_OPEN) {        
-        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnect)        
+        MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotConnect)        
     } else if (ev == MG_EV_WS_MSG) { 
         struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
         
@@ -697,42 +692,41 @@ static void botEventHandler(struct mg_connection *c,
         int messageType = newServerMessage.message_type();
         
         /**
-         * Call handler in a fork such that the main thread is not blocked by user
-         * code
+         * Call handler is blocked by user code
          */
-        if (fork() == 0) { 
-            if (messageType == RESPONSE) {
-                handleResponse(b, &newServerMessage);            
-            } else if (messageType == SESSION_EVENT) {   
-                handleSessionEvent(b, &newServerMessage);  
-            } else if (messageType == GAME_EVENT_CONTAINER) {   
-                handleGameEvent(b, &newServerMessage);     
-            } else if (messageType == ROOM_EVENT) {   
-                handleRoomEvent(b, &newServerMessage);   
-            } 
-            
-            exit(0); //exit fork
-        }
+        if (messageType == RESPONSE) {
+            handleResponse(b, &newServerMessage);                       
+        } else if (messageType == SESSION_EVENT) {   
+            handleSessionEvent(b, &newServerMessage);  
+        } else if (messageType == GAME_EVENT_CONTAINER) {   
+            handleGameEvent(b, &newServerMessage);                 
+        } else if (messageType == ROOM_EVENT) {   
+            handleRoomEvent(b, &newServerMessage);               
+        } 
         
-        b->lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received             
+        pthread_mutex_lock(&b->mutex);
+        b->lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received     
+        pthread_mutex_unlock(&b->mutex);        
     } if (ev == MG_EV_POLL) {
-        if (!b->config.authRequired && !b->roomRequested) {            
+        pthread_mutex_lock(&b->mutex);
+        if (!b->config.authRequired && !b->roomRequested) {    
             //Get room list
             CommandContainer cont;     
             SessionCommand *c = cont.add_session_command(); 
             c->MutableExtension(Command_ListRooms::ext);
             
-            struct pendingCommand *cmd = prepCmd(b, cont, -1, -1);  
+            struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);  
             enq(cmd, &b->sendQueue);  
             
             b->roomRequested = 1;
         }
+        pthread_mutex_unlock(&b->mutex);
         
         //Send commands
         if (hasNext(&b->sendQueue)) {           
             struct pendingCommand *cmd = deq(&b->sendQueue);   
             
-            mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);            
+            mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);  
             
             enq(cmd, &b->callbackQueue);
         }
@@ -744,7 +738,7 @@ static void botEventHandler(struct mg_connection *c,
             if (cmd != NULL) {
                 if (time(NULL) - cmd->timeSent >= TIMEOUT) {
                     struct pendingCommand *cmdd = deq(&b->callbackQueue);
-                    executeCallback(b, cmdd, NULL);                        
+                    executeCallback(b, cmdd, NULL);   
                 }
             }
         }            
@@ -756,6 +750,7 @@ static void botEventHandler(struct mg_connection *c,
         }    
     } 
     
+    pthread_mutex_lock(&b->mutex);
     if (ev == MG_EV_ERROR || ev == MG_EV_CLOSE) {
             b->running = 0;
             // Signal that we're done
@@ -765,6 +760,7 @@ static void botEventHandler(struct mg_connection *c,
     if (! b->running) {
         c->is_closing = 1;        
     }                            
+    pthread_mutex_unlock(&b->mutex);
 }
 
 /**
@@ -798,7 +794,7 @@ static void *botThread(void *in) {
     c = mg_ws_connect(&mgr, b->config.cockatriceServer, botEventHandler, b, NULL);  
     
     if (c == NULL) {
-        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotConnectionError)
+        MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotConnectionError)
     } else {
         pthread_mutex_lock(&b->mutex);
         int cont = b->running;        
@@ -812,7 +808,7 @@ static void *botThread(void *in) {
             pthread_mutex_unlock(&b->mutex);
         }
         
-        MACRO_CALL_FUNCTION_PTR_FOR_BOY_STATE_CHANGE(onBotDisconnect)
+        MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
     }
     
     //Free data

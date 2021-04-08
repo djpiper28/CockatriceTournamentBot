@@ -13,9 +13,8 @@
  * struct triceBot *b -> pointer to the bot to init
  * struct Config config -> bot configuration
  */ 
-void initBot(struct triceBot *b, 
+void initBot(struct triceBot *b,
              struct Config config);
-
 /**
  * struct triceBot *b -> pointer to the bot to free
  */ 

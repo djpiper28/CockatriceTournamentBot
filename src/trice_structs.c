@@ -32,22 +32,21 @@
 
 //macros to gen functions
 #define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR(fn, type)\
-void set_##fn (\
-              void (*event) (struct triceBot *, type),\
-              struct triceBot *b) {\
+void set_##fn (void (*event) (struct triceBot *, type),\
+               struct triceBot *b) {\
     pthread_mutex_lock(&b->mutex);\
     b->fn = event;\
     pthread_mutex_unlock(&b->mutex);\
 }
 
 #define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(fn)\
-void set_##fn (\
-               void (*event) (struct triceBot *),\
+void set_##fn (void (*event) (struct triceBot *),\
                struct triceBot *b) {\
     pthread_mutex_lock(&b->mutex);\
     b->fn = event;\
     pthread_mutex_unlock(&b->mutex);\
 }
+//Lock mutex then set b->fn to the event then unlock the mutex
 
 /**
  * For each of the onEvent.* (regex) function pointers in the triceBot structure

@@ -16,7 +16,7 @@ struct tournamentBot {
 };
 
 void stopAll(struct tournamentBot *bot) {
-    printf("Stopping bot\n"); 
+    printf("[INFO]: Stopping bot\n"); 
     
     bot->running = 0;    
     stopServer(&bot->server);
@@ -37,6 +37,8 @@ void startConsoleListener (struct tournamentBot *bot) {
         //Parse command
         if (strncmp ("exit", commandBuffer, LEN) == 0) {
             listening = 0;
+        } else {
+            printf("[Error]: No command %s found.\n", commandBuffer);
         }
     }
     
@@ -58,7 +60,19 @@ void DebugFor##fn (struct triceBot *b, type event) {\
     info = localtime( &rawtime );\
     strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
     \
-    printf("[DEBUG] / %s : %s\n", buffer, event.DebugString().c_str());\
+    printf("[DEBUG] (%s) %s : %s\n",#fn , buffer, event.DebugString().c_str());\
+}
+
+#define MACRO_DEBUG_FOR_STATE_CHANGE(fn)\
+void DebugFor##fn (struct triceBot *b) {\
+    time_t rawtime;\
+    struct tm *info;\
+    char buffer[80];\
+    time(&rawtime);\
+    info = localtime( &rawtime );\
+    strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
+    \
+    printf("[DEBUG] %s : %s\n", buffer, #fn);\
 }
 
 //Server events
@@ -97,6 +111,12 @@ MACRO_DEBUG_FOR_EVENT(onEventLeaveRoom,
 MACRO_DEBUG_FOR_EVENT(onEventRoomSay,
                       Event_RoomSay)
 
+//State changes
+MACRO_DEBUG_FOR_STATE_CHANGE(onBotDisconnect)
+MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnect)
+MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnectionError)
+
+
 #define MACRO_DEBUG_FOR_EVENT_CALL(fn) set_##fn(&DebugFor##fn, b);
 
 void addDebugFunctions(struct triceBot *b) {
@@ -124,25 +144,25 @@ void addDebugFunctions(struct triceBot *b) {
 #endif
 
 int main (int argc, char * args[]) {
-    printf("INFO: %s\n-> by djpiper28 see %s for git repo.\n",           
+    printf("[INFO]: %s\n-> by djpiper28 see %s for git repo.\n",           
            PROG_NAME, GITHUB_REPO);
     printf("-> Version %d.%d\n", VERSION_MAJOR, VERSION_MINOR);
-    printf("Starting bot\n");
+    printf("[INFO]: Starting bot\n");
     
     mg_log_set("0");
         
     struct tournamentBot bot;
     bot.running = 1;
-    readConf(&bot.config);    
+    readConf(&bot.config); 
     initBot(&bot.b, bot.config);
     initServer(&bot.server, &bot.b, bot.config);
-    
-    startServer(&bot.server);
-    startBot(&bot.b);
-    
+        
     #if DEBUG
     addDebugFunctions(&bot.b);
     #endif
+    
+    startServer(&bot.server);
+    startBot(&bot.b);
     
     startConsoleListener(&bot);
 }

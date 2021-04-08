@@ -56,10 +56,10 @@ struct pendingCommandQueue {
  * gcc arguments of -E
  */ 
 #define MACRO_CREATE_EVENT_FUNCTION_PTR(fn, type)\
-void (*fn) (struct triceBot *, type);
+void (*fn) (struct triceBot *, type) = NULL;
 
 #define MACRO_CREATE_EVENT_FUNCTION_PTR_1(fn)\
-void (*fn) (struct triceBot *);
+void (*fn) (struct triceBot *) = NULL;
 
 struct triceBot {
     struct Config config;
