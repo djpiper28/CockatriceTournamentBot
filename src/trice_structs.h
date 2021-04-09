@@ -7,10 +7,37 @@
 #include "response.pb.h"
 #include "mongoose.h"
 
+#include "event_set_card_attr.pb.h"
+#include "event_set_card_counter.pb.h"
+#include "event_set_active_phase.pb.h"
+#include "event_set_active_player.pb.h"
+#include "event_dump_zone.pb.h"
+#include "event_stop_dump_zone.pb.h"
+#include "event_change_zone_properties.pb.h"
+#include "event_reverse_turn.pb.h"
+#include "event_move_card.pb.h"
+#include "event_attach_card.pb.h"
+#include "event_create_token.pb.h"
+#include "event_roll_die.pb.h"
+#include "event_flip_card.pb.h"
+#include "event_destroy_card.pb.h"
+#include "event_shuffle.pb.h"
+#include "event_draw_cards.pb.h"
+#include "event_reveal_cards.pb.h"
+#include "event_create_counter.pb.h"
+#include "event_del_counter.pb.h"
+#include "event_set_counter.pb.h"
+#include "event_game_say.pb.h"
+#include "event_game_host_changed.pb.h"
+#include "event_player_properties_changed.pb.h"
+#include "event_kicked.pb.h"
+#include "event_create_arrow.pb.h"
+#include "event_delete_arrow.pb.h"
 #include "event_add_to_list.pb.h"
 #include "event_remove_from_list.pb.h"
 #include "event_connection_closed.pb.h"
 #include "event_join.pb.h"
+#include "event_leave.pb.h"
 #include "event_game_joined.pb.h"
 #include "event_game_closed.pb.h"
 #include "event_notify_user.pb.h"
@@ -57,6 +84,9 @@ struct pendingCommandQueue {
  */ 
 #define MACRO_CREATE_EVENT_FUNCTION_PTR(fn, type)\
 void (*fn) (struct triceBot *, type) = NULL;
+
+#define MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(fn, type)\
+void (*fn) (struct triceBot *, struct game, type) = NULL;
 
 #define MACRO_CREATE_EVENT_FUNCTION_PTR_1(fn)\
 void (*fn) (struct triceBot *) = NULL;
@@ -115,38 +145,66 @@ struct triceBot {
                                     Event_RoomSay)
     
     //Game events
-    /*
-    JOIN = 1000;
-    LEAVE = 1001;
-    GAME_CLOSED = 1002;
-    GAME_HOST_CHANGED = 1003;
-    KICKED = 1004;
-    GAME_STATE_CHANGED = 1005;
-    PLAYER_PROPERTIES_CHANGED = 1007;
-    GAME_SAY = 1009;
-    CREATE_ARROW = 2000;
-    DELETE_ARROW = 2001;
-    CREATE_COUNTER = 2002;
-    SET_COUNTER = 2003;
-    DEL_COUNTER = 2004;
-    DRAW_CARDS = 2005;
-    REVEAL_CARDS = 2006;
-    SHUFFLE = 2007;
-    ROLL_DIE = 2008;
-    MOVE_CARD = 2009;
-    FLIP_CARD = 2010;
-    DESTROY_CARD = 2011;
-    ATTACH_CARD = 2012;
-    CREATE_TOKEN = 2013;
-    SET_CARD_ATTR = 2014;
-    SET_CARD_COUNTER = 2015;
-    SET_ACTIVE_PLAYER = 2016;
-    SET_ACTIVE_PHASE = 2017;
-    DUMP_ZONE = 2018;
-    STOP_DUMP_ZONE = 2019;
-    CHANGE_ZONE_PROPERTIES = 2020;
-    REVERSE_TURN = 2021;
-    */
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventJoin,
+                                         Event_Join)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventLeave,
+                                         Event_Leave)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventGameClosed,
+                                         Event_GameClosed)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventHostChanged,
+                                         Event_GameHostChanged)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventPlayerKicked,
+                                         Event_Kicked)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventStateChanged,
+                                         Event_GameStateChanged)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventPlayerPropertyChanged,
+                                         Event_PlayerPropertiesChanged)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventGameSay,
+                                         Event_GameSay)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventCreateArrow,
+                                         Event_CreateArrow)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventDeleteArrow,
+                                         Event_DeleteArrow)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventCreateCounter,
+                                         Event_CreateCounter)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventSetCounter,
+                                         Event_SetCounter)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventDelCounter,
+                                         Event_DelCounter)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventDrawCards,
+                                         Event_DrawCards)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventRevealCards,
+                                         Event_RevealCards)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventShuffle,
+                                         Event_Shuffle)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventRollDie,
+                                         Event_RollDie)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventMoveCard,
+                                         Event_MoveCard)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventFlipCard,
+                                         Event_FlipCard)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventDestroyCard,
+                                         Event_DestroyCard)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventAttachCard,
+                                         Event_AttachCard)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventCreateToken,
+                                         Event_CreateToken)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventSetCardAttr,
+                                         Event_SetCardAttr)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventSetCardCounter,
+                                         Event_SetCardCounter)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventSetActivePlayer,
+                                         Event_SetActivePlayer)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventSetActivePhase,
+                                         Event_SetActivePhase)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventDumpZone,
+                                         Event_DumpZone)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventStopDumpZone,
+                                         Event_StopDumpZone)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventChangeZoneProperties,
+                                         Event_ChangeZoneProperties)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventReverseTurn,
+                                         Event_ReverseTurn)
     
     //Bot state changes
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotDisconnect)
@@ -157,6 +215,9 @@ struct triceBot {
 //macros to gen functions
 #define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(fn, type)\
 void set_##fn (void (*event) (struct triceBot *, type), struct triceBot *b);
+
+#define MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(fn, type)\
+void set_##fn (void (*event) (struct triceBot *, struct game, type), struct triceBot *b);
 
 #define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(fn)\
 void set_##fn (void (*event) (struct triceBot *), struct triceBot *b);
@@ -175,6 +236,8 @@ MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerMessage,
                                               Event_ServerMessage)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerShutdown, 
                                               Event_ServerShutdown)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventConnectionClosed,
+                                              Event_ConnectionClosed)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserMessage, 
                                               Event_UserMessage)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventListRooms, 
@@ -201,6 +264,68 @@ MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventLeaveRoom,
                                               Event_LeaveRoom)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventRoomSay,
                                               Event_RoomSay)
+//Game events
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventJoin,
+                                                   Event_Join)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventLeave,
+                                                   Event_Leave)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventGameClosed,
+                                                   Event_GameClosed)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventHostChanged,
+                                                   Event_GameHostChanged)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventPlayerKicked,
+                                                   Event_Kicked)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventStateChanged,
+                                                   Event_GameStateChanged)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventPlayerPropertyChanged,
+                                                   Event_PlayerPropertiesChanged)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventGameSay,
+                                                   Event_GameSay)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventCreateArrow,
+                                                   Event_CreateArrow)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDeleteArrow,
+                                                   Event_DeleteArrow)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventCreateCounter,
+                                                   Event_CreateCounter)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetCounter,
+                                                   Event_SetCounter)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDelCounter,
+                                                   Event_DelCounter)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDrawCards,
+                                                   Event_DrawCards)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventRevealCards,
+                                                   Event_RevealCards)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventShuffle,
+                                                   Event_Shuffle)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventRollDie,
+                                                   Event_RollDie)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventMoveCard,
+                                                   Event_MoveCard)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventFlipCard,
+                                                   Event_FlipCard)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDestroyCard,
+                                                   Event_DestroyCard)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventAttachCard,
+                                                   Event_AttachCard)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventCreateToken,
+                                                   Event_CreateToken)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetCardAttr,
+                                                   Event_SetCardAttr)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetCardCounter,
+                                                   Event_SetCardCounter)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetActivePlayer,
+                                                   Event_SetActivePlayer)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetActivePhase,
+                                                   Event_SetActivePhase)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDumpZone,
+                                                   Event_DumpZone)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventStopDumpZone,
+                                                   Event_StopDumpZone)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventChangeZoneProperties,
+                                                   Event_ChangeZoneProperties)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventReverseTurn,
+                                                   Event_ReverseTurn)
+
 //Setters for bot state updates
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotDisconnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotConnect)

@@ -481,6 +481,8 @@ static void handleGameEvent(struct triceBot *b,
                     enq(cmd, &b->sendQueue);
                 } else if (stateChange.game_started()) {
                     currentGame->started = 1;
+                } else if (!stateChange.game_started() && currentGame->started) {
+                    currentGame->started = 0;
                 }
             }
         }

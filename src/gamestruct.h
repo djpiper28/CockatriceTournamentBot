@@ -23,7 +23,8 @@ struct gameListNode {
 };
 
 struct game {
-    int gameID, started;
+    int gameID, 
+        started;
     long startTime;
 };
 

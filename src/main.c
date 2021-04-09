@@ -35,7 +35,11 @@ void startConsoleListener (struct tournamentBot *bot) {
         fgets(commandBuffer, LEN, stdin);
         
         //Parse command
-        if (strncmp ("exit", commandBuffer, LEN) == 0) {
+        int len;
+        for (len = 0; len < LEN && commandBuffer[len] != ' ' 
+                                && commandBuffer[len] != '\n'; len++);
+        
+        if (strncmp ("exit", commandBuffer, len) == 0) {
             listening = 0;
         } else {
             printf("[Error]: No command '%s' found.\n", commandBuffer);
@@ -126,7 +130,7 @@ void addDebugFunctions(struct triceBot *b) {
     MACRO_DEBUG_FOR_EVENT_CALL(onEventServerMessage)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventServerShutdown)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventConnectionClosed)
-    MACRO_DEBUG_FOR_EVENT_CALL(onEventUserMessage,)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventUserMessage)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventListRooms)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventAddToList)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventRemoveFromList)
@@ -137,12 +141,9 @@ void addDebugFunctions(struct triceBot *b) {
     MACRO_DEBUG_FOR_EVENT_CALL(onEventReplayAdded)
     
     //Room events
-    MACRO_DEBUG_FOR_EVENT_CALL(onEventJoinRoom,
-                          Event_JoinRoom)
-    MACRO_DEBUG_FOR_EVENT_CALL(onEventLeaveRoom,
-                          Event_LeaveRoom)
-    MACRO_DEBUG_FOR_EVENT_CALL(onEventRoomSay,
-                          Event_RoomSay)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventJoinRoom)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventLeaveRoom)
+    MACRO_DEBUG_FOR_EVENT_CALL(onEventRoomSay)
     
     //State changes
     MACRO_DEBUG_FOR_EVENT_CALL(onBotDisconnect)
