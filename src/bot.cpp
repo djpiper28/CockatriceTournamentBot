@@ -221,7 +221,7 @@ void sendPing(struct triceBot *b) {
 static void loginResponse(struct triceBot *b, 
                           const Response *response, 
                           void *param) {    
-    pthread_mutex_lock(&b->mutex);   
+    pthread_mutex_lock(&b->mutex);
     
     if (response != NULL) {    
         if (response->HasExtension(Response_Login::ext)) {    
@@ -240,7 +240,9 @@ static void loginResponse(struct triceBot *b,
                 
                 b->roomRequested = 1;
                 
+                pthread_mutex_unlock(&b->mutex);
                 MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotLogin)
+                pthread_mutex_lock(&b->mutex);  
             } else if (response->response_code() != Response::RespOk) {                     
                 b->running = 0;
                 b->loggedIn = 0;
