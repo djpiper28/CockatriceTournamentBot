@@ -7,6 +7,9 @@
 #include "trice_structs.h"
 #include "bot.h"
 #include "version.h"
+#include "cmd_queue.h"
+#include "commands.pb.h"
+#include "command_leave_game.pb.h"
 
 struct tournamentBot {
     struct Config config;
@@ -67,6 +70,18 @@ void DebugFor##fn (struct triceBot *b, type event) {\
     printf("[DEBUG] (%s) %s : %s\n",#fn , buffer, event.DebugString().c_str());\
 }
 
+#define MACRO_DEBUG_FOR_GAME_EVENT(fn,type)\
+void DebugFor##fn (struct triceBot *b, struct game, type event) {\
+    time_t rawtime;\
+    struct tm *info;\
+    char buffer[80];\
+    time(&rawtime);\
+    info = localtime( &rawtime );\
+    strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
+    \
+    printf("[DEBUG] %s : %s\n", buffer, #fn);\
+}
+
 #define MACRO_DEBUG_FOR_STATE_CHANGE(fn)\
 void DebugFor##fn (struct triceBot *b) {\
     time_t rawtime;\
@@ -109,6 +124,68 @@ MACRO_DEBUG_FOR_EVENT(onEventNotifyUser,
 MACRO_DEBUG_FOR_EVENT(onEventReplayAdded,
                       Event_ReplayAdded)
 
+//Game events
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventJoin,
+                           Event_Join)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventLeave,
+                           Event_Leave)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventGameClosed,
+                           Event_GameClosed)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventHostChanged,
+                           Event_GameHostChanged)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventPlayerKicked,
+                           Event_Kicked)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventStateChanged,
+                           Event_GameStateChanged)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventPlayerPropertyChanged,
+                           Event_PlayerPropertiesChanged)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventGameSay,
+                           Event_GameSay)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventCreateArrow,
+                           Event_CreateArrow)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDeleteArrow,
+                           Event_DeleteArrow)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventCreateCounter,
+                           Event_CreateCounter)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetCounter,
+                           Event_SetCounter)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDelCounter,
+                           Event_DelCounter)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDrawCards,
+                           Event_DrawCards)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventRevealCards,
+                           Event_RevealCards)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventShuffle,
+                           Event_Shuffle)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventRollDie,
+                           Event_RollDie)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventMoveCard,
+                           Event_MoveCard)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventFlipCard,
+                           Event_FlipCard)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDestroyCard,
+                           Event_DestroyCard)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventAttachCard,
+                           Event_AttachCard)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventCreateToken,
+                           Event_CreateToken)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetCardAttr,
+                           Event_SetCardAttr)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetCardCounter,
+                           Event_SetCardCounter)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetActivePlayer,
+                           Event_SetActivePlayer)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetActivePhase,
+                           Event_SetActivePhase)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDumpZone,
+                           Event_DumpZone)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventStopDumpZone,
+                           Event_StopDumpZone)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventChangeZoneProperties,
+                           Event_ChangeZoneProperties)
+MACRO_DEBUG_FOR_GAME_EVENT(onGameEventReverseTurn,
+                           Event_ReverseTurn)
+
 //Room events
 MACRO_DEBUG_FOR_EVENT(onEventJoinRoom,
                       Event_JoinRoom)
@@ -121,6 +198,7 @@ MACRO_DEBUG_FOR_EVENT(onEventRoomSay,
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotDisconnect)
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnect)
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnectionError)
+MACRO_DEBUG_FOR_STATE_CHANGE(onBotLogin)
 
 #define MACRO_DEBUG_FOR_EVENT_CALL(fn) set_##fn(&DebugFor##fn, b);
 
@@ -149,9 +227,23 @@ void addDebugFunctions(struct triceBot *b) {
     MACRO_DEBUG_FOR_EVENT_CALL(onBotDisconnect)
     MACRO_DEBUG_FOR_EVENT_CALL(onBotConnect)
     MACRO_DEBUG_FOR_EVENT_CALL(onBotConnectionError)
+    MACRO_DEBUG_FOR_EVENT_CALL(onBotLogin)
 }
 
 #endif
+
+void onGameEnd(struct triceBot *b, 
+               struct game g) {
+    Command_LeaveGame leaveGame;                    
+    CommandContainer cont;  
+    GameCommand *gc = cont.add_game_command();
+    gc->MutableExtension(Command_LeaveGame::ext)->CopyFrom(leaveGame);
+    
+    //IDs are set in prepCMD
+    struct pendingCommand *cmd = prepCmd(b, cont, g.gameID, b->magicRoomID);
+    
+    enq(cmd, &b->sendQueue);
+}
 
 int main (int argc, char * args[]) {
     printf("[INFO]: %s\n-> by djpiper28 see %s for git repo.\n",           
@@ -170,6 +262,8 @@ int main (int argc, char * args[]) {
     #if DEBUG
     addDebugFunctions(&bot.b);
     #endif
+    
+    set_onGameEnd(&onGameEnd, &bot.b);
     
     startServer(&bot.server);
     startBot(&bot.b);

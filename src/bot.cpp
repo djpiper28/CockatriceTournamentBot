@@ -99,6 +99,18 @@ if (fn != NULL) {\
     fn(b, event.GetExtension(type::ext));\
 }
 
+//This has an if statement unlike the rest as the only edge case is long
+#define MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(fn, type)\
+if (event.HasExtension(type::ext)) {\
+    pthread_mutex_lock(&b->mutex);\
+    void (*fn) (struct triceBot *b, struct game, type) = b->fn;\
+    pthread_mutex_unlock(&b->mutex);\
+    \
+    if (fn != NULL) {\
+        fn(b, g, event.GetExtension(type::ext));\
+    }\
+}
+
 //Type defs moved to trice_structs.h due to circlular references
 
 /**
@@ -203,7 +215,8 @@ void sendPing(struct triceBot *b) {
 
 /**
  * This part of the library will take a login response and it will check if it 
- * is logged in. If it is not logged in it will TODO: make it do something
+ * is logged in. If it is not logged in it will call the onBotLogin state change 
+ * event in the same thread after requesting the room list
  */ 
 static void loginResponse(struct triceBot *b, 
                           const Response *response, 
@@ -226,6 +239,8 @@ static void loginResponse(struct triceBot *b,
                 enq(cmd, &b->sendQueue);
                 
                 b->roomRequested = 1;
+                
+                MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotLogin)
             } else if (response->response_code() != Response::RespOk) {                     
                 b->running = 0;
                 b->loggedIn = 0;
@@ -237,7 +252,7 @@ static void loginResponse(struct triceBot *b,
     pthread_mutex_unlock(&b->mutex);
 }
 
-//Login
+//Login, login details are stored in b->config
 static void sendLogin(struct triceBot *b) {
     pthread_mutex_lock(&b->mutex);
     
@@ -457,38 +472,106 @@ static void handleGameEvent(struct triceBot *b,
     
     int id = gameEventContainer.game_id();
     struct game *currentGame = getGameWithID(&b->gameList, id);
+    struct game g = * currentGame;
     
     if (currentGame != NULL) {
         int size = gameEventContainer.event_list_size();
         for (int i = 0; i < size; i++) {
-            GameEvent gameEvent = gameEventContainer.event_list().Get(i);
+            GameEvent event = gameEventContainer.event_list().Get(i);
             
-            if (gameEvent.HasExtension(Event_GameStateChanged::ext)) {
-                Event_GameStateChanged stateChange = gameEvent.GetExtension(
+            if (event.HasExtension(Event_GameStateChanged::ext)) {
+                Event_GameStateChanged stateChange = event.GetExtension(
                     Event_GameStateChanged::ext);
                 
-                // Game has ended - leave
                 if (currentGame->started && !stateChange.game_started()) {
-                    // Leave game message
-                    Command_LeaveGame leaveGame;                    
-                    CommandContainer cont;  
-                    cont.set_game_id(id);
-                    GameCommand *gc = cont.add_game_command();
-                    gc->MutableExtension(Command_LeaveGame::ext)->CopyFrom(leaveGame);
-                    
-                    struct pendingCommand *cmd = prepCmd(b, cont, -1, b->magicRoomID);
-                    
-                    enq(cmd, &b->sendQueue);
-                } else if (stateChange.game_started()) {
-                    currentGame->started = 1;
-                } else if (!stateChange.game_started() && currentGame->started) {
                     currentGame->started = 0;
+                    
+                    // Game has ended
+                    pthread_mutex_lock(&b->mutex);
+                    void (*fn) (struct triceBot *, struct game) = b->onGameEnd;
+                    pthread_mutex_unlock(&b->mutex);
+                    
+                    if (fn != NULL) {
+                        fn(b, g);
+                    }
+                } else if (stateChange.game_started() && !currentGame->started) {                    
+                    currentGame->started = 1;
+                    
+                    // Game has started
+                    pthread_mutex_lock(&b->mutex);
+                    void (*fn) (struct triceBot *, struct game) = b->onGameStart;
+                    pthread_mutex_unlock(&b->mutex);
+                    
+                    if (fn != NULL) {
+                        fn(b, *currentGame);
+                    }
                 }
-            }
+                
+                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventStateChanged,
+                                                       Event_GameStateChanged)
+            }                   
+            
+            //Game events
+            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventJoin,
+                                                        Event_Join)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventLeave,
+                                                        Event_Leave)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameClosed,
+                                                        Event_GameClosed)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventHostChanged,
+                                                        Event_GameHostChanged)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerKicked,
+                                                        Event_Kicked)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerPropertyChanged,
+                                                        Event_PlayerPropertiesChanged)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameSay,
+                                                        Event_GameSay)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateArrow,
+                                                        Event_CreateArrow)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDeleteArrow,
+                                                        Event_DeleteArrow)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateCounter,
+                                                        Event_CreateCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCounter,
+                                                        Event_SetCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDelCounter,
+                                                        Event_DelCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDrawCards,
+                                                        Event_DrawCards)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRevealCards,
+                                                        Event_RevealCards)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventShuffle,
+                                                        Event_Shuffle)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRollDie,
+                                                        Event_RollDie)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventMoveCard,
+                                                        Event_MoveCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventFlipCard,
+                                                        Event_FlipCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDestroyCard,
+                                                        Event_DestroyCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventAttachCard,
+                                                        Event_AttachCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateToken,
+                                                        Event_CreateToken)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardAttr,
+                                                        Event_SetCardAttr)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardCounter,
+                                                        Event_SetCardCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePlayer,
+                                                        Event_SetActivePlayer)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePhase,
+                                                        Event_SetActivePhase)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDumpZone,
+                                                        Event_DumpZone)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventStopDumpZone,
+                                                        Event_StopDumpZone)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventChangeZoneProperties,
+                                                        Event_ChangeZoneProperties)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventReverseTurn,
+                                                        Event_ReverseTurn)
         }
     }
-    
-    //TODO: game events
 }
 
 /**

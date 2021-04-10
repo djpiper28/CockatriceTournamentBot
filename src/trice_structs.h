@@ -88,6 +88,9 @@ void (*fn) (struct triceBot *, type) = NULL;
 #define MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(fn, type)\
 void (*fn) (struct triceBot *, struct game, type) = NULL;
 
+#define MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(fn)\
+void (*fn) (struct triceBot *, struct game) = NULL;
+
 #define MACRO_CREATE_EVENT_FUNCTION_PTR_1(fn)\
 void (*fn) (struct triceBot *) = NULL;
 
@@ -206,10 +209,15 @@ struct triceBot {
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventReverseTurn,
                                          Event_ReverseTurn)
     
+    //Game state changes
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(onGameStart)
+    MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(onGameEnd)
+    
     //Bot state changes
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotDisconnect)
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnect)
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnectionError)
+    MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotLogin)
 };
 
 //macros to gen functions
@@ -221,6 +229,9 @@ void set_##fn (void (*event) (struct triceBot *, struct game, type), struct tric
 
 #define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(fn)\
 void set_##fn (void (*event) (struct triceBot *), struct triceBot *b);
+
+#define MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF_1(fn)\
+void set_##fn (void (*event) (struct triceBot *, struct game), struct triceBot *b);
 /**
  * For each of the onEvent.* (regex) function pointers in the triceBot structure
  * there is a set_onEvent.* function that is thread safe. They are made with 
@@ -325,10 +336,14 @@ MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventChangeZoneProperti
                                                    Event_ChangeZoneProperties)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventReverseTurn,
                                                    Event_ReverseTurn)
+//Game state changes
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF_1(onGameStart)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF_1(onGameEnd)
 
 //Setters for bot state updates
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotDisconnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotConnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotConnectionError)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotLogin)
 
 #endif

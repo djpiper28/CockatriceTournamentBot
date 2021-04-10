@@ -75,6 +75,14 @@ void set_##fn (void (*event) (struct triceBot *, struct game, type),\
     pthread_mutex_unlock(&b->mutex);\
 }
 
+#define MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_1(fn)\
+void set_##fn (void (*event) (struct triceBot *, struct game),\
+               struct triceBot *b) {\
+    pthread_mutex_lock(&b->mutex);\
+    b->fn = event;\
+    pthread_mutex_unlock(&b->mutex);\
+}
+
 #define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(fn)\
 void set_##fn (void (*event) (struct triceBot *),\
                struct triceBot *b) {\
@@ -190,9 +198,14 @@ MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR(onGameEventChangeZoneProperties,
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR(onGameEventReverseTurn,
                                                Event_ReverseTurn)
 
+//Game state changes
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_1(onGameStart)
+MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_1(onGameEnd)
+
 //Setters for bot state updates
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotDisconnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotConnectionError)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_1(onBotLogin)
 
 #endif
