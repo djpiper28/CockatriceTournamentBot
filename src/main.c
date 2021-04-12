@@ -30,6 +30,28 @@ void stopAll(struct tournamentBot *bot) {
 }
 
 #define LEN 1024
+static void createGameCommandCallback (struct gameCreateCallbackWaitParam *g) {
+    printf("[INFO]: Game with name '%s' and ID %d created by user command.\n", 
+           g->gameName, 
+           g->gameID);
+}
+
+int readNum(char *msg) {
+    char *buffer = (char *) malloc(sizeof(char) * LEN);
+    
+    fgets(buffer, LEN, stdin);
+    int len;
+    for (len = 0; len < LEN && buffer[len] != ' ' 
+                            && buffer[len] != '\n'; len++);
+    
+    buffer[len] = 0; //null terminator at line end or space or buffer end
+    
+    int number = atoi(buffer);    
+    free(buffer);
+    
+    return number;
+}
+
 void startConsoleListener (struct tournamentBot *bot) {
     int listening = 1;
     char *commandBuffer = (char *) malloc(sizeof(char) * LEN);
@@ -42,8 +64,49 @@ void startConsoleListener (struct tournamentBot *bot) {
         for (len = 0; len < LEN && commandBuffer[len] != ' ' 
                                 && commandBuffer[len] != '\n'; len++);
         
-        if (strncmp ("exit", commandBuffer, len) == 0) {
+        commandBuffer[len] = 0; //null terminator at line end or space or buffer end
+        
+        if (strncmp ("exit", commandBuffer, LEN) == 0) {
             listening = 0;
+        } else if (strncmp ("creategame", commandBuffer, LEN) == 0) {
+            printf("Create Game Command:\n");
+            
+            //Read username
+            printf("> Game Name: ");            
+            char *gameName = (char *) malloc(sizeof(char) * LEN);
+            fgets(gameName, LEN, stdin);
+            
+            //Remove line feed
+            for (len = 0; len < LEN && gameName[len] != '\n'; len++);
+            
+            gameName[len] = 0; //null terminator at line end or space or buffer end
+            
+            //Read password
+            printf("> Game Password: ");  
+            char *password = (char *) malloc(sizeof(char) * LEN);
+            fgets(password, LEN, stdin);
+                        
+            //Remove line feed
+            for (len = 0; len < LEN && password[len] != '\n'; len++);
+            
+            password[len] = 0; //null terminator at line end or space or buffer end
+            
+            
+            sendCreateGameCommand(&bot->b, 
+                                  gameName,
+                                  password,
+                                  readNum("> Player Count: "),    
+                                  readNum("> Join as Spectator (1 yes or, 0 no): "), 
+                                  readNum("> Spectators Allowed (1 yes or, 0 no): "),                                                         
+                                  readNum("> Spectators Can Chat (1 yes or, 0 no): "),
+                                  readNum("> Spectators Need Password (1 yes or, 0 no): "),
+                                  readNum("> Spectators Can See Hands (1 yes or, 0 no): "),
+                                  readNum("> Only Registered (1 yes or, 0 no): "),
+                                  readNum("> Only Buddies (1 yes or, 0 no): "),                                                          
+                                  &createGameCommandCallback);
+            
+            free(gameName);
+            free(password);
         } else {
             printf("[Error]: No command '%s' found.\n", commandBuffer);
         }
@@ -67,7 +130,7 @@ void DebugFor##fn (struct triceBot *b, type event) {\
     info = localtime( &rawtime );\
     strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
     \
-    printf("[DEBUG] (%s) %s : %s\n",#fn , buffer, event.DebugString().c_str());\
+    printf("[DEBUG] (%s) %s: %s\n",#fn , buffer, event.DebugString().c_str());\
 }
 
 #define MACRO_DEBUG_FOR_GAME_EVENT(fn,type)\
@@ -79,7 +142,7 @@ void DebugFor##fn (struct triceBot *b, struct game, type event) {\
     info = localtime( &rawtime );\
     strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
     \
-    printf("[DEBUG] %s : %s\n", buffer, #fn);\
+    printf("[DEBUG] %s: %s\n", buffer, #fn);\
 }
 
 #define MACRO_DEBUG_FOR_STATE_CHANGE(fn)\
@@ -91,7 +154,7 @@ void DebugFor##fn (struct triceBot *b) {\
     info = localtime( &rawtime );\
     strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
     \
-    printf("[DEBUG] %s : %s\n", buffer, #fn);\
+    printf("[DEBUG] %s: %s\n", buffer, #fn);\
 }
 
 //Server events

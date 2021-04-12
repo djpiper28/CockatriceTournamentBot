@@ -51,6 +51,8 @@ static void readProperty(char *line, struct Config *config) {
         config->cert = valueStr;               
     } else if (strncmp("certkeyfile", propertyStr, BUFFER_LENGTH) == 0) {
         config->certkey = valueStr;   
+    } else if (strncmp("ca", propertyStr, BUFFER_LENGTH) == 0) {
+        config->ca = valueStr;   
     } else if (strncmp("bindAddr", propertyStr, BUFFER_LENGTH) == 0) {
         config->bindAddr = valueStr;   
     } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
@@ -120,15 +122,18 @@ static void makeNewFile(struct Config *config) {
         }
         generatedAuthToken[TOKEN_LENGTH] = 0;
         
-        fprintf(configFile, "username=changeme\n");
-        fprintf(configFile, "password=changeme\n");
+        fprintf(configFile, "username=changeme\n"); // vv
+        fprintf(configFile, "password=changeme\n"); // For auto login
         fprintf(configFile, "serveraddress=ws://server.cockatrice.us:4748\n");
+        fprintf(configFile, "roomName=Magic\nauthRequired=0\n"); //For auto room join
+                
+        //Tournament bot data TODO: move them elsewhere
         fprintf(configFile, "authtoken=%s\n", generatedAuthToken);
         fprintf(configFile, "certfile=server.pem\n");
         fprintf(configFile, "certkeyfile=server.pem\n");
+        fprintf(configFile, "ca=ca.pem\n");
         fprintf(configFile, "bindAddr=https://0.0.0.0:8000\n");
         fprintf(configFile, "clientID=changeme\n");
-        fprintf(configFile, "roomName=Magic\nauthRequired=0\n");       
         
         fclose (configFile);    //close file like a good boy
     } else {
@@ -180,8 +185,9 @@ void freeConf(struct Config *config) {
     
     //Tournament bot data TODO: move them elsewhere
     if (config->cert != NULL) free (config->cert);
-    if (config->authToken != NULL) free (config->authToken);
     if (config->certkey != NULL) free (config->certkey);
+    if (config->ca != NULL) free (config->ca);
+    if (config->authToken != NULL) free (config->authToken);
     if (config->bindAddr != NULL) free (config->bindAddr);
 }
     

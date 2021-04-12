@@ -11,6 +11,7 @@
 #include "trice_structs.h"
 #include "bot.h"
 #include "mongoose.h"
+#include "botcflags.h"
 
 #include "room_commands.pb.h"
 #include "commands.pb.h"
@@ -65,7 +66,8 @@ static void serverCreateGameCommand(struct apiServer *api,
     //Get the data from the mg_http_message
     int lineStart = 0,
         lineEnd = 0, 
-        firstEquals = 0;   
+        firstEquals = 0;  
+        
     for (int i = 0; i < hm->body.len; i++) {
         //TODO: Make these into functions
         
@@ -183,7 +185,7 @@ static void serverCreateGameCommand(struct apiServer *api,
         && spectatorsNeedPassword != -1 && spectatorsCanChat != -1 
         && spectatorsCanSeeHands != -1 && onlyRegistered != -1;    
                     
-    if (valid)       
+    if (valid) {      
         c->fn_data = (void *) sendCreateGameCommand(api->triceBot,
                                                     gameName,
                                                     password,
@@ -196,33 +198,48 @@ static void serverCreateGameCommand(struct apiServer *api,
                                                     onlyRegistered,
                                                     0,
                                                     NULL);
+   
+        printf("[INFO]: Creating game called '%s'\n", gameName);
+    } 
     
     //Free the temp vars
-    if (gameName != NULL) {
-    free(gameName);    }  
-        
+    if (gameName != NULL)
+        free(gameName);
     if (authToken != NULL)
         free(authToken);
     if (password != NULL)
         free(password);
     
     if (!valid) {
+        printf("[ERROR]: Invalid game create command.\n");
         send404(c);
-        return;
     } 
 }
 
-static void eventHandler (struct mg_connection *c,
-                          int event,
-                          void *ev_data,
-                          void *fn_data) {
+static void eventHandler(struct mg_connection *c,
+                         int event,
+                         void *ev_data,
+                         void *fn_data) {
     struct apiServer *api = (struct apiServer *) fn_data;
     
     if (event == MG_EV_ACCEPT) {
-        c->fn_data = NULL;
-        mg_tls_init(c, &api->opts);        
-    } else if (event == MG_EV_HTTP_MSG) {         
+        #if DEBUG
+        printf("[DEBUG]: Establishing TLS for conneciton.\n");
+        #endif
+        
+        struct mg_tls_opts opts = {
+            .ca = api->opts.ca,
+            .cert = api->opts.cert,
+            .certkey = api->opts.certkey,
+        };
+        
+        mg_tls_init(c, &opts);
+    } else if (event == MG_EV_HTTP_MSG) {        
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+        
+        #if DEBUG
+        printf("[DEBUG]: Request to endpoint '%s'.\n", hm->uri.ptr);
+        #endif
                 
         if (mg_http_match_uri(hm, "/github/")) {
             //TODO: http redirect or something
@@ -241,13 +258,15 @@ static void eventHandler (struct mg_connection *c,
         } else {
             send404(c);
         }
-    } else if (event == MG_EV_POLL && c->fn_data != NULL && c->is_accepted) {        
+    } else if (event == MG_EV_POLL && c->fn_data != NULL && c->is_client) {        
         struct gameCreateCallbackWaitParam *paramdata = 
                 (struct gameCreateCallbackWaitParam*) c->fn_data;
                     
         if (paramdata->gameID != -1) { 
             char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
-            snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);                    
+            snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);  
+            printf("[INFO]: Game created with ID %d.\n", paramdata->gameID);
+            
             mg_http_reply(c, 200, data);  
             c->fn_data = NULL;
             
@@ -259,9 +278,11 @@ static void eventHandler (struct mg_connection *c,
     } else if (event == MG_EV_CLOSE || event == MG_EV_ERROR) {
         //TODO: Handle error state
     }
+    
+    (void) fn_data;
 }
 
-static void *pollingThread (void *apiIn) {
+static void *pollingThread(void *apiIn) {
     struct mg_mgr mgr;
     struct mg_connection *c;
     struct apiServer *api = (struct apiServer *) apiIn;
@@ -290,17 +311,18 @@ static void *pollingThread (void *apiIn) {
     pthread_exit(NULL);
 }
 
-int startServer (struct apiServer *api) {  
+int startServer(struct apiServer *api) {  
     pthread_mutex_lock(&api->bottleneck);
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
+    api->opts.ca = api->config.ca;
     api->running = 1;
     pthread_mutex_unlock(&api->bottleneck);
     
     return pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api);
 }
 
-void stopServer (struct apiServer *api) {    
+void stopServer(struct apiServer *api) {    
     pthread_mutex_lock(&api->bottleneck);
     api->running = 0;
     pthread_mutex_unlock(&api->bottleneck);
