@@ -224,11 +224,10 @@ static void eventHandler(struct mg_connection *c,
     
     if (event == MG_EV_ACCEPT) {
         #if DEBUG
-        printf("[DEBUG]: Establishing TLS for conneciton.\n");
+        printf("[DEBUG]: Establishing TLS for connection.\n");
         #endif
         
         struct mg_tls_opts opts = {
-            .ca = api->opts.ca,
             .cert = api->opts.cert,
             .certkey = api->opts.certkey,
         };
@@ -315,7 +314,6 @@ int startServer(struct apiServer *api) {
     pthread_mutex_lock(&api->bottleneck);
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
-    api->opts.ca = api->config.ca;
     api->running = 1;
     pthread_mutex_unlock(&api->bottleneck);
     

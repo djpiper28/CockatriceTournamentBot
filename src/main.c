@@ -36,7 +36,7 @@ static void createGameCommandCallback (struct gameCreateCallbackWaitParam *g) {
            g->gameID);
 }
 
-int readNum(char *msg) {
+int readNum(const char *msg) {
     char *buffer = (char *) malloc(sizeof(char) * LEN);
     
     fgets(buffer, LEN, stdin);
@@ -312,9 +312,10 @@ int main (int argc, char * args[]) {
     printf("[INFO]: %s\n-> by djpiper28 see %s for git repo.\n",           
            PROG_NAME, GITHUB_REPO);
     printf("-> Version %d.%d\n", VERSION_MAJOR, VERSION_MINOR);
+    printf("-> Use the first argument for the mongoose debug level (0,1,2,3 or 4).\n");
     printf("[INFO]: Starting bot\n");
     
-    mg_log_set("0");
+    mg_log_set(argc > 1 ? args[1] : "0");
         
     struct tournamentBot bot;
     bot.running = 1;

@@ -23,7 +23,6 @@ struct Config {
          //Tournament bot data TODO: move them elsewhere
          *cert, 
          *authToken,
-         *ca,
          *certkey, 
          *bindAddr; 
     int authRequired, 

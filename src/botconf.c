@@ -51,8 +51,6 @@ static void readProperty(char *line, struct Config *config) {
         config->cert = valueStr;               
     } else if (strncmp("certkeyfile", propertyStr, BUFFER_LENGTH) == 0) {
         config->certkey = valueStr;   
-    } else if (strncmp("ca", propertyStr, BUFFER_LENGTH) == 0) {
-        config->ca = valueStr;   
     } else if (strncmp("bindAddr", propertyStr, BUFFER_LENGTH) == 0) {
         config->bindAddr = valueStr;   
     } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
@@ -131,7 +129,6 @@ static void makeNewFile(struct Config *config) {
         fprintf(configFile, "authtoken=%s\n", generatedAuthToken);
         fprintf(configFile, "certfile=server.pem\n");
         fprintf(configFile, "certkeyfile=server.pem\n");
-        fprintf(configFile, "ca=ca.pem\n");
         fprintf(configFile, "bindAddr=https://0.0.0.0:8000\n");
         fprintf(configFile, "clientID=changeme\n");
         
