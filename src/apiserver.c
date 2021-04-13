@@ -144,24 +144,24 @@ static void serverCreateGameCommand(struct apiServer *api,
                                                 &playerCount, 
                                                 "playerCount", 
                                                 prop);
-                    readNumberIfPropertiesMatch(spectatorsAllowed, 
-                                                &playerCount, 
+                    readNumberIfPropertiesMatch(number, 
+                                                &spectatorsAllowed, 
                                                 "spectatorsAllowed", 
                                                 prop);
-                    readNumberIfPropertiesMatch(spectatorsNeedPassword, 
-                                                &playerCount, 
+                    readNumberIfPropertiesMatch(number, 
+                                                &spectatorsNeedPassword, 
                                                 "spectatorsNeedPassword", 
                                                 prop);
-                    readNumberIfPropertiesMatch(spectatorsCanChat, 
-                                                &playerCount, 
+                    readNumberIfPropertiesMatch(number, 
+                                                &spectatorsCanChat, 
                                                 "spectatorsCanChat", 
                                                 prop);
-                    readNumberIfPropertiesMatch(spectatorsCanSeeHands, 
-                                                &playerCount, 
+                    readNumberIfPropertiesMatch(number, 
+                                                &spectatorsCanSeeHands, 
                                                 "spectatorsCanSeeHands", 
                                                 prop);
-                    readNumberIfPropertiesMatch(onlyRegistered, 
-                                                &playerCount, 
+                    readNumberIfPropertiesMatch(number, 
+                                                &onlyRegistered, 
                                                 "onlyRegistered", 
                                                 prop);
                 } 
@@ -223,10 +223,6 @@ static void eventHandler(struct mg_connection *c,
     struct apiServer *api = (struct apiServer *) fn_data;
     
     if (event == MG_EV_ACCEPT) {
-        #if DEBUG
-        printf("[DEBUG]: Establishing TLS for connection.\n");
-        #endif
-        
         struct mg_tls_opts opts = {
             .cert = api->opts.cert,
             .certkey = api->opts.certkey,
@@ -235,10 +231,6 @@ static void eventHandler(struct mg_connection *c,
         mg_tls_init(c, &opts);
     } else if (event == MG_EV_HTTP_MSG) {        
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
-        
-        #if DEBUG
-        printf("[DEBUG]: Request to endpoint '%s'.\n", hm->uri.ptr);
-        #endif
                 
         if (mg_http_match_uri(hm, "/github/")) {
             //TODO: http redirect or something

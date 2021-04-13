@@ -10,6 +10,7 @@
 #include "cmd_queue.h"
 #include "commands.pb.h"
 #include "command_leave_game.pb.h"
+#include "room_commands.pb.h"
 
 struct tournamentBot {
     struct Config config;
@@ -297,15 +298,23 @@ void addDebugFunctions(struct triceBot *b) {
 
 void onGameEnd(struct triceBot *b, 
                struct game g) {
+    pthread_mutex_lock(&b->mutex);
+    int ID = b->magicRoomID;
+    pthread_mutex_unlock(&b->mutex);
+        
     Command_LeaveGame leaveGame;                    
     CommandContainer cont;  
     GameCommand *gc = cont.add_game_command();
     gc->MutableExtension(Command_LeaveGame::ext)->CopyFrom(leaveGame);
     
     //IDs are set in prepCMD
-    struct pendingCommand *cmd = prepCmd(b, cont, g.gameID, b->magicRoomID);
+    struct pendingCommand *cmd = prepCmd(b, cont, g.gameID, ID);
     
     enq(cmd, &b->sendQueue);
+}
+
+void onBotDisconnect(struct triceBot *b) {
+    startBot(b);
 }
 
 int main (int argc, char * args[]) {
@@ -328,6 +337,7 @@ int main (int argc, char * args[]) {
     #endif
     
     set_onGameEnd(&onGameEnd, &bot.b);
+    set_onBotDisconnect(&onBotDisconnect, &bot.b);
     
     startServer(&bot.server);
     startBot(&bot.b);

@@ -183,7 +183,6 @@ void freeConf(struct Config *config) {
     //Tournament bot data TODO: move them elsewhere
     if (config->cert != NULL) free (config->cert);
     if (config->certkey != NULL) free (config->certkey);
-    if (config->ca != NULL) free (config->ca);
     if (config->authToken != NULL) free (config->authToken);
     if (config->bindAddr != NULL) free (config->bindAddr);
 }

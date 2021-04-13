@@ -903,8 +903,6 @@ static void *botThread(void *in) {
             cont = b->running;
             pthread_mutex_unlock(&b->mutex);
         }
-        
-        MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
     }
     
     //Free data
@@ -913,6 +911,8 @@ static void *botThread(void *in) {
     freePendingCommandQueue(&b->callbackQueue);
     
     mg_mgr_free(&mgr);     
+    
+    MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
     pthread_exit(NULL);
 }
 
