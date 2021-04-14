@@ -14,8 +14,12 @@ void initGameList(struct gameList *gl) {
 
 // Resource free stuff
 void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp) {
-    free(gp->gameName);
-    free(gp);
+    if (gp != NULL) {
+        if (gp->gameName != NULL) 
+            free(gp->gameName);
+        pthread_mutex_destroy(&gp->mutex);
+        free(gp);
+    }
 }
 
 //Not thread safe version
@@ -25,10 +29,8 @@ static void freeGameListNodeNTS(struct gameListNode *gl) {
 }
 
 void freeGameListNode(struct gameList *g, struct gameListNode *gl) {
-    pthread_mutex_lock(&g->mutex);
-    
-    freeGameListNodeNTS(gl);
-    
+    pthread_mutex_lock(&g->mutex);    
+    freeGameListNodeNTS(gl);    
     pthread_mutex_unlock(&g->mutex);
 }
 
@@ -64,23 +66,23 @@ struct game *getGameWithID(struct gameList *g, int gameID) {
     pthread_mutex_lock(&g->mutex);
     
     struct gameListNode *current = g->gamesHead;
+    struct game * out = NULL;
     while (current != NULL && current->currentGame->gameID != gameID)
         current = current->nextGame;
     
-    if (current == NULL)
-        return NULL;
+    if (current != NULL)
+        out = current->currentGame;
     
-    struct game * out = current->currentGame;
     pthread_mutex_unlock(&g->mutex);
     
     return out;
 }
 
-void addGame (struct gameList *g, struct game *gamePointer) {    
-    pthread_mutex_lock(&g->mutex); 
-    
+void addGame (struct gameList *g, struct game *gamePointer) {   
     if (g == NULL)
         return;
+    
+    pthread_mutex_lock(&g->mutex); 
     
     if (g->gamesHead == NULL) {        
         struct gameListNode *next = (struct gameListNode *) malloc(sizeof(struct gameListNode));
@@ -107,9 +109,7 @@ void addGame (struct gameList *g, struct game *gamePointer) {
 void removeGame (struct gameList *g, struct game *gamePointer) {       
     pthread_mutex_lock(&g->mutex);
     
-    if (g == NULL) {        
-        return;
-    } else {            
+    if (g != NULL) {
         struct gameListNode *current = g->gamesHead;
         if (current->currentGame == gamePointer) {
             struct gameListNode *next = current->nextGame;

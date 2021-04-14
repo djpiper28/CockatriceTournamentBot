@@ -7,7 +7,7 @@ class TriceBot:
         
     # verify = false as self signed ssl certificates will cause errors here
     def req(self, urlpostfix, data):
-        return requests.get(self.apiURL + "/" + urlpostfix, timeout=3.0, data=data,  verify=False).text
+        return requests.get(self.apiURL + "/" + urlpostfix, timeout=7.0, data=data,  verify=False).text
         
     def checkauthkey(self):
         return self.req("api/checkauthkey", self.authToken) == "1"

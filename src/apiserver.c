@@ -19,6 +19,23 @@
 #include "get_pb_extension.h"
 #include "response.pb.h"
 
+//Internal connection struct
+struct ServerConnection {
+    struct apiServer *api;
+    struct gameCreateCallbackWaitParam *param;
+    int isGameCreate;
+    int closing;
+    long startTime;
+};
+
+void initServerConnection(struct ServerConnection *s, struct apiServer *api) {
+    s->startTime = time(NULL);
+    s->isGameCreate = 0;
+    s->param = NULL;
+    s->api = api;
+    s->closing = 0;
+}
+
 void initServer(struct apiServer *server, 
                 struct triceBot *triceBot, 
                 struct Config config) {
@@ -27,6 +44,8 @@ void initServer(struct apiServer *server,
     server->triceBot = triceBot;
     server->running = 0;
 }
+
+//TODO: rewrite create game code
 
 void freeServer(struct apiServer *api) {
     pthread_mutex_destroy(&api->bottleneck);
@@ -49,10 +68,10 @@ static void readNumberIfPropertiesMatch(int number,
     }
 }
 
-static void serverCreateGameCommand(struct apiServer *api, 
-                       struct mg_connection *c, 
-                       struct mg_http_message *hm, 
-                       void *fn_data) {
+static void serverCreateGameCommand(struct ServerConnection *s, 
+                                    struct mg_connection *c, 
+                                    struct mg_http_message *hm, 
+                                    void *fn_data) {
     char *authToken = NULL, 
          *gameName = NULL, 
          *password = NULL;
@@ -81,10 +100,11 @@ static void serverCreateGameCommand(struct apiServer *api,
             
             //Read value into temp
             int valueLen = lineEnd - firstEquals /*+1 for null terminator -1 to remove \n*/;
-            char *tmp = (char *) malloc(sizeof(char) * valueLen);
-            tmp[valueLen - 1] = 0;
+            char *tmp = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
             
-            for (int j = firstEquals + 1, ii = 0; j < lineEnd; j++) {
+            for (int j = firstEquals + 1, ii = 0; 
+                 j < lineEnd && ii < BUFFER_LENGTH; 
+                 j++) {
                 tmp[ii] = hm->body.ptr[j];        
                 
                 ii++;
@@ -92,11 +112,15 @@ static void serverCreateGameCommand(struct apiServer *api,
             
             //Read prop tag into prop
             int propLen = firstEquals - lineStart;
+            
+            //Error case - no prop len
+            if (propLen == 0) {
+                free(tmp);
+                continue;
+            }
+            
             char *prop = (char *) malloc(sizeof(char) * propLen);
             
-            //Error case
-            if (propLen == 0)
-                continue;
             
             prop[propLen - 1] = 0;
             
@@ -116,10 +140,10 @@ static void serverCreateGameCommand(struct apiServer *api,
                 
             if (strncmp(prop, "authtoken", propLen) == 0) {                
                 authToken = tmp;
-            } else if (strncmp(prop, "gamename", propLen) == 0) {                
-                    gameName = tmp;
-            } else if (strncmp(prop, "password", propLen) == 0) {                
-                    password = tmp;
+            } else if (strncmp(prop, "gamename", propLen) == 0) {
+                gameName = tmp;
+            } else if (strncmp(prop, "password", propLen) == 0) {
+                password = tmp;
             } else {
                 //Check is number
                 int isNum = valueLen < 3, 
@@ -128,10 +152,10 @@ static void serverCreateGameCommand(struct apiServer *api,
                     isNum &= hm->body.ptr[j] >= '0' && hm->body.ptr[j] <= '9';
                 
                 //Read number
-                if (strncmp(tmp, "TRUE", valueLen)) {
+                if (strncmp(tmp, "TRUE", BUFFER_LENGTH)) {
                     isNum = 1;
                     number = 1;
-                } else if (strncmp(tmp, "FALSE", valueLen)) {
+                } else if (strncmp(tmp, "FALSE", BUFFER_LENGTH)) {
                     isNum = 1;
                     number = 0;
                 } else if (isNum) {
@@ -164,42 +188,42 @@ static void serverCreateGameCommand(struct apiServer *api,
                                                 &onlyRegistered, 
                                                 "onlyRegistered", 
                                                 prop);
-                } 
+                }
                 
+                //Free tmp here as it is not assigned to a ptr
                 free(tmp);    
             }
         }
     }
-        
-    //Check authtoken
-    if (authToken != NULL) {
-        if (strncmp(authToken, api->config.authToken, BUFFER_LENGTH) != 0) {
-            sendInvalidAuthTokenResponse(c);
-            return;
-        }
-    }
-        
+                
     //Check all fields have data
-    int valid = authToken != NULL && gameName != NULL && password != NULL 
+    int valid = authToken != NULL && s->api->config.authToken != NULL 
+        && gameName != NULL && password != NULL 
         && playerCount != -1 && spectatorsAllowed != -1 
         && spectatorsNeedPassword != -1 && spectatorsCanChat != -1 
         && spectatorsCanSeeHands != -1 && onlyRegistered != -1;    
                     
-    if (valid) {      
-        c->fn_data = (void *) sendCreateGameCommand(api->triceBot,
-                                                    gameName,
-                                                    password,
-                                                    playerCount,
-                                                    1,
-                                                    spectatorsAllowed,
-                                                    spectatorsCanChat,
-                                                    spectatorsNeedPassword,
-                                                    spectatorsCanSeeHands,
-                                                    onlyRegistered,
-                                                    0,
-                                                    NULL);
-   
-        printf("[INFO]: Creating game called '%s'\n", gameName);
+    if (valid) { 
+        //Check authtoken 
+        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
+            s->param = sendCreateGameCommand(s->api->triceBot,
+                                             gameName,              
+                                             password,
+                                             playerCount,
+                                             1,
+                                             spectatorsAllowed,
+                                             spectatorsCanChat,
+                                             spectatorsNeedPassword,
+                                             spectatorsCanSeeHands,
+                                             onlyRegistered,
+                                             0,
+                                             NULL);
+            s->isGameCreate = 1;
+            
+            printf("[INFO]: Creating game called '%s'\n", gameName);
+        } else {
+            sendInvalidAuthTokenResponse(c);
+        }
     } 
     
     //Free the temp vars
@@ -220,7 +244,7 @@ static void eventHandler(struct mg_connection *c,
                          int event,
                          void *ev_data,
                          void *fn_data) {
-    struct apiServer *api = (struct apiServer *) fn_data;
+    struct apiServer *api = (struct apiServer *) c->fn_data;
     
     if (event == MG_EV_ACCEPT) {
         struct mg_tls_opts opts = {
@@ -229,8 +253,16 @@ static void eventHandler(struct mg_connection *c,
         };
         
         mg_tls_init(c, &opts);
-    } else if (event == MG_EV_HTTP_MSG) {        
+        
+        //Init connection
+        struct ServerConnection *s = (struct ServerConnection *) malloc(sizeof(struct ServerConnection));
+        initServerConnection(s, api);
+        
+        c->fn_data = s;
+    } else if (event == MG_EV_HTTP_MSG) {
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+        struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
+        api = s->api;
                 
         if (mg_http_match_uri(hm, "/github/")) {
             //TODO: http redirect or something
@@ -243,31 +275,47 @@ static void eventHandler(struct mg_connection *c,
                                                 api->config.authToken, 
                                                 BUFFER_LENGTH) == 0); 
         } else if (mg_http_match_uri(hm, "/api/creategame/")) { 
-            serverCreateGameCommand(api, c, hm, fn_data);
+            serverCreateGameCommand(s, c, hm, fn_data);
         } else if (mg_http_match_uri(hm, "/api/")) {
             mg_http_reply(c, 200, HELP_STR);  
         } else {
             send404(c);
         }
-    } else if (event == MG_EV_POLL && c->fn_data != NULL && c->is_client) {        
-        struct gameCreateCallbackWaitParam *paramdata = 
-                (struct gameCreateCallbackWaitParam*) c->fn_data;
+    } else if (event == MG_EV_POLL && c->is_accepted) {         
+        struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+        struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
+        
+        if (s->isGameCreate) {
+            struct gameCreateCallbackWaitParam *paramdata = s->param;
+            api = s->api;
+            
+            pthread_mutex_lock(&paramdata->mutex);
+            int ID = paramdata->gameID;
+            pthread_mutex_unlock(&paramdata->mutex);
                     
-        if (paramdata->gameID != -1) { 
-            char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
-            snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);  
-            printf("[INFO]: Game created with ID %d.\n", paramdata->gameID);
-            
-            mg_http_reply(c, 200, data);  
-            c->fn_data = NULL;
-            
-            free(data);
-            freeGameCreateCallbackWaitParam(paramdata);
-        } else if (time(NULL) - paramdata->sendTime > TIMEOUT) {
-            mg_http_reply(c, 408, "error");  
-        }        
-    } else if (event == MG_EV_CLOSE || event == MG_EV_ERROR) {
-        //TODO: Handle error state
+            if (ID != -1) { 
+                char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
+                snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);  
+                printf("[INFO]: Game created with ID %d.\n", paramdata->gameID);
+                
+                mg_http_reply(c, 200, data);  
+                c->fn_data = NULL;
+                
+                free(data);
+                freeGameCreateCallbackWaitParam(paramdata);
+            } 
+        } 
+        
+        //Timeout
+        else if (time(NULL) - s->startTime > TIMEOUT && !s->closing) {
+            mg_http_reply(c, 408, "timeout error");
+            s->closing = 1;
+        } else if (s->closing) {
+            c->is_closing = 1;
+        }
+    } else if ((event == MG_EV_CLOSE || event == MG_EV_ERROR) && c->is_client) {
+        struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
+        if (s != NULL) free(s);
     }
     
     (void) fn_data;
@@ -291,7 +339,7 @@ static void *pollingThread(void *apiIn) {
     pthread_mutex_unlock(&api->bottleneck);
     
     while (cont) {   
-        mg_mgr_poll(&mgr, 250);  
+        mg_mgr_poll(&mgr, 50);  
         
         pthread_mutex_lock(&api->bottleneck); 
         cont = api->running;    

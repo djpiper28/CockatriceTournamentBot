@@ -3,11 +3,15 @@
 
 #include <pthread.h>
 
-//Used for game create callback
+/**
+ * Used for game create callback
+ * Only the gameID is mutable, use the mutex when accessing or modifying it
+ */
 struct gameCreateCallbackWaitParam {   
     char *gameName;
     int   gameID, 
-    sendTime;
+          sendTime;
+    pthread_mutex_t mutex;
     void (*callbackFn) (struct gameCreateCallbackWaitParam *);
 };
 

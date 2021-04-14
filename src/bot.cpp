@@ -474,9 +474,10 @@ static void handleGameEvent(struct triceBot *b,
     
     int id = gameEventContainer.game_id();
     struct game *currentGame = getGameWithID(&b->gameList, id);
-    struct game g = * currentGame;
     
     if (currentGame != NULL) {
+        struct game g = *currentGame;
+        
         int size = gameEventContainer.event_list_size();
         for (int i = 0; i < size; i++) {
             GameEvent event = gameEventContainer.event_list().Get(i);
@@ -585,11 +586,18 @@ static void handleGameCreate(struct triceBot *b,
                                               listGames.game_info().description().c_str());
     
     if (cmd != NULL) {
-        struct gameCreateCallbackWaitParam *game = 
-        (struct gameCreateCallbackWaitParam *) cmd->param;
+        //Create and add game item to the list
+        addGame(&b->gameList, createGame(listGames.game_info().game_id()));   
         
+        //Game create callback
+        struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *) 
+                                                   cmd->param;        
+        //Check for null pointer
         if (game != NULL) {
-            game->gameID = listGames.game_info().game_id();    
+            //Set the game ID (used in callbackFn both cases)
+            pthread_mutex_lock(&game->mutex);
+            game->gameID = listGames.game_info().game_id();  
+            pthread_mutex_unlock(&game->mutex);  
             
             if (game->callbackFn != NULL) {
                 /**
@@ -597,20 +605,15 @@ static void handleGameCreate(struct triceBot *b,
                  * OTHERWISE AND WILL LEAK MEMORY IF THE USER DOES NOT FREE
                  * IT.
                  */
+                
                 if (fork() == 0) {                    
                     game->callbackFn(game);
-                    free(game->gameName);
-                    free(game);
+                    freeGameCreateCallbackWaitParam(game);
                     exit(0);
                 }   
-            }
-            
-        }
-        
-        free(game);
-    } 
-    
-    addGame(&b->gameList, createGame(listGames.game_info().game_id()));   
+            }            
+        }       
+    }     
 }
 
 /**
