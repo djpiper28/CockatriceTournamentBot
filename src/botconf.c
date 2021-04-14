@@ -27,7 +27,6 @@ static void readProperty(char *line, struct Config *config) {
     
     for (int i = 0; i < propertyLen - 1; i++)  //null terminator
         propertyStr[i] = line[i];
-    
     propertyStr[propertyLen - 1] = 0;
     
     int ii = 0;
@@ -36,7 +35,6 @@ static void readProperty(char *line, struct Config *config) {
         valueStr[ii] = line[i];
         ii++;
     }
-    
     valueStr[valueLen - 1] = 0;
     
     if (strncmp("username", propertyStr, BUFFER_LENGTH) == 0) {        

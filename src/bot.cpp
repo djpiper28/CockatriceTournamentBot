@@ -494,9 +494,8 @@ static void handleGameEvent(struct triceBot *b,
                     void (*fn) (struct triceBot *, struct game) = b->onGameEnd;
                     pthread_mutex_unlock(&b->mutex);
                     
-                    if (fn != NULL) {
+                    if (fn != NULL)
                         fn(b, g);
-                    }
                 } else if (stateChange.game_started() && !currentGame->started) {                    
                     currentGame->started = 1;
                     
@@ -505,9 +504,8 @@ static void handleGameEvent(struct triceBot *b,
                     void (*fn) (struct triceBot *, struct game) = b->onGameStart;
                     pthread_mutex_unlock(&b->mutex);
                     
-                    if (fn != NULL) {
+                    if (fn != NULL)
                         fn(b, *currentGame);
-                    }
                 }
                 
                 MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventStateChanged,
