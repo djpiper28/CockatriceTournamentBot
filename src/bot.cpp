@@ -595,9 +595,11 @@ static void handleGameCreate(struct triceBot *b,
             //Set the game ID (used in callbackFn both cases)
             pthread_mutex_lock(&game->mutex);
             game->gameID = listGames.game_info().game_id();  
+            void (*callbackFn) (struct gameCreateCallbackWaitParam *) = 
+                game->callbackFn;
             pthread_mutex_unlock(&game->mutex);  
             
-            if (game->callbackFn != NULL) {
+            if (callbackFn != NULL) {
                 /**
                  * WARNING THE USER IS ASSUMED TO HAVE A POLLING THREAD 
                  * OTHERWISE AND WILL LEAK MEMORY IF THE USER DOES NOT FREE
@@ -605,7 +607,7 @@ static void handleGameCreate(struct triceBot *b,
                  */
                 
                 if (fork() == 0) {                    
-                    game->callbackFn(game);
+                    callbackFn(game);
                     freeGameCreateCallbackWaitParam(game);
                     exit(0);
                 }   

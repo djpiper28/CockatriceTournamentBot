@@ -25,6 +25,13 @@ void freePendingCommand(struct pendingCommand *cmd) {
         if (cmd->message != NULL) {
             free(cmd->message);
         }
+        
+        if (cmd->isGame) {
+            struct gameCreateCallbackWaitParam *p = (struct
+                gameCreateCallbackWaitParam *) cmd->param;
+            if (p != NULL)
+                freeGameCreateCallbackWaitParam(p);
+        }
         free(cmd);
     }
 }

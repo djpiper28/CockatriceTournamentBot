@@ -259,6 +259,10 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         free(password);
 }
 
+static void ErrorCallback(struct gameCreateCallbackWaitParam *param) {
+    printf("[ERROR]: Game create callback error - api client disconnected.\n");
+}
+
 static void eventHandler(struct mg_connection *c,
                          int event,
                          void *ev_data,
@@ -334,16 +338,18 @@ static void eventHandler(struct mg_connection *c,
         }
     } else if ((event == MG_EV_CLOSE || event == MG_EV_ERROR) && c->is_accepted) {
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
-        if (s != NULL) {
-            //Free game create parms if game
-            if (s->isGameCreate && s->param != NULL) {
-                freeGameCreateCallbackWaitParam(s->param);
-                s->isGameCreate = 0;
+        if (s != NULL) { 
+            if (s->isGameCreate) {
+                pthread_mutex_lock(&s->param->mutex);
+                int ID = s->param->gameID;
+                if (ID != -1) {
+                    freeGameCreateCallbackWaitParam(s->param);
+                    free(s);
+                } else {
+                    s->param->callbackFn = &ErrorCallback;
+                }
+                pthread_mutex_unlock(&s->param->mutex);            
             }
-            
-            //Free s
-            free(s);
-            
             c->fn_data = NULL;
         }
     }

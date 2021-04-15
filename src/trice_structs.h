@@ -59,10 +59,10 @@
 struct pendingCommand {
     char *message;
     void *param;
-    int size = 0, 
-        cmdID = -1, 
-        timeSent = -1, 
-        isGame = 0;
+    int size = 0;
+    int cmdID = -1; 
+    int timeSent = -1; 
+    int isGame = 0;
     void (*callbackFunction) (struct triceBot *b, const Response *resp, void *param);
 };
 
