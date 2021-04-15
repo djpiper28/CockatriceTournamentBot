@@ -904,7 +904,7 @@ static void *botThread(void *in) {
         MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotConnect)  
         
         while (cont) {
-            mg_mgr_poll(&mgr, 250);
+            mg_mgr_poll(&mgr, 100);
             
             pthread_mutex_lock(&b->mutex);
             cont = b->running;

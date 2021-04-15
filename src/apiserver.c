@@ -276,8 +276,10 @@ static void eventHandler(struct mg_connection *c,
         initServerConnection(s, api);
         
         c->fn_data = (void *) s;
-                
+        
+        #if SSL
         mg_tls_init(c, &api->opts);
+        #endif
     } else if (event == MG_EV_HTTP_MSG) {
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
@@ -375,7 +377,7 @@ static void *pollingThread(void *apiIn) {
     pthread_mutex_unlock(&api->bottleneck);
     
     while (cont) {   
-        mg_mgr_poll(&mgr, 50);  
+        mg_mgr_poll(&mgr, 100);  
         
         pthread_mutex_lock(&api->bottleneck); 
         cont = api->running;    
@@ -388,9 +390,12 @@ static void *pollingThread(void *apiIn) {
 
 int startServer(struct apiServer *api) {  
     pthread_mutex_lock(&api->bottleneck);
+    #if SSL
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
     api->opts.ca = api->config.cert;
+    #endif
+    
     api->running = 1;
     pthread_mutex_unlock(&api->bottleneck);
     

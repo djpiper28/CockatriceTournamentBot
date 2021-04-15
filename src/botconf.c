@@ -45,11 +45,17 @@ static void readProperty(char *line, struct Config *config) {
         config->cockatriceServer = valueStr;
     } else if (strncmp("authtoken", propertyStr, BUFFER_LENGTH) == 0) {
         config->authToken = valueStr;               
-    } else if (strncmp("certfile", propertyStr, BUFFER_LENGTH) == 0) {
+    } else 
+        
+    #if SSL    
+    if (strncmp("certfile", propertyStr, BUFFER_LENGTH) == 0) {
         config->cert = valueStr;               
     } else if (strncmp("certkeyfile", propertyStr, BUFFER_LENGTH) == 0) {
         config->certkey = valueStr;   
-    } else if (strncmp("bindAddr", propertyStr, BUFFER_LENGTH) == 0) {
+    } else
+    #endif
+    
+    if (strncmp("bindAddr", propertyStr, BUFFER_LENGTH) == 0) {
         config->bindAddr = valueStr;   
     } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
         config->clientID = valueStr;   
@@ -124,9 +130,12 @@ static void makeNewFile(struct Config *config) {
         fprintf(configFile, "roomName=Magic\nauthRequired=0\n"); //For auto room join
                 
         //Tournament bot data TODO: move them elsewhere
+        #if SSL
         fprintf(configFile, "authtoken=%s\n", generatedAuthToken);
         fprintf(configFile, "certfile=server.pem\n");
         fprintf(configFile, "certkeyfile=server.pem\n");
+        #endif
+        
         fprintf(configFile, "bindAddr=https://0.0.0.0:8000\n");
         fprintf(configFile, "clientID=changeme\n");
         

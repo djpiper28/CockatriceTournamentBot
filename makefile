@@ -3,11 +3,11 @@ OPENSSL=`pkg-config --cflags -libs openssl` -DMG_ENABLE_OPENSSL=1
 
 PROTOBUF=`pkg-config --cflags -libs protobuf`
 #Use openssl or mbedtls
-LIBS=-pthread ${PROTOBUF} -lpthread ${OPENSSL} 
+LIBS=-pthread -lpthread ${PROTOBUF} ${OPENSSL}
 MG_ARGS=-DMG_ENABLE_IPV6=1
 DO_DEBUG=-DDEBUG=1 -g
 
-BASE_CC=g++ -Wall $(CFLAGS) ${LIBS} ${MG_ARGS} ${DO_DEBUG}
+BASE_CC=g++ -Wall $(CFLAGS) ${LIBS} ${MG_ARGS} ${MBEDTLS} ${DO_DEBUG}
 
 objectsc=$(wildcard buildtmp/*.c) 
 objectscc=$(wildcard buildtmp/*.cc)
