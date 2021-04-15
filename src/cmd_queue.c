@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "commands.pb.h"
 #include "gamestruct.h"
@@ -29,8 +30,22 @@ void freePendingCommand(struct pendingCommand *cmd) {
         if (cmd->isGame) {
             struct gameCreateCallbackWaitParam *p = (struct
                 gameCreateCallbackWaitParam *) cmd->param;
-            if (p != NULL)
-                freeGameCreateCallbackWaitParam(p);
+            if (p != NULL) {
+                if (fork() == 0) {
+                    //Wait for timeout of the game callback in another thread
+                    int waiting = 1;                    
+                    while (waiting) {
+                        usleep(25);
+                        
+                        pthread_mutex_lock(&p->mutex);
+                        waiting = p->callbackFn == NULL;
+                        pthread_mutex_unlock(&p->mutex);
+                    }
+                    
+                    freeGameCreateCallbackWaitParam(p);                    
+                    exit(0);
+                }
+            }
         }
         free(cmd);
     }

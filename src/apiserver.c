@@ -50,11 +50,11 @@ void freeServer(struct apiServer *api) {
 }
 
 static void sendInvalidAuthTokenResponse(struct mg_connection *c) {
-    mg_http_reply(c, 401, "invalid auth token");
+    mg_http_reply(c, 401, "", "invalid auth token");
 }
 
 static void send404(struct mg_connection *c) {
-    mg_http_reply(c, 404, "error 404");  
+    mg_http_reply(c, 404, "", "error 404");  
 }
 
 static void readNumberIfPropertiesMatch(int number, 
@@ -68,13 +68,13 @@ static void readNumberIfPropertiesMatch(int number,
 
 struct str {
     const char *ptr;
-    int len;
+    size_t len;
 };
 
 static struct str readNextLine(const char *buffer, 
-                               int *ptr, 
-                               int len) {    
-    int i = 0;
+                               size_t *ptr, 
+                               size_t len) {    
+    size_t i = 0;
     while (*ptr < len && buffer[*ptr] != '\n') { 
         i++;
         *ptr += 1;
@@ -99,30 +99,30 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         onlyRegistered = -1;
             
     //Read the buffer line by line
-    int ptr = 0;
+    size_t ptr = 0;
     while (ptr < hm->body.len - 1) {
         struct str line = readNextLine(hm->body.ptr, &ptr, hm->body.len);
         
-        int eqPtr = 0;
+        size_t eqPtr = 0;
         for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
         
         //Check is line has equals with non-null strings on each side
         if (eqPtr < line.len - 2 && eqPtr > 1) {
             //Read value into *tmp
             //+1 for null terminator -1 to remove \n
-            int valueLen = line.len - eqPtr;
+            size_t valueLen = line.len - eqPtr;
             
             char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
             
             //Read value
-            for (int i = eqPtr + 1; 
+            for (size_t i = eqPtr + 1; 
                  i < line.len; 
                  i++) 
                 tmp[i] = line.ptr[i];
             tmp[valueLen] = 0;
             
             //Read prop tag into prop
-            int propLen = eqPtr;
+            size_t propLen = eqPtr;
             
             //Error case - no prop len
             if (propLen == 0) {
@@ -135,7 +135,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
             
             prop[propLen] = 0;
             
-            for (int i = 0; 
+            for (size_t i = 0; 
                  i < eqPtr; 
                  i++)
                 prop[i] = line.ptr[i]; 
@@ -276,7 +276,7 @@ static void eventHandler(struct mg_connection *c,
         initServerConnection(s, api);
         
         c->fn_data = (void *) s;
-        
+                
         mg_tls_init(c, &api->opts);
     } else if (event == MG_EV_HTTP_MSG) {
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
@@ -285,18 +285,18 @@ static void eventHandler(struct mg_connection *c,
                 
         if (mg_http_match_uri(hm, "/github/")) {
             //TODO: http redirect or something
-            mg_http_reply(c, 303, GITHUB_REPO);
+            mg_http_reply(c, 303, "", GITHUB_REPO);
         } else if (mg_http_match_uri(hm, "/api/version/")) {
-            mg_http_reply(c, 200, "v%d.%d", 
+            mg_http_reply(c, 200, "", "v%d.%d", 
                         VERSION_MAJOR, VERSION_MINOR);  
         } else if (mg_http_match_uri(hm, "/api/checkauthkey/")) {
-            mg_http_reply(c, 200, "%d", strncmp(hm->body.ptr,
-                                                api->config.authToken, 
-                                                BUFFER_LENGTH) == 0); 
+            mg_http_reply(c, 200, "", "%d", strncmp(hm->body.ptr,
+                                                    api->config.authToken, 
+                                                    BUFFER_LENGTH) == 0); 
         } else if (mg_http_match_uri(hm, "/api/creategame/")) { 
             serverCreateGameCommand(s, c, hm);            
         } else if (mg_http_match_uri(hm, "/api/")) {
-            mg_http_reply(c, 200, HELP_STR);
+            mg_http_reply(c, 200, "", HELP_STR);
         } else {
             send404(c);
         }
@@ -318,7 +318,7 @@ static void eventHandler(struct mg_connection *c,
                     snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);  
                     printf("[INFO]: Game created with ID %d.\n", paramdata->gameID);
                     
-                    mg_http_reply(c, 200, data);  
+                    mg_http_reply(c, 200, "", data);  
                     
                     free(data);
                     freeGameCreateCallbackWaitParam(paramdata);
@@ -330,7 +330,7 @@ static void eventHandler(struct mg_connection *c,
             
             //Timeout
             else if (time(NULL) - s->startTime > TIMEOUT && !s->closing) {
-                mg_http_reply(c, 408, "timeout error");
+                mg_http_reply(c, 408, "", "timeout error");
                 s->closing = 1;
             } else if (s->closing) {
                 c->is_closing = 1;
@@ -390,6 +390,7 @@ int startServer(struct apiServer *api) {
     pthread_mutex_lock(&api->bottleneck);
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
+    api->opts.ca = api->config.cert;
     api->running = 1;
     pthread_mutex_unlock(&api->bottleneck);
     

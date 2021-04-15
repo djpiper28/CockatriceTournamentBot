@@ -414,7 +414,7 @@ void replayResponseDownload(struct triceBot *b,
         if (made) {            
             if (access(fileName, F_OK) != 0) {
                 FILE *replayFile = fopen(fileName, "wb+");
-                if (replayFile != NULL == 0 && access(fileName, W_OK) == 0) {
+                if (replayFile != NULL && access(fileName, W_OK) == 0) {
                     for (int i = 0; i < len; i++)
                         fputc(replayData[i], replayFile);
                     
@@ -621,10 +621,14 @@ static void handleGameCreate(struct triceBot *b,
  * WARNING If the callback is NULL then the param struct is not freed as it 
  * assumes that a thread is polling it see apiServer for example.
  * Otherwise the callback is called and then the data is freed.
+ * If the bot disconnects while waiting for a callback then it will wait in 
+ * another thread for the callbackFn to stop being null then free the struct.
  * 
  * TL;DR.
  * Callback should not be NULL.
  * If callback is NULL then the param is leaked.
+ * If the bot disconnects while waiting for a callback then it will wait in 
+ * another thread for the callbackFn to stop being null then free the struct.
  */ 
 //These are long type names
 struct gameCreateCallbackWaitParam * 
@@ -923,11 +927,16 @@ static void *botThread(void *in) {
  * Stops the bot
  */
 void stopBot(struct triceBot *b) {    
+    int flag = 0;
     pthread_mutex_lock(&b->mutex);
-    b->running = 0;    
-    pthread_mutex_unlock(&b->mutex);
+    if (b->running) {
+        b->running = 0;    
+        flag = 1;
+    }
+    pthread_mutex_unlock(&b->mutex);    
     
-    pthread_join(b->pollingThreadBOT, NULL);
+    if (flag)
+        pthread_join(b->pollingThreadBOT, NULL);
 }
 
 /**
