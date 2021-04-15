@@ -47,7 +47,7 @@ static void readProperty(char *line, struct Config *config) {
         config->authToken = valueStr;               
     } else 
         
-    #if SSL    
+    #if _SSL    
     if (strncmp("certfile", propertyStr, BUFFER_LENGTH) == 0) {
         config->cert = valueStr;               
     } else if (strncmp("certkeyfile", propertyStr, BUFFER_LENGTH) == 0) {
@@ -94,18 +94,6 @@ static char toHex(char c) {
     } else { 
         return 'A' + (c - 10);
     }
-} 
-
-static char* strToHex(const char *str, int len) {
-    char *str2 = (char *) malloc(sizeof(char) * 2 * len + 1);
-    
-    for (int i = 0; i < len; i++) {
-        str2[2 * i] = toHex(str[i] & HEX_BIT_MASK);
-        str2[2 * i + 1] = toHex((str[i] >> 4) & HEX_BIT_MASK);  
-    }
-    str2[2 * len] = 0;
-    
-    return str2;
 }
 
 static void makeNewFile(struct Config *config) {
@@ -130,7 +118,7 @@ static void makeNewFile(struct Config *config) {
         fprintf(configFile, "roomName=Magic\nauthRequired=0\n"); //For auto room join
                 
         //Tournament bot data TODO: move them elsewhere
-        #if SSL
+        #if _SSL
         fprintf(configFile, "authtoken=%s\n", generatedAuthToken);
         fprintf(configFile, "certfile=server.pem\n");
         fprintf(configFile, "certkeyfile=server.pem\n");

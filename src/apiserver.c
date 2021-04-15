@@ -28,7 +28,8 @@ struct ServerConnection {
     long startTime;
 };
 
-static void initServerConnection(struct ServerConnection *s, struct apiServer *api) {
+static void initServerConnection(struct ServerConnection *s, 
+                                 struct apiServer *api) {
     s->startTime = time(NULL);
     s->isGameCreate = 0;
     s->param = NULL;
@@ -156,7 +157,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 //Check is number
                 int isNum = valueLen < 3, 
                 number = -1;
-                for (int i = eqPtr + 1; i < line.len; i++) 
+                for (size_t i = eqPtr + 1; i < line.len; i++) 
                     isNum &= line.ptr[i] >= '0' && line.ptr[i] <= '9';
                 
                 //Read number
@@ -277,7 +278,7 @@ static void eventHandler(struct mg_connection *c,
         
         c->fn_data = (void *) s;
         
-        #if SSL
+        #if _SSL
         mg_tls_init(c, &api->opts);
         #endif
     } else if (event == MG_EV_HTTP_MSG) {
@@ -303,7 +304,6 @@ static void eventHandler(struct mg_connection *c,
             send404(c);
         }
     } else if (event == MG_EV_POLL && c->is_accepted) {         
-        struct mg_http_message *hm = (struct mg_http_message *) ev_data;
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
         
         if (s != NULL) {
@@ -390,7 +390,7 @@ static void *pollingThread(void *apiIn) {
 
 int startServer(struct apiServer *api) {  
     pthread_mutex_lock(&api->bottleneck);
-    #if SSL
+    #if _SSL
     api->opts.cert = api->config.cert;
     api->opts.certkey = api->config.certkey;
     api->opts.ca = api->config.cert;

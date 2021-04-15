@@ -12,7 +12,11 @@ struct response {
 struct apiServer {
     pthread_t pollingThreadT;
     pthread_mutex_t bottleneck;
+    
+    #if _SSL
     struct mg_tls_opts opts;
+    #endif
+    
     struct triceBot *triceBot; 
     struct Config config;
     int running;

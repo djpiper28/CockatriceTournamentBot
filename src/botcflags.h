@@ -10,8 +10,8 @@
 #define JOIN_ROOM_AUTOMATICALLY 1
 #endif
 
-#ifndef SSL
-#define SSL 0
+#ifndef _SSL
+#define _SSL 1
 #endif
 
 //SSL HAS DRIVEN ME MAD PLEASE SOMEONE FIX MY SSL

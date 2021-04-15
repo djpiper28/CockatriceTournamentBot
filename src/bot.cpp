@@ -315,7 +315,7 @@ static void handleResponse (struct triceBot *b,
         const Response response = newServerMessage->response(); 
         
         struct pendingCommand *cmd = NULL;
-        if (response.cmd_id() != -1) 
+        if (response.cmd_id() != (long unsigned int) -1) 
             cmd = cmdForCMDId(response.cmd_id(), &b->callbackQueue);   
         
         if (response.HasExtension(Response_Login::ext)) 
