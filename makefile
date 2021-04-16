@@ -1,9 +1,9 @@
 MBEDTLS=-lmbedtls -lmbedcrypto -lmbedx509 -DMG_ENABLE_MBEDTLS=1
 OPENSSL=`pkg-config --cflags -libs openssl` -DMG_ENABLE_OPENSSL=1
-
 PROTOBUF=`pkg-config --cflags -libs protobuf`
+
 #Use openssl or mbedtls
-LIBS=-pthread -lpthread ${PROTOBUF} ${MBEDTLS} 
+LIBS=-pthread -lpthread ${PROTOBUF} ${MBEDTLS}
 MG_ARGS=-DMG_ENABLE_IPV6=1
 DO_DEBUG=-DDEBUG=1 -g
 

@@ -43,7 +43,13 @@ void initServer(struct apiServer *server,
     server->bottleneck = PTHREAD_MUTEX_INITIALIZER;
     server->config = config;
     server->triceBot = triceBot;
-    server->running = 0;
+    server->running = 0;    
+    
+    if (_SSL && mg_url_is_ssl(server->config.bindAddr)) {
+        server->opts.cert = server->config.cert;
+        server->opts.certkey = server->config.certkey;
+        server->opts.ca = NULL;//server->config.cert;
+    }
 }
 
 void freeServer(struct apiServer *api) {
@@ -76,13 +82,14 @@ static struct str readNextLine(const char *buffer,
                                size_t *ptr, 
                                size_t len) {    
     size_t i = 0;
+    size_t tmp = *ptr;
     while (*ptr < len && buffer[*ptr] != '\n') { 
         i++;
         *ptr += 1;
     }
     *ptr += 1;
     
-    struct str string = {buffer + *ptr, i};
+    struct str string = {buffer + tmp, i};
     return string;
 }
 
@@ -108,7 +115,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
         
         //Check is line has equals with non-null strings on each side
-        if (eqPtr < line.len - 2 && eqPtr > 1) {
+        if (eqPtr < line.len - 1 && eqPtr > 1) {
             //Read value into *tmp
             //+1 for null terminator -1 to remove \n
             size_t valueLen = line.len - eqPtr;
@@ -116,10 +123,11 @@ static void serverCreateGameCommand(struct ServerConnection *s,
             char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
             
             //Read value
-            for (size_t i = eqPtr + 1; 
-                 i < line.len; 
-                 i++) 
-                tmp[i] = line.ptr[i];
+            int j = 0;
+            for (size_t i = eqPtr + 1; i < line.len; i++) {
+                tmp[j] = line.ptr[i];
+                j++;
+            }
             tmp[valueLen] = 0;
             
             //Read prop tag into prop
@@ -128,79 +136,75 @@ static void serverCreateGameCommand(struct ServerConnection *s,
             //Error case - no prop len
             if (propLen == 0) {
                 free(tmp);
-                continue;
-            }
-            
-            //Read prop tag into prop
-            char *prop = (char *) malloc(sizeof(char) * (propLen + 1));            
-            
-            prop[propLen] = 0;
-            
-            for (size_t i = 0; 
-                 i < eqPtr; 
-                 i++)
-                prop[i] = line.ptr[i]; 
-            
-            //Process line
-            //Prop len
-            #define MAX_PROP_LEN 22
-            if (MAX_PROP_LEN < propLen)
-                propLen = MAX_PROP_LEN;
-            
-            if (strncmp(prop, "authtoken", propLen) == 0) {                
-                authToken = tmp;
-            } else if (strncmp(prop, "gamename", propLen) == 0) {
-                gameName = tmp;
-            } else if (strncmp(prop, "password", propLen) == 0) {
-                password = tmp;
-            } else {
-                //Check is number
-                int isNum = valueLen < 3, 
-                number = -1;
-                for (size_t i = eqPtr + 1; i < line.len; i++) 
-                    isNum &= line.ptr[i] >= '0' && line.ptr[i] <= '9';
+            } else {            
+                //Read prop tag into prop
+                char *prop = (char *) malloc(sizeof(char) * (propLen + 1));            
+                            
+                for (size_t i = 0; i < eqPtr; i++)
+                    prop[i] = line.ptr[i]; 
+                prop[propLen] = 0;            
                 
-                //Read number
-                if (strncmp(tmp, "TRUE", BUFFER_LENGTH)) {
-                    isNum = 1;
-                    number = 1;
-                } else if (strncmp(tmp, "FALSE", BUFFER_LENGTH)) {
-                    isNum = 1;
-                    number = 0;
-                } else if (isNum) {
-                    isNum = 1;
-                    number = atoi(tmp);
+                //Process line
+                //Prop len
+                #define MAX_PROP_LEN 22
+                if (MAX_PROP_LEN < propLen)
+                    propLen = MAX_PROP_LEN;
+                
+                if (strncmp(prop, "authtoken", propLen) == 0) {                
+                    authToken = tmp;
+                } else if (strncmp(prop, "gamename", propLen) == 0) {
+                    gameName = tmp;
+                } else if (strncmp(prop, "password", propLen) == 0) {
+                    password = tmp;
+                } else {
+                    //Check is number
+                    int isNum = valueLen < 3, 
+                    number = -1;
+                    for (size_t i = eqPtr + 1; i < line.len; i++) 
+                        isNum &= line.ptr[i] >= '0' && line.ptr[i] <= '9';
+                    
+                    //Read number
+                    if (strncmp(tmp, "TRUE", BUFFER_LENGTH)) {
+                        isNum = 1;
+                        number = 1;
+                    } else if (strncmp(tmp, "FALSE", BUFFER_LENGTH)) {
+                        isNum = 1;
+                        number = 0;
+                    } else if (isNum) {
+                        isNum = 1;
+                        number = atoi(tmp);
+                    }
+                    
+                    if (isNum) {
+                        readNumberIfPropertiesMatch(number, 
+                                                    &playerCount, 
+                                                    "playerCount", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(number, 
+                                                    &spectatorsAllowed, 
+                                                    "spectatorsAllowed", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(number, 
+                                                    &spectatorsNeedPassword, 
+                                                    "spectatorsNeedPassword", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(number, 
+                                                    &spectatorsCanChat, 
+                                                    "spectatorsCanChat", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(number, 
+                                                    &spectatorsCanSeeHands, 
+                                                    "spectatorsCanSeeHands", 
+                                                    prop);
+                        readNumberIfPropertiesMatch(number, 
+                                                    &onlyRegistered, 
+                                                    "onlyRegistered", 
+                                                    prop);
+                    }
+                    
+                    //Free tmp here as it is not assigned to a ptr
+                    free(tmp);   
                 }
-                
-                if (isNum) {
-                    readNumberIfPropertiesMatch(number, 
-                                                &playerCount, 
-                                                "playerCount", 
-                                                prop);
-                    readNumberIfPropertiesMatch(number, 
-                                                &spectatorsAllowed, 
-                                                "spectatorsAllowed", 
-                                                prop);
-                    readNumberIfPropertiesMatch(number, 
-                                                &spectatorsNeedPassword, 
-                                                "spectatorsNeedPassword", 
-                                                prop);
-                    readNumberIfPropertiesMatch(number, 
-                                                &spectatorsCanChat, 
-                                                "spectatorsCanChat", 
-                                                prop);
-                    readNumberIfPropertiesMatch(number, 
-                                                &spectatorsCanSeeHands, 
-                                                "spectatorsCanSeeHands", 
-                                                prop);
-                    readNumberIfPropertiesMatch(number, 
-                                                &onlyRegistered, 
-                                                "onlyRegistered", 
-                                                prop);
-                }
-                
-                //Free tmp here as it is not assigned to a ptr
-                free(tmp);    
             }
         }
     }
@@ -236,19 +240,6 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     } else {        
         printf("[ERROR]: Invalid game create command.\n");
         send404(c);
-        
-        #if DEBUG
-        printf("Auth token = %s\n", authToken);
-        printf("Game name = %s\n", gameName);
-        printf("Game password = %s\n", password);
-        
-        printf("playerCount = %d\n", playerCount);
-        printf("spectatorsAllowed = %d\n", spectatorsAllowed);
-        printf("spectatorsNeedPassword = %d\n", spectatorsNeedPassword);
-        printf("spectatorsCanChat = %d\n", spectatorsCanChat);
-        printf("spectatorsCanSeeHands = %d\n", spectatorsCanSeeHands);
-        printf("onlyRegistered = %d\n", onlyRegistered);
-        #endif
     }
     
     //Free the temp vars
@@ -276,11 +267,11 @@ static void eventHandler(struct mg_connection *c,
             malloc (sizeof(struct ServerConnection));
         initServerConnection(s, api);
         
-        c->fn_data = (void *) s;
+        c->fn_data = (void *) s;        
         
-        #if _SSL
-        mg_tls_init(c, &api->opts);
-        #endif
+        if (_SSL && mg_url_is_ssl(api->config.bindAddr)) {
+            mg_tls_init(c, &api->opts);
+        }
     } else if (event == MG_EV_HTTP_MSG) {
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
@@ -340,7 +331,9 @@ static void eventHandler(struct mg_connection *c,
         }
     } else if ((event == MG_EV_CLOSE || event == MG_EV_ERROR) && c->is_accepted) {
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
+        
         if (s != NULL) { 
+            api = s->api;
             if (s->isGameCreate) {
                 pthread_mutex_lock(&s->param->mutex);
                 int ID = s->param->gameID;
@@ -366,7 +359,10 @@ static void *pollingThread(void *apiIn) {
     
     mg_mgr_init(&mgr);
     
-    c = mg_http_listen(&mgr, api->config.bindAddr, eventHandler, apiIn);
+    c = mg_http_listen(&mgr, 
+                       api->config.bindAddr, 
+                       eventHandler, 
+                       apiIn);
     
     if (c == NULL) {
         //TODO: Handle error state
@@ -388,18 +384,29 @@ static void *pollingThread(void *apiIn) {
     pthread_exit(NULL);
 }
 
-int startServer(struct apiServer *api) {  
-    pthread_mutex_lock(&api->bottleneck);
-    #if _SSL
-    api->opts.cert = api->config.cert;
-    api->opts.certkey = api->config.certkey;
-    api->opts.ca = api->config.cert;
-    #endif
-    
-    api->running = 1;
-    pthread_mutex_unlock(&api->bottleneck);
-    
-    return pthread_create(&api->pollingThreadT, NULL, pollingThread, (void *) api);
+int startServer(struct apiServer *api) {     
+    pthread_mutex_lock(&api->bottleneck);      
+    if (api->running) {        
+        pthread_mutex_unlock(&api->bottleneck);
+        printf("[ERROR]: Server has already started.\n");
+        return 0;
+    } else {    
+        printf("[INFO]: Starting api server, listening on %s\n", api->config.bindAddr);
+        
+        #if _SSL
+        printf("-> SSL enabled. cert: %s & certkey: %s.\n",
+               api->config.cert,
+               api->config.certkey);
+        #endif
+        
+        api->running = 1;
+        pthread_mutex_unlock(&api->bottleneck);
+        
+        return pthread_create(&api->pollingThreadT, 
+                            NULL, 
+                            pollingThread, 
+                            (void *) api);
+    }
 }
 
 void stopServer(struct apiServer *api) {    

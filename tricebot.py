@@ -1,7 +1,7 @@
 import requests
 
 class TriceBot:    
-    def __init__(self, authToken, apiURL="https://127.0.0.1:8000"):
+    def __init__(self, authToken, apiURL="https://0.0.0.0:8000"):
         self.authToken = authToken
         self.apiURL = apiURL
         
@@ -60,7 +60,7 @@ class TriceBot:
         
         return True
 def test():
-    t = TriceBot("nGpzR/KspN6ry7jG8CU4bonN2aujzfJa", "http://127.0.0.1:80")
+    t = TriceBot("nGpzR/KspN6ry7jG8CU4bonN2aujzfJa")
     print(t.createGame("test", "poop", 1, True, True, True, True, True))
     
 test()    
