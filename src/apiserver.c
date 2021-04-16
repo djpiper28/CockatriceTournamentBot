@@ -116,30 +116,22 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         
         //Check is line has equals with non-null strings on each side
         if (eqPtr < line.len - 1 && eqPtr > 1) {
-            //Read value into *tmp
-            //+1 for null terminator -1 to remove \n
-            size_t valueLen = line.len - eqPtr;
-            
-            char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
-            
-            //Read value
-            int j = 0;
-            for (size_t i = eqPtr + 1; i < line.len; i++) {
-                tmp[j] = line.ptr[i];
-                j++;
-            }
-            tmp[valueLen] = 0;
-            
-            //Read prop tag into prop
+            size_t valueLen = line.len - eqPtr - 1;
             size_t propLen = eqPtr;
             
             //Error case - no prop len
-            if (propLen == 0) {
-                free(tmp);
-            } else {            
+            if (propLen != 0) {
+                //Read value of the tag
+                char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
+                size_t j = 0;
+                for (size_t i = eqPtr + 1; j < valueLen; i++) {
+                    tmp[j] = line.ptr[i];
+                    j++;
+                }
+                tmp[valueLen] = 0;
+                
                 //Read prop tag into prop
-                char *prop = (char *) malloc(sizeof(char) * (propLen + 1));            
-                            
+                char *prop = (char *) malloc(sizeof(char) * (propLen + 1));
                 for (size_t i = 0; i < eqPtr; i++)
                     prop[i] = line.ptr[i]; 
                 prop[propLen] = 0;            
@@ -214,8 +206,8 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         && gameName != NULL && password != NULL 
         && playerCount != -1 && spectatorsAllowed != -1 
         && spectatorsNeedPassword != -1 && spectatorsCanChat != -1 
-        && spectatorsCanSeeHands != -1 && onlyRegistered != -1;    
-                    
+        && spectatorsCanSeeHands != -1 && onlyRegistered != -1; 
+        
     if (valid) { 
         //Check authtoken 
         if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
@@ -317,7 +309,6 @@ static void eventHandler(struct mg_connection *c,
                     freeGameCreateCallbackWaitParam(paramdata);
                     
                     s->isGameCreate = 0;
-                    s->closing = 1;
                 }
             } 
             
@@ -336,6 +327,7 @@ static void eventHandler(struct mg_connection *c,
             api = s->api;
             if (s->isGameCreate) {
                 pthread_mutex_lock(&s->param->mutex);
+                
                 int ID = s->param->gameID;
                 if (ID != -1) {
                     freeGameCreateCallbackWaitParam(s->param);
@@ -343,6 +335,7 @@ static void eventHandler(struct mg_connection *c,
                 } else {
                     s->param->callbackFn = &ErrorCallback;
                 }
+                
                 pthread_mutex_unlock(&s->param->mutex);            
             }
             c->fn_data = NULL;

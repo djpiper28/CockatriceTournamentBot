@@ -301,6 +301,10 @@ static void executeCallback(struct triceBot *b,
     if (cmd->message != NULL)
         free(cmd->message);   
     
+    if (cmd->isGame) {
+        freeGameCreateCallbackWaitParam((struct gameCreateCallbackWaitParam *) cmd->param);
+    }
+    
     free(cmd);  
 }
 
@@ -514,7 +518,7 @@ static void handleGameEvent(struct triceBot *b,
             
             //Game events
             MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventJoin,
-                                                        Event_Join)
+                                                   Event_Join)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventLeave,
                                                         Event_Leave)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameClosed,
@@ -582,7 +586,6 @@ static void handleGameCreate(struct triceBot *b,
                              const Event_GameJoined listGames) {    
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
                                               listGames.game_info().description().c_str());
-    
     if (cmd != NULL) {
         //Create and add game item to the list
         addGame(&b->gameList, createGame(listGames.game_info().game_id()));   
@@ -591,7 +594,7 @@ static void handleGameCreate(struct triceBot *b,
         struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *) 
                                                    cmd->param;        
         //Check for null pointer
-        if (game != NULL) {
+        if (game != NULL) {            
             //Set the game ID (used in callbackFn both cases)
             pthread_mutex_lock(&game->mutex);
             game->gameID = listGames.game_info().game_id();  
@@ -682,8 +685,9 @@ sendCreateGameCommand(struct triceBot *b,
     param->gameID = -1;
     param->sendTime = time(NULL);
     param->callbackFn = callbackFn;
+    param->mutex = PTHREAD_MUTEX_INITIALIZER;
     
-    cmd->param = (void *) &param;        
+    cmd->param = (void *) param;        
     cmd->isGame = 1;
     enq(cmd, &b->sendQueue);
     
