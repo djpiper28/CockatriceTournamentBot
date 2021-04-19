@@ -7,7 +7,7 @@ LIBS=-pthread -lpthread ${PROTOBUF} ${MBEDTLS}
 MG_ARGS=-DMG_ENABLE_IPV6=1
 DO_DEBUG=-DDEBUG=1 -g
 
-BASE_CC=g++ -Wall -D_SSL=1 $(CFLAGS) ${LIBS} ${MG_ARGS} ${DO_DEBUG}
+BASE_CC=g++ -Wall -D_SSL=1 -DDEBUG=1 -DMEGA_DEBUG=1 $(CFLAGS) ${LIBS} ${MG_ARGS} ${DO_DEBUG}
 
 objectsc=$(wildcard buildtmp/*.c) 
 objectscc=$(wildcard buildtmp/*.cc)

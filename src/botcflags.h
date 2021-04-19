@@ -10,6 +10,14 @@
 #define JOIN_ROOM_AUTOMATICALLY 1
 #endif
 
+#ifndef MEGA_DEBUG
+#define MEGA_DEBUG 0
+#endif
+
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 #ifndef _SSL
 #define _SSL 1
 #endif

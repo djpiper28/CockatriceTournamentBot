@@ -53,6 +53,7 @@ class TriceBot:
             body +="0"
             
         status = self.req("api/creategame/", body)
+        print(body)
         print(status)        
 
         if (status == "timeout error" or status == "error 404" or status == "invalid auth token"):
@@ -60,7 +61,7 @@ class TriceBot:
         
         return True
 def test():
-    t = TriceBot("nGpzR/KspN6ry7jG8CU4bonN2aujzfJa")
-    print(t.createGame("test", "poop", 1, True, True, True, True, True))
+    t = TriceBot("gNm6FLEdMhPwTt2Irdn0n7CoAjQBzyZ8XQCaeyYKnvzZoLBPOF8m8F7QVC")
+    print(t.createGame("testGame", "poop", 1, True, True, True, True, False))
     
 test()    

@@ -155,18 +155,6 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     for (size_t i = eqPtr + 1; i < line.len; i++) 
                         isNum &= line.ptr[i] >= '0' && line.ptr[i] <= '9';
                     
-                    //Read number
-                    if (strncmp(tmp, "TRUE", BUFFER_LENGTH)) {
-                        isNum = 1;
-                        number = 1;
-                    } else if (strncmp(tmp, "FALSE", BUFFER_LENGTH)) {
-                        isNum = 1;
-                        number = 0;
-                    } else if (isNum) {
-                        isNum = 1;
-                        number = atoi(tmp);
-                    }
-                    
                     if (isNum) {
                         readNumberIfPropertiesMatch(number, 
                                                     &playerCount, 
@@ -225,7 +213,9 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                                              NULL);
             s->isGameCreate = 1;
             
-            printf("[INFO]: Creating game called '%s'\n", gameName);
+            printf("[INFO]: Creating game called '%s' with %d players\n", 
+                   gameName, 
+                   playerCount);
         } else {
             sendInvalidAuthTokenResponse(c);
         }
@@ -301,7 +291,8 @@ static void eventHandler(struct mg_connection *c,
                 if (ID != -1) { 
                     char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
                     snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);  
-                    printf("[INFO]: Game created with ID %d.\n", paramdata->gameID);
+                    printf("[INFO]: Game created with ID %d.\n",
+                           paramdata->gameID);
                     
                     mg_http_reply(c, 200, "", data);  
                     

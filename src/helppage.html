@@ -56,8 +56,6 @@ invalid auth token
 <h3 name="create game">../api/creategame</h3>
 request body follows this format (case-sensitive):
 <br>
-(TRUE is treated as the number 1 and FALSE the number 0)
-
 <blockquote>
 authtoken=token
 <br>
@@ -67,15 +65,15 @@ password=password
 <br>
 playerCount=2/3/...
 <br>
-spectatctorsAllowed=TRUE/FALSE
+spectatctorsAllowed=1/0
 <br>
-spectatorsNeedPassword=TRUE/FALSE
+spectatorsNeedPassword=1/0
 <br>
-spectatorsCanChat=TRUE/FALSE
+spectatorsCanChat=1/0
 <br>
-spectatorsCanSeeHands=TRUE/FALSE
+spectatorsCanSeeHands=1/0
 <br>
-onlyRegistered=TRUE/FALSE
+onlyRegistered=1/0
 </blockquote>
 
 <b>

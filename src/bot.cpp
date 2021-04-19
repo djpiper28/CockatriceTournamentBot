@@ -64,7 +64,6 @@
 #define SESSION_EVENT 1
 #define GAME_EVENT_CONTAINER 2
 #define ROOM_EVENT 3
-#define REPLAY_DIR "replays"
 
 /**
  * This macro is to reduce code repetition in the session event method which
@@ -399,34 +398,20 @@ void replayResponseDownload(struct triceBot *b,
         
         const char *replayData = replay.replay_data().c_str();
         int len = replay.replay_data().length();
-        int made = 0;
         
         int *replayID = (int *) param;
         char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
         
-        snprintf(fileName, BUFFER_LENGTH,"%s/replay%d.cod", REPLAY_DIR, *replayID);        
+        snprintf(fileName, BUFFER_LENGTH,"/replay%d.cod", *replayID);        
         
-        //Check is replay directory is made
-        DIR* dir = opendir(REPLAY_DIR);
-        if (dir != NULL) {
-            closedir(dir);
-            made = 1;
-        } else if (ENOENT == errno) {
-            //Make folder
-            made = mkdir(REPLAY_DIR, S_IRWXU) != -1;
-        }
+        //Check is replay directory is made         
+        FILE *replayFile = fopen(fileName, "wb+");
+        for (int i = 0; i < len; i++)
+            fputc(replayData[i], replayFile);
         
-        if (made) {            
-            if (access(fileName, F_OK) != 0) {
-                FILE *replayFile = fopen(fileName, "wb+");
-                if (replayFile != NULL && access(fileName, W_OK) == 0) {
-                    for (int i = 0; i < len; i++)
-                        fputc(replayData[i], replayFile);
-                    
-                    fclose (replayFile);    //close file like a good boy
-                }
-            }
-        }
+        fclose (replayFile);    //close file like a good boy
+        
+        printf("[INFO]: Replay %s saved.\n", fileName);  
         
         if (fileName != NULL)
             free(fileName);        
@@ -796,6 +781,10 @@ static void botEventHandler(struct mg_connection *c,
         ServerMessage newServerMessage;
         newServerMessage.ParseFromArray(wm->data.ptr, wm->data.len);
         int messageType = newServerMessage.message_type();
+        
+        #if MEGA_DEBUG
+        printf("[MEGA_DEBUG]: %s\n", newServerMessage.DebugString().c_str());
+        #endif
         
         /**
          * Call handler is blocked by user code
