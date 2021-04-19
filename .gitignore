@@ -6,3 +6,4 @@ replays
 botExecutable
 MSG_RAW
 log
+*.log
