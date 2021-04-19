@@ -316,18 +316,19 @@ static void handleResponse (struct triceBot *b,
                             ServerMessage *newServerMessage) {
     //Response
     if (hasNext(&b->callbackQueue)) {                   
-        const Response response = newServerMessage->response(); 
-        
+        const Response response = newServerMessage->response();
         struct pendingCommand *cmd = NULL;
-        if (response.cmd_id() != (long unsigned int) -1) 
+        
+        if (response.cmd_id() != (long unsigned int) -1) {
             cmd = cmdForCMDId(response.cmd_id(), &b->callbackQueue);   
+         
+            if (cmd != NULL) { 
+                executeCallback(b, cmd, &response);         
+            }     
+        }
         
         if (response.HasExtension(Response_Login::ext)) 
-            loginResponse(b, &response, NULL);            
-        
-        if (cmd != NULL) { 
-            executeCallback(b, cmd, &response);         
-        }       
+            loginResponse(b, &response, NULL);      
     }
 }
 
