@@ -52,16 +52,13 @@ class TriceBot:
         else:
             body +="0"
             
-        status = self.req("api/creategame/", body)
-        print(body)
-        print(status)        
+        try:
+            status = self.req("api/creategame/", body)     
+        except OSError as exc:
+            # logging.error(f"exception while requesting create game with body:\n{body}", exc_info=exc)
+            return False
 
         if (status == "timeout error" or status == "error 404" or status == "invalid auth token"):
             return False
         
         return True
-def test():
-    t = TriceBot("gNm6FLEdMhPwTt2Irdn0n7CoAjQBzyZ8XQCaeyYKnvzZoLBPOF8m8F7QVC")
-    print(t.createGame("testGame", "poop", 1, True, True, True, True, False))
-    
-test()    
