@@ -151,9 +151,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 } else {
                     //Check is number
                     int isNum = valueLen < 3, 
-                    number = -1;
-                    for (size_t i = eqPtr + 1; i < line.len; i++) 
-                        isNum &= line.ptr[i] >= '0' && line.ptr[i] <= '9';
+                    number = atoi(tmp);
                     
                     if (isNum) {
                         readNumberIfPropertiesMatch(number, 

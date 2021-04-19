@@ -87,15 +87,6 @@ static int toBase64 (int c) {
     }
 }
 
-static char toHex(char c) {
-    //Assumes char c is 4 bits of data and returns the hex character
-    if (c < 10) {
-        return '0' + c;
-    } else { 
-        return 'A' + (c - 10);
-    }
-}
-
 static void makeNewFile(struct Config *config) {
     // No file    
     FILE * configFile = fopen("config.conf", "w+");
