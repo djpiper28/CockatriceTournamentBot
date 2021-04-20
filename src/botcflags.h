@@ -17,13 +17,3 @@
 #ifndef DEBUG
 #define DEBUG 0
 #endif
-
-#ifndef _SSL
-#define _SSL 1
-#endif
-
-#ifndef REPLAY_FOLDER
-#define REPLAY_FOLDER "replays"
-#endif
-
-//SSL HAS DRIVEN ME MAD PLEASE SOMEONE FIX MY SSL

@@ -263,6 +263,7 @@ MACRO_DEBUG_FOR_STATE_CHANGE(onBotDisconnect)
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnect)
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotConnectionError)
 MACRO_DEBUG_FOR_STATE_CHANGE(onBotLogin)
+MACRO_DEBUG_FOR_STATE_CHANGE(onReplayDownload)
 
 #define MACRO_DEBUG_FOR_EVENT_CALL(fn) set_##fn(&DebugFor##fn, b);
 
@@ -292,6 +293,7 @@ void addDebugFunctions(struct triceBot *b) {
     MACRO_DEBUG_FOR_EVENT_CALL(onBotConnect)
     MACRO_DEBUG_FOR_EVENT_CALL(onBotConnectionError)
     MACRO_DEBUG_FOR_EVENT_CALL(onBotLogin)
+    MACRO_DEBUG_FOR_EVENT_CALL(onReplayDownload)
 }
 
 #endif

@@ -37,16 +37,38 @@ static void readProperty(char *line, struct Config *config) {
     }
     valueStr[valueLen - 1] = 0;
     
+    //Read the config data
+    #if LOGIN_AUTOMATICALLY
     if (strncmp("username", propertyStr, BUFFER_LENGTH) == 0) {        
         config->cockatriceUsername = valueStr;      
     } else if (strncmp("password", propertyStr, BUFFER_LENGTH) == 0) {        
         config->cockatricePassword = valueStr;            
-    } else if (strncmp("serveraddress", propertyStr, BUFFER_LENGTH) == 0) {        
+    } else         
+    #endif
+        
+    #if JOIN_ROOM_AUTOMATICALLY
+    if (strncmp("roomName", propertyStr, BUFFER_LENGTH) == 0) {
+        config->roomName = valueStr;   
+    } else            
+    #endif   
+            
+    if (strncmp("serveraddress", propertyStr, BUFFER_LENGTH) == 0) {        
         config->cockatriceServer = valueStr;
     } else if (strncmp("authtoken", propertyStr, BUFFER_LENGTH) == 0) {
         config->authToken = valueStr;               
+    } else if (strncmp("replayFolder", propertyStr, BUFFER_LENGTH) == 0) {
+        config->replayFolder = valueStr;               
+    } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
+        config->clientID = valueStr;   
     } else 
         
+    //Read numerical data
+    if (strncmp("floodingCooldown", propertyStr, BUFFER_LENGTH) == 0) {
+        config->floodingCooldown = atoi(valueStr);  
+        free(valueStr);    
+    } else 
+            
+    //API Server config
     #if _SSL    
     if (strncmp("certfile", propertyStr, BUFFER_LENGTH) == 0) {
         config->cert = valueStr;               
@@ -57,13 +79,10 @@ static void readProperty(char *line, struct Config *config) {
     
     if (strncmp("bindAddr", propertyStr, BUFFER_LENGTH) == 0) {
         config->bindAddr = valueStr;   
-    } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
-        config->clientID = valueStr;   
-    } else if (strncmp("roomName", propertyStr, BUFFER_LENGTH) == 0) {
-        config->roomName = valueStr;   
-    } else if (strncmp("authRequired", propertyStr, BUFFER_LENGTH) == 0) {
-        config->authRequired = atoi(valueStr);
-    } else {
+    } 
+    
+    //Free string if not used
+    else {
         free(valueStr);   
     }
     

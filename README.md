@@ -11,17 +11,20 @@ in python in a file called `tricebot.py`.
 The file (config.conf) should be in this format:
 
 ```yaml
-username=cockatrice username
-password=cockatrice password
+username=username
+password=yourpassword
 serveraddress=ws://server.cockatrice.us:4748
-authtoken=auth token for the interfacing with this bot
-certfile=server.pem
-certkeyfile=server-key.pem
+authtoken=nGpzR/KspN6ry7jG8CU4bonN2aujzfJa
+certfile=fullchain.pem
+certkeyfile=privkey.pem
 bindAddr=https://127.0.0.1:8000
-clientID=what servertrice sees as your client id
+clientID=test
 roomName=Magic
-authRequired=1
+replayFolder=replays
+floodingCooldown=150
 ```
+The floodingCooldown is the minimum time in millis that two commands can be sent 
+to the trice server so that rate limits are not applied.
 
 Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:

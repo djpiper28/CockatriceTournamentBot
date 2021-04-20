@@ -125,6 +125,9 @@ void initBot(struct triceBot *b,
     b->magicRoomID = -1;
     b->lastPingTime = 0;
     b->id = 0;
+    b->lastSend = 0;
+    b->sendWaitTime = b->config.floodingCooldown;
+    
 }
 
 static struct pendingCommand *prepCmdNTS(struct triceBot *b, 
@@ -327,14 +330,14 @@ static void replayResponseDownload(struct triceBot *b,
     //end spaghetti
     char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
     
-    snprintf(fileName, BUFFER_LENGTH, "%s/replay%d.cor", REPLAY_FOLDER, replayID);
+    snprintf(fileName, BUFFER_LENGTH, "%s/replay%d.cor", b->config.replayFolder, replayID);
     
-    DIR* dir = opendir(REPLAY_FOLDER);
+    DIR* dir = opendir(b->config.replayFolder);
     if (dir) {
         closedir(dir);
     } else if (ENOENT == errno) {
         // Directory does not exist. 
-        mkdir(REPLAY_FOLDER, 0700);
+        mkdir(b->config.replayFolder, 0700);
     }
     
     FILE *replayFile = fopen(fileName, "wb+");
@@ -346,7 +349,7 @@ static void replayResponseDownload(struct triceBot *b,
         
         printf("[INFO]: Replay %s saved.\n", fileName);
     } else {
-        printf("[ERROR]: An error occured saving the replay.\n");
+        printf("[ERROR]: An error occured saving the replay as %s.\n", fileName);
     }
     
     if (fileName != NULL)
@@ -382,7 +385,7 @@ static void handleResponse (struct triceBot *b,
                                    response.GetExtension(Response_ReplayDownload::ext));
             #endif
             
-            //TODO: call a user function
+            MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onReplayDownload)
         }
     }
 }
@@ -818,7 +821,7 @@ static void botEventHandler(struct mg_connection *c,
         pthread_mutex_unlock(&b->mutex);        
     } if (ev == MG_EV_POLL) {
         pthread_mutex_lock(&b->mutex);
-        if (!b->config.authRequired && !b->roomRequested) {    
+        if (!b->roomRequested) {    
             //Get room list
             CommandContainer cont;     
             SessionCommand *c = cont.add_session_command(); 
@@ -832,13 +835,21 @@ static void botEventHandler(struct mg_connection *c,
         pthread_mutex_unlock(&b->mutex);
         
         //Send commands
-        if (hasNext(&b->sendQueue)) {           
+        long sendTime = clock() / (CLOCKS_PER_SEC * 1000);
+        if (hasNext(&b->sendQueue)/* && sendTime - b->lastSend > b->sendWaitTime*/) {           
             struct pendingCommand *cmd = deq(&b->sendQueue);   
             
             mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);  
             
             enq(cmd, &b->callbackQueue);
+            
+            //b->lastSend = sendTime;
         }
+        #if MEGA_DEBUG
+        else {
+            printf("[MEGA_DEBUG]: Waiting a bit before sending command. %d\n", sendTime);
+        }
+        #endif
         
         //Check for callback that has timed out
         if (hasNext(&b->callbackQueue)) {

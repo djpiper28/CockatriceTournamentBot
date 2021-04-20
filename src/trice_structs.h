@@ -107,7 +107,7 @@ struct triceBot {
         cmdID,
         running,
         id;
-    long lastPingTime; 
+    long lastPingTime, lastSend, sendWaitTime;
     
     //Event Function Pointers for session events    
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,
@@ -218,6 +218,7 @@ struct triceBot {
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnect)
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnectionError)
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotLogin)
+    MACRO_CREATE_EVENT_FUNCTION_PTR_1(onReplayDownload)
 };
 
 //macros to gen functions
@@ -345,5 +346,6 @@ MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotDisconnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotConnect)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotConnectionError)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onBotLogin)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(onReplayDownload)
 
 #endif

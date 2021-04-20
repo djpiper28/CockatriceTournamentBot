@@ -8,6 +8,8 @@
 #define BUFFER_LENGTH 1024
 
 struct Config {
+    int floodingCooldown;
+    
     #if LOGIN_AUTOMATICALLY
     char *cockatriceUsername, 
          *cockatricePassword;
@@ -15,18 +17,18 @@ struct Config {
     
     #if JOIN_ROOM_AUTOMATICALLY
     char *roomName;
-    #endif
+    #endif    
     
     char *cockatriceServer, 
          *clientID,
+         *replayFolder,
          
          //Tournament bot data TODO: move them elsewhere
          *cert, 
          *authToken,
          *certkey, 
-         *bindAddr; 
-    int authRequired, 
-        success;
+         *bindAddr;
+    int success;
 };
 
 int readConf(struct Config *config);

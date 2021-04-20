@@ -45,7 +45,7 @@ void initServer(struct apiServer *server,
     server->triceBot = triceBot;
     server->running = 0;    
     
-    if (_SSL && mg_url_is_ssl(server->config.bindAddr)) {
+    if (mg_url_is_ssl(server->config.bindAddr)) {
         server->opts.cert = server->config.cert;
         server->opts.certkey = server->config.certkey;
         server->opts.ca = NULL;//server->config.cert;
@@ -249,7 +249,7 @@ static void eventHandler(struct mg_connection *c,
         
         c->fn_data = (void *) s;        
         
-        if (_SSL && mg_url_is_ssl(api->config.bindAddr)) {
+        if (mg_url_is_ssl(api->config.bindAddr)) {
             mg_tls_init(c, &api->opts);
         }
     } else if (event == MG_EV_HTTP_MSG) {
