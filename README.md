@@ -47,4 +47,6 @@ backtrace of the program. Make sure that the program is called with an argument 
 `3` to get some verbose mongoose logs.
 
 ## TODO:
-make it make a log or something idk
+- add tricebot rate limit (wip)
+- allow multi-room gaming
+- replay download via the api
