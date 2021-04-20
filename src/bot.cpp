@@ -836,20 +836,23 @@ static void botEventHandler(struct mg_connection *c,
         
         //Send commands
         long sendTime = clock() / (CLOCKS_PER_SEC * 1000);
-        if (hasNext(&b->sendQueue)/* && sendTime - b->lastSend > b->sendWaitTime*/) {           
-            struct pendingCommand *cmd = deq(&b->sendQueue);   
-            
-            mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);  
-            
-            enq(cmd, &b->callbackQueue);
-            
-            //b->lastSend = sendTime;
+        if (hasNext(&b->sendQueue)) {           
+            if (/* && sendTime - b->lastSend > b->sendWaitTime*/ 1) {
+                struct pendingCommand *cmd = deq(&b->sendQueue);   
+                
+                mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);  
+                
+                enq(cmd, &b->callbackQueue);
+                
+                //b->lastSend = sendTime;
+            }
+        
+            #if MEGA_DEBUG
+            else {
+                printf("[MEGA_DEBUG]: Waiting a bit before sending command. %d\n", sendTime);
+            }
+            #endif
         }
-        #if MEGA_DEBUG
-        else {
-            printf("[MEGA_DEBUG]: Waiting a bit before sending command. %d\n", sendTime);
-        }
-        #endif
         
         //Check for callback that has timed out
         if (hasNext(&b->callbackQueue)) {
