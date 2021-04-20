@@ -19,6 +19,7 @@
 #include "botcflags.h"
 
 //Pb imports
+#include "game_replay.pb.h"
 #include "room_event.pb.h"
 #include "session_event.pb.h"
 #include "server_message.pb.h"
@@ -308,6 +309,51 @@ static void executeCallback(struct triceBot *b,
 }
 
 /**
+ * Downloads a replay to ./replays/
+ * -> Fails silently
+ * Is subject to cockaspagheti
+ */ 
+static void replayResponseDownload(struct triceBot *b,
+                                   const Response_ReplayDownload replay) {
+    const char *replayData = replay.replay_data().c_str();
+    int len = replay.replay_data().length();
+    
+    //start spaghetti
+    GameReplay gameReplay;
+    gameReplay.ParseFromArray(replay.replay_data().c_str(),
+                              replay.replay_data().length());
+    
+    int replayID = gameReplay.replay_id();
+    //end spaghetti
+    char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
+    
+    snprintf(fileName, BUFFER_LENGTH, "%s/replay%d.cor", REPLAY_FOLDER, replayID);
+    
+    DIR* dir = opendir(REPLAY_FOLDER);
+    if (dir) {
+        closedir(dir);
+    } else if (ENOENT == errno) {
+        // Directory does not exist. 
+        mkdir(REPLAY_FOLDER, 0700);
+    }
+    
+    FILE *replayFile = fopen(fileName, "wb+");
+    if (replayFile != NULL) {
+        for (int i = 0; i < len; i++)
+            fputc(replayData[i], replayFile);
+        
+        fclose (replayFile);    //close file like a good boy
+        
+        printf("[INFO]: Replay %s saved.\n", fileName);
+    } else {
+        printf("[ERROR]: An error occured saving the replay.\n");
+    }
+    
+    if (fileName != NULL)
+        free(fileName);      
+}
+
+/**
  * Handles a server message
  * make it call a user defined function of OnServerMSG
  */
@@ -326,8 +372,18 @@ static void handleResponse (struct triceBot *b,
             }     
         }
         
-        if (response.HasExtension(Response_Login::ext)) 
-            loginResponse(b, &response, NULL);      
+        if (response.HasExtension(Response_Login::ext)) {
+            loginResponse(b, &response, NULL);   
+        } 
+        
+        else if (response.HasExtension(Response_ReplayDownload::ext)) {
+            #if DOWNLOAD_REPLAYS
+            replayResponseDownload(b,
+                                   response.GetExtension(Response_ReplayDownload::ext));
+            #endif
+            
+            //TODO: call a user function
+        }
     }
 }
 
@@ -384,49 +440,12 @@ static void handleRoomEvent(struct triceBot *b,
 }
 
 /**
- * Downloads a replay to ./replays/
- * -> Fails silently
- */ 
-void replayResponseDownload(struct triceBot *b,
-                            const Response *response, 
-                            void *param) {
-    if (response == NULL)
-        return;
-    
-    if (response->HasExtension(Response_ReplayDownload::ext)) {
-        Response_ReplayDownload replay = response->GetExtension(Response_ReplayDownload::ext);
-        
-        const char *replayData = replay.replay_data().c_str();
-        int len = replay.replay_data().length();
-        
-        int *replayID = (int *) param;
-        char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
-        
-        snprintf(fileName, BUFFER_LENGTH,"/replay%d.cod", *replayID);        
-        
-        //Check is replay directory is made         
-        FILE *replayFile = fopen(fileName, "wb+");
-        for (int i = 0; i < len; i++)
-            fputc(replayData[i], replayFile);
-        
-        fclose (replayFile);    //close file like a good boy
-        
-        printf("[INFO]: Replay %s saved.\n", fileName);  
-        
-        if (fileName != NULL)
-            free(fileName);        
-    } 
-    
-    if (param != NULL)
-        free(param);
-}
-
-/**
  * Called when a replay is ready
  * Set DOWNLOAD_REPLAYS to 1 with -DDOWNLOAD_REPLAYS=1 to make this be 
  * called on any replay.
  * If you want to have smart replay downloading then feel free to modify this
  * code. :)
+ * This is subject to cockspaghet tm
  */ 
 static void replayReady(struct triceBot *b,
                         const Event_ReplayAdded replayAdded) {    
@@ -445,11 +464,6 @@ static void replayReady(struct triceBot *b,
         c->MutableExtension(Command_ReplayDownload::ext)->CopyFrom(replayDownload);
         
         struct pendingCommand *cmd = prepCmd(b, cont, -1, -1);    
-        cmd->callbackFunction = &replayResponseDownload;
-        
-        int *id = (int *) malloc(sizeof(int));
-        *id = replay.replay_id();
-        cmd->param = (void *) id;
         enq(cmd, &b->sendQueue);
     }    
 }

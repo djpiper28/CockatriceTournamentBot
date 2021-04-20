@@ -52,14 +52,6 @@ struct pendingCommand *prepEmptyCmd(struct triceBot *b);
 void sendPing(struct triceBot *b);
 
 /**
- * Downloads a replay to ./replays/
- * -> fails silently
- */ 
-void replayResponseDownload(struct triceBot *b,
-                            const Response *response, 
-                            void *param);
-
-/**
  * This method sends a create game command
  * WARNING If the callback is NULL then the param struct is not freed as it 
  * assumes that a thread is polling it see apiServer for example.
