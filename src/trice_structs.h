@@ -2,6 +2,7 @@
 #define TRICE_STRUCTS_H_
 
 #include <pthread.h>
+#include <unistd.h>
 #include "botconf.h"
 #include "gamestruct.h"
 #include "response.pb.h"
@@ -107,7 +108,7 @@ struct triceBot {
         cmdID,
         running,
         id;
-    long lastPingTime, lastSend, sendWaitTime;
+    long lastPingTime, lastSend;
     
     //Event Function Pointers for session events    
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,

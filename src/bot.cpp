@@ -125,9 +125,7 @@ void initBot(struct triceBot *b,
     b->magicRoomID = -1;
     b->lastPingTime = 0;
     b->id = 0;
-    b->lastSend = 0;
-    b->sendWaitTime = b->config.floodingCooldown;
-    
+    b->lastSend = 0;    
 }
 
 static struct pendingCommand *prepCmdNTS(struct triceBot *b, 
@@ -326,11 +324,11 @@ static void replayResponseDownload(struct triceBot *b,
     gameReplay.ParseFromArray(replay.replay_data().c_str(),
                               replay.replay_data().length());
     
-    int replayID = gameReplay.replay_id();
+    int gameID = gameReplay.game_info().game_id();
     //end spaghetti
     char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
     
-    snprintf(fileName, BUFFER_LENGTH, "%s/replay%d.cor", b->config.replayFolder, replayID);
+    snprintf(fileName, BUFFER_LENGTH, "%s/replay%d.cor", b->config.replayFolder, gameID);
     
     DIR* dir = opendir(b->config.replayFolder);
     if (dir) {
@@ -349,7 +347,7 @@ static void replayResponseDownload(struct triceBot *b,
         
         printf("[INFO]: Replay %s saved.\n", fileName);
     } else {
-        printf("[ERROR]: An error occured saving the replay as %s.\n", fileName);
+        printf("[ERROR]: An error occurred saving the replay as %s.\n", fileName);
     }
     
     if (fileName != NULL)
@@ -835,22 +833,18 @@ static void botEventHandler(struct mg_connection *c,
         pthread_mutex_unlock(&b->mutex);
         
         //Send commands
-        long sendTime = clock() / (CLOCKS_PER_SEC * 1000);
-        if (hasNext(&b->sendQueue)) {           
-            if (/* && sendTime - b->lastSend > b->sendWaitTime*/ 1) {
-                struct pendingCommand *cmd = deq(&b->sendQueue);   
-                
-                mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);  
-                
-                enq(cmd, &b->callbackQueue);
-                
-                //b->lastSend = sendTime;
-            }
+        struct timeval val;
+        gettimeofday(&val, NULL);        
         
+        if (hasNext(&b->sendQueue)) {           
+            struct pendingCommand *cmd = deq(&b->sendQueue);   
+            
+            mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);  
+            
+            enq(cmd, &b->callbackQueue);
+            
             #if MEGA_DEBUG
-            else {
-                printf("[MEGA_DEBUG]: Waiting a bit before sending command. %ld\n", sendTime);
-            }
+            printf("[MEGA_DEBUG]: MSG of length %d sent\n", cmd->size);
             #endif
         }
         

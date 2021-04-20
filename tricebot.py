@@ -1,18 +1,23 @@
 import requests
 
+class GameMade:
+    def __init__(self, success: str, gameID: int):
+        self.success = success
+        self.gameName = gameName
+
 class TriceBot:    
-    def __init__(self, authToken, apiURL="https://0.0.0.0:8000"):
+    def __init__(self, authToken: str, apiURL: str="https://0.0.0.0:8000"):
         self.authToken = authToken
         self.apiURL = apiURL
         
     # verify = false as self signed ssl certificates will cause errors here
-    def req(self, urlpostfix, data):
+    def req(self, urlpostfix: str, data: str):
         return requests.get(self.apiURL + "/" + urlpostfix, timeout=7.0, data=data,  verify=False).text
         
     def checkauthkey(self):
         return self.req("api/checkauthkey", self.authToken) == "1"
     
-    def createGame(self, gamename, password, playercount, spectatorsallowed, spectatorsneedpassword, spectatorscanchat, spectatorscanseehands, onlyregistered):
+    def createGame(self, gamename: str, password: str, playercount: int, spectatorsallowed: bool, spectatorsneedpassword: bool, spectatorscanchat: bool, spectatorscanseehands: bool, onlyregistered: bool):
         body = "authtoken=" + self.authToken + "\n"
         body += "gamename=" + gamename + "\n"
         body += "password=" + password + "\n"
@@ -56,9 +61,16 @@ class TriceBot:
             status = self.req("api/creategame/", body)     
         except OSError as exc:
             # logging.error(f"exception while requesting create game with body:\n{body}", exc_info=exc)
-            return False
+            return GameMade(False, -1)
 
         if (status == "timeout error" or status == "error 404" or status == "invalid auth token"):
-            return False
+            return GameMade(False, -1)
         
-        return True
+        parts = status.split("=")
+        if (len(parts) == 2):
+            #jank lmao
+            try:
+                return GameMade(True, int(parts[1]))
+            except:
+                return GameMade(False, -1)
+        return GameMade(False, -1)

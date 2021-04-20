@@ -8,8 +8,6 @@
 #define BUFFER_LENGTH 1024
 
 struct Config {
-    int floodingCooldown;
-    
     #if LOGIN_AUTOMATICALLY
     char *cockatriceUsername, 
          *cockatricePassword;
@@ -27,7 +25,8 @@ struct Config {
          *cert, 
          *authToken,
          *certkey, 
-         *bindAddr;
+         *bindAddr,
+         *externalAddr;
     int success;
 };
 

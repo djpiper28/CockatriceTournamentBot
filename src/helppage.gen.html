@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Cockatrice Bot API Documentation</title>
+<title>Marchesa Cockatrice Bot API Documentation</title>
 </head>
 
 <body>
@@ -20,6 +20,7 @@
 <p><a href="#check auth key">check auth key</a></p>
 <p><a href="#invalid auth token">invalid auth token</a></p>
 <p><a href="#create game">create game</a></p>
+<p><a href="#replays">replays</a></p>
 <p><a href="#bottom">bottom</a></p>
 
 <a name="top"/>
@@ -42,11 +43,11 @@ sampleauthtoken
 
 returns 1 if the auth token is valid, 0 if not. i.e:
 <blockquote>
-1
+valid=1
 </blockquote>
 if it is valid or
 <blockquote>
-0
+valid=0
 </blockquote>
 if it is invalid
 
@@ -99,6 +100,10 @@ if it is made or
 error
 </blockquote>
 if it is not made
+
+<h3 name="replays">../replay/replay%d.cor</h3>
+%d is the game ID as returned by creategame. The replay may be overwritten after 
+enough time. Returns the replay file.
 
 <a name="bottom"/>
 

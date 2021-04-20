@@ -21,11 +21,7 @@ bindAddr=https://127.0.0.1:8000
 clientID=test
 roomName=Magic
 replayFolder=replays
-floodingCooldown=150
 ```
-The floodingCooldown is the minimum time in millis that two commands can be sent 
-to the trice server so that rate limits are not applied.
-
 Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:
 

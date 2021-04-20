@@ -61,12 +61,6 @@ static void readProperty(char *line, struct Config *config) {
     } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
         config->clientID = valueStr;   
     } else 
-        
-    //Read numerical data
-    if (strncmp("floodingCooldown", propertyStr, BUFFER_LENGTH) == 0) {
-        config->floodingCooldown = atoi(valueStr);  
-        free(valueStr);    
-    } else 
             
     //API Server config
     #if _SSL    
