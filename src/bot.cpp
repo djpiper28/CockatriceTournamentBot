@@ -849,7 +849,7 @@ static void botEventHandler(struct mg_connection *c,
         
             #if MEGA_DEBUG
             else {
-                printf("[MEGA_DEBUG]: Waiting a bit before sending command. %d\n", sendTime);
+                printf("[MEGA_DEBUG]: Waiting a bit before sending command. %ld\n", sendTime);
             }
             #endif
         }
