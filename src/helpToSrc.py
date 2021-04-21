@@ -3,6 +3,7 @@ anchorPoints = []
 tmpSource = []
 
 for line in helpFile:
+    line = line.replace("%", "%%")
     temp = line.split("name=\"")
     if (len(temp) > 1):
         anchorPoints.append(temp[1].split("\"")[0])

@@ -266,14 +266,16 @@ static void eventHandler(struct mg_connection *c,
         api = s->api;
         
         #if DISCORD
-        if (mg_http_match_uri(hm, "/index/")) {
+        if (mg_http_match_uri(hm, "/index") 
+            || mg_http_match_uri(hm, "/index/")
+            || mg_http_match_uri(hm, "/")) {
             mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL="
             "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\" />",
                           api->config.clientID);
         } else 
         #endif
             
-        if (mg_http_match_uri(hm, "/github/")) {
+        if (mg_http_match_uri(hm, "/github")) {
             mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />", 
                           GITHUB_REPO);
         } else if (mg_http_match_uri(hm, "/api/version/")) {
