@@ -17,3 +17,7 @@
 #ifndef DEBUG
 #define DEBUG 0
 #endif
+
+#ifndef DISCORD
+#define DISCORD 1
+#endif

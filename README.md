@@ -18,12 +18,15 @@ authtoken=nGpzR/KspN6ry7jG8CU4bonN2aujzfJa
 certfile=fullchain.pem
 certkeyfile=privkey.pem
 bindAddr=https://127.0.0.1:8000
-clientID=test
+clientID=id
 roomName=Magic
 replayFolder=replays
 ```
 Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:
+
+The clientID is the client ID of the discord bot attched, use -DDISCORD=0 if you
+are not using a discord bot and set the client ID to your IP or random noise.
 
 ```yaml
 username=not this
