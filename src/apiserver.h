@@ -16,8 +16,8 @@ struct apiServer {
     struct triceBot *triceBot; 
     struct Config config;
     int running;
+    char * replayFolerWildcard;
 };
-
 
 void initServer(struct apiServer *server, 
                 struct triceBot *triceBot, 

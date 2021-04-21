@@ -19,6 +19,8 @@
 #include "get_pb_extension.h"
 #include "response.pb.h"
 
+#define DOWNLOAD_HEADER "Content-Disposition: attachment\r\n"
+
 //Internal connection struct
 struct ServerConnection {
     struct apiServer *api;
@@ -50,10 +52,16 @@ void initServer(struct apiServer *server,
         server->opts.certkey = server->config.certkey;
         server->opts.ca = NULL;//server->config.cert;
     }
+    
+    server->replayFolerWildcard = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
+    snprintf(server->replayFolerWildcard,
+             BUFFER_LENGTH,
+             "/%s/**/*", server->config.replayFolder);    
 }
 
 void freeServer(struct apiServer *api) {
     pthread_mutex_destroy(&api->bottleneck);
+    free(api->replayFolerWildcard);
 }
 
 static void sendInvalidAuthTokenResponse(struct mg_connection *c) {
@@ -280,10 +288,17 @@ static void eventHandler(struct mg_connection *c,
         } else if (mg_http_match_uri(hm, "/api/")) {
             mg_http_reply(c, 200, "", HELP_STR);
         } else if (mg_http_match_uri(hm, "/replay*")) {
-            #define DOWNLOAD_HEADER "Content-Disposition: attachment\r\n"
             
             struct mg_http_serve_opts opts = {
                 .root_dir = api->config.replayFolder,
+                .extra_headers = DOWNLOAD_HEADER
+            };
+            
+            mg_http_serve_dir(c, hm, &opts);
+        } else if (mg_http_match_uri(hm, api->replayFolerWildcard)) {      
+            
+            struct mg_http_serve_opts opts = {
+                .root_dir = ".",
                 .extra_headers = DOWNLOAD_HEADER
             };
             
@@ -306,10 +321,13 @@ static void eventHandler(struct mg_connection *c,
                 if (ID != -1) {                     
                     char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
                     char *replayName = getReplayFileName(paramdata->gameID,
-                                                         paramdata->gameName);
+                                                         paramdata->gameName,
+                                                         paramdata->gameNameLength,
+                                                         NULL);
                     
-                    snprintf(data, BUFFER_LENGTH, "gameid=%d\nreplayName=%s", 
+                    snprintf(data, BUFFER_LENGTH, "gameid=%d\nreplayName=%s/%s", 
                              paramdata->gameID,
+                             api->config.replayFolder,
                              replayName);
                     
                     printf("[INFO]: Game created with ID %d.\n",
@@ -404,6 +422,8 @@ int startServer(struct apiServer *api) {
                api->config.cert,
                api->config.certkey);
         #endif
+        printf("-> Serving replays on /replay* and %s\n",
+               api->replayFolerWildcard);
         
         api->running = 1;
         pthread_mutex_unlock(&api->bottleneck);

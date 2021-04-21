@@ -57,7 +57,26 @@ static void readProperty(char *line, struct Config *config) {
     } else if (strncmp("authtoken", propertyStr, BUFFER_LENGTH) == 0) {
         config->authToken = valueStr;               
     } else if (strncmp("replayFolder", propertyStr, BUFFER_LENGTH) == 0) {
-        config->replayFolder = valueStr;               
+        config->replayFolder = valueStr;
+        
+        //Remove trailing slashes i,e: 
+        //    test///// to test
+        //    test/test/ to test/test
+        for (int i = valueLen - 2, trailingSlashes = 1; i >= 0 && trailingSlashes; i--) {
+            if (config->replayFolder[i] == '/') {
+                config->replayFolder[i] = 0;
+            } else {
+                trailingSlashes = 0;
+            }
+        }
+        
+        //Warn the user that the location is absolute and they might be trying to write to /replays/
+        if (valueLen >= 1) {
+            if (config->replayFolder[0] == '/') {
+                printf("[WARNING]: Replay folder is an absolute location (%s)\n",
+                       config->replayFolder);
+            }
+        }
     } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
         config->clientID = valueStr;   
     } else 

@@ -10,7 +10,8 @@
 struct gameCreateCallbackWaitParam {   
     char *gameName;
     int   gameID, 
-          sendTime;
+          sendTime,
+          gameNameLength;
     pthread_mutex_t mutex;
     void (*callbackFn) (struct gameCreateCallbackWaitParam *);
 };

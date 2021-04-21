@@ -310,11 +310,134 @@ static void executeCallback(struct triceBot *b,
 }
 
 /**
- * Free the char* manually.
+ * Length should include the null terminator!
+ * Cleans out rogue null terminators and unprintable chars.
+ * 
+ * Returns 1 if chars were cleaned
  */ 
-char *getReplayFileName(int gameID, const char *gameName) {   
-    char *replayName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);    
-    snprintf(replayName, BUFFER_LENGTH, "replay-%s-%d.cor", gameName, gameID); 
+static int cleanUpStringInput(char *str, int length) {
+    int cleaned = 0;
+    for (int i = 0; i < length - 1; i++) {
+        if (str[i] < 32 || str[i] > 126){
+            str[i] = '?';
+            cleaned = 1;
+        }
+    }
+    
+    //Sanity check - double check the null terminator at the end is there
+    str[length] = 0;
+    
+    return cleaned;
+}
+
+/**
+ * Free the char* manually.
+ * Names with slashes i.e: Test Tournament/Finals/Match 6 will be saved as as
+ * REPLAY_FOLDER/Test Tournament/Finals/replay-Match 6-GAME_ID.cor
+ * Names without slashes will be saved as replay-NAME-GAMEID.cor
+ * 
+ * Set baseDIR to NULL if you do not want to make the folders yet
+ */ 
+char *getReplayFileName(int gameID, 
+                        const char *gameNameUnfiltered, 
+                        int length,
+                        char *baseDIR) { 
+    //Allow non-null terminated data to work
+    char *gameNameCP = (char *) malloc(sizeof(char) * (length + 1));
+    strncpy(gameNameCP, gameNameUnfiltered, length + 1);
+    if (cleanUpStringInput(gameNameCP, length + 1)) {
+        printf("[WARNING]: A tournament with unprintable chars in its name was detected!\n");
+    }    
+    
+    int makeDIR = baseDIR != NULL;
+    
+    /**
+     * Security check remove all ../
+     */
+    for (int i = 0; i < length; i++) {
+        if (gameNameCP[i] == '.') {
+            if (i + 2 < length) {
+                if (gameNameCP[i + 1] == '.' && gameNameCP[i + 2] == '/') {
+                    gameNameCP[i] = '_';
+                    gameNameCP[i + 1] = '_';
+                    gameNameCP[i + 2] = '_';
+                    
+                    if(makeDIR) {
+                        printf("[WARNING]: A tournament tried to create a replay in ../ in the path but was stopped. ");
+                        printf("The ../ (slash) was changed to ___.\n");
+                    }
+                }
+            }
+        }
+    }      
+    
+    
+    
+    /**
+     * Security check - do not use abs path!!!
+     * Stop writing to an absolute path
+     * */
+    if (gameNameCP[0] == '/') {        
+        gameNameCP[0] = '_'; 
+        
+        if(makeDIR) {
+            printf("[WARNING]: A tournament tried to create a replay in an absolute path but was stopped. ");
+            printf("The Leading / was changed to an _.\n");
+        }
+    }
+    
+    //Get DIR structure
+    int tempFolderBaseLength = 1;
+    if (makeDIR) {
+        tempFolderBaseLength+= strnlen(baseDIR, BUFFER_LENGTH);
+    }
+    
+    char *tempFolderName = (char *) malloc(sizeof(char) * (tempFolderBaseLength + length + 1));
+    
+    int lastSlash = -1;    
+    for (int i = 0; i < length; i++) {
+        if (gameNameCP[i] == '/') {            
+            lastSlash = i;        
+            if(makeDIR) {
+                tempFolderName = (char *) malloc(sizeof(char) * (i + 1)); 
+                snprintf(tempFolderName, tempFolderBaseLength + i + 1, "%s/%s", baseDIR, gameNameCP);
+                
+                // make directory
+                DIR* dir = opendir(tempFolderName);
+                if (dir) {
+                    closedir(dir);
+                    printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
+                           tempFolderName);
+                } else if (ENOENT == errno) {
+                    // Directory does not exist. 
+                    mkdir(tempFolderName, 0700);
+                    printf("[INFO]: Made dir %s for replays.\n", 
+                           tempFolderName);
+                }
+            }            
+        }
+    }    
+    
+    free(tempFolderName);
+        
+    /**
+     * All replays are stored in the replay folder and the names of the replay 
+     * are appended to the replay folder after a slash. 
+     * i.e: REPLAYFOLDER/test/replay-%s-%d.cor
+     * */
+    char *replayName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
+    if (lastSlash == -1) {
+        snprintf(replayName, BUFFER_LENGTH, "replay-%s-%d.cor", 
+                 gameNameCP, 
+                 gameID); 
+    } else {
+        snprintf(replayName, BUFFER_LENGTH, "%s-%d.cor",
+                 gameNameCP, 
+                 gameID); 
+    }
+    
+    free(gameNameCP);
+    
     return replayName;
 }
 
@@ -335,7 +458,9 @@ static void replayResponseDownload(struct triceBot *b,
     //end spaghetti
     char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH * 2);
     char *replayName = getReplayFileName(gameReplay.game_info().game_id(),
-                                         gameReplay.game_info().description().c_str());
+                                         gameReplay.game_info().description().c_str(),
+                                         gameReplay.game_info().description().length(),
+                                         b->config.replayFolder);
     
     snprintf(fileName, BUFFER_LENGTH, "%s/%s", b->config.replayFolder, replayName);
     free(replayName);
@@ -637,6 +762,8 @@ static void handleGameCreate(struct triceBot *b,
  * Otherwise the callback is called and then the data is freed.
  * If the bot disconnects while waiting for a callback then it will wait in 
  * another thread for the callbackFn to stop being null then free the struct.
+ * The game name is cleaned of unprintable chars but the password is not as it
+ * is not seen by the user.
  * 
  * TL;DR.
  * Callback should not be NULL.
@@ -659,13 +786,12 @@ sendCreateGameCommand(struct triceBot *b,
                       int onlyBuddies,                                                          
                       void (*callbackFn) (struct gameCreateCallbackWaitParam *)) {
     Command_CreateGame createGame;
-    int length;
-    for (length = 0; gameName[length] != 0; length++);
+    int gameNameLength = strnlen(gameName, BUFFER_LENGTH);
     
-    char *gameNameCopy = (char *) malloc(sizeof(char) * length + 1);
-    for (int i = 0; i < length && i < BUFFER_LENGTH; i++)
-        gameNameCopy[i] = gameName[i];
-        
+    char *gameNameCopy = (char *) malloc(sizeof(char) * gameNameLength + 1);
+    strncpy(gameNameCopy, gameName, gameNameLength);    
+    cleanUpStringInput(gameNameCopy, gameNameLength + 1);  
+    
     createGame.set_description(gameNameCopy);
     createGame.set_password(password);
     createGame.set_max_players(playerCount);
@@ -693,6 +819,7 @@ sendCreateGameCommand(struct triceBot *b,
             malloc(sizeof(struct gameCreateCallbackWaitParam));      
     
     param->gameName = gameNameCopy;
+    param->gameNameLength = gameNameLength;
     param->gameID = -1;
     param->sendTime = time(NULL);
     param->callbackFn = callbackFn;

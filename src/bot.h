@@ -17,8 +17,13 @@
 
 /**
  * Free the char* manually.
+ * Names with slashes i.e: Test Tournament/Finals/Match 6 will be saved as as
+ * REPLAY_FOLDER/Test Tournament/Finals/replay-Match 6-GAME_ID.cor
+ * Names without slashes will be saved as replay-NAME-GAMEID.cor
+ * 
+ * Set baseDIR to NULL if you do not want to make the folders yet
  */ 
-char* getReplayFileName(int gameID, const char* gameName);
+char *getReplayFileName(int gameID, const char *gameNameUnfiltered, int length, char *baseDIR);
 
 /**
  * struct triceBot *b -> pointer to the bot to init
