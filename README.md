@@ -48,4 +48,3 @@ backtrace of the program. Make sure that the program is called with an argument 
 ## TODO:
 - add tricebot rate limit (wip)
 - allow multi-room gaming
-- replay download via the api
