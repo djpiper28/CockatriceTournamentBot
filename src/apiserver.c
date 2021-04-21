@@ -271,11 +271,14 @@ static void eventHandler(struct mg_connection *c,
             serverCreateGameCommand(s, c, hm);            
         } else if (mg_http_match_uri(hm, "/api/")) {
             mg_http_reply(c, 200, "", HELP_STR);
-        } else if ("/replays/*") {            
+        } else if (mg_http_match_uri(hm, "/replay*")) {
+            #define DOWNLOAD_HEADER "Content-Disposition: attachment\r\n"
+            
             struct mg_http_serve_opts opts = {
                 .root_dir = api->config.replayFolder,
-                .ssi_pattern="#.cor"                
+                .extra_headers = DOWNLOAD_HEADER
             };
+            
             mg_http_serve_dir(c, hm, &opts);
         } else{
             send404(c);
@@ -292,15 +295,22 @@ static void eventHandler(struct mg_connection *c,
                 int ID = paramdata->gameID;
                 pthread_mutex_unlock(&paramdata->mutex);
                         
-                if (ID != -1) { 
+                if (ID != -1) {                     
                     char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
-                    snprintf(data, BUFFER_LENGTH, "gameid=%d", paramdata->gameID);  
+                    char *replayName = getReplayFileName(paramdata->gameID,
+                                                         paramdata->gameName);
+                    
+                    snprintf(data, BUFFER_LENGTH, "gameid=%d\nreplayName=%s", 
+                             paramdata->gameID,
+                             replayName);
+                    
                     printf("[INFO]: Game created with ID %d.\n",
                            paramdata->gameID);
                     
                     mg_http_reply(c, 200, "", data);  
                     
                     free(data);
+                    free(replayName);
                     freeGameCreateCallbackWaitParam(paramdata);
                     
                     s->isGameCreate = 0;

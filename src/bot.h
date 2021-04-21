@@ -16,6 +16,11 @@
  */ 
 
 /**
+ * Free the char* manually.
+ */ 
+char* getReplayFileName(int gameID, const char* gameName);
+
+/**
  * struct triceBot *b -> pointer to the bot to init
  * struct Config config -> bot configuration
  */ 

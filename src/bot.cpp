@@ -310,6 +310,15 @@ static void executeCallback(struct triceBot *b,
 }
 
 /**
+ * Free the char* manually.
+ */ 
+char *getReplayFileName(int gameID, const char *gameName) {   
+    char *replayName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);    
+    snprintf(replayName, BUFFER_LENGTH, "replay-%s-%d.cor", gameName, gameID); 
+    return replayName;
+}
+
+/**
  * Downloads a replay to ./replays/
  * -> Fails silently
  * Is subject to cockaspagheti
@@ -323,12 +332,13 @@ static void replayResponseDownload(struct triceBot *b,
     GameReplay gameReplay;
     gameReplay.ParseFromArray(replay.replay_data().c_str(),
                               replay.replay_data().length());
-    
-    int gameID = gameReplay.game_info().game_id();
     //end spaghetti
-    char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
+    char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH * 2);
+    char *replayName = getReplayFileName(gameReplay.game_info().game_id(),
+                                         gameReplay.game_info().description().c_str());
     
-    snprintf(fileName, BUFFER_LENGTH, "%s/replay%d.cor", b->config.replayFolder, gameID);
+    snprintf(fileName, BUFFER_LENGTH, "%s/%s", b->config.replayFolder, replayName);
+    free(replayName);
     
     DIR* dir = opendir(b->config.replayFolder);
     if (dir) {
