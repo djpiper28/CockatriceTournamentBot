@@ -102,8 +102,9 @@ timeout error
 </blockquote>
 if it is not made
 
-<h3 name="replays">../replay/replay%d.cor</h3>
-%d is the game ID as returned by creategame. The replay may be overwritten after 
+<h3 name="replays">../replay-%s-%d.cor</h3>
+%d is the game ID as returned by creategame and %s is the game name sent to the api.
+The replay may be overwritten after 
 enough time. Returns the replay file.
 
 <a name="bottom"/>
