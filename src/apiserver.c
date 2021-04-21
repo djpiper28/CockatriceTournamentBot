@@ -278,16 +278,20 @@ static void eventHandler(struct mg_connection *c,
         if (mg_http_match_uri(hm, "/github")) {
             mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />", 
                           GITHUB_REPO);
-        } else if (mg_http_match_uri(hm, "/api/version/")) {
+        } else if (mg_http_match_uri(hm, "/api/version/") 
+            || mg_http_match_uri(hm, "/api/version")) {
             mg_http_reply(c, 200, "", "v%d.%d", 
                         VERSION_MAJOR, VERSION_MINOR);  
-        } else if (mg_http_match_uri(hm, "/api/checkauthkey/")) {
+        } else if (mg_http_match_uri(hm, "/api/checkauthkey/")
+            || mg_http_match_uri(hm, "/api/checkauthkey")) {
             mg_http_reply(c, 200, "", "valid=%d", strncmp(hm->body.ptr,
                                                           api->config.authToken, 
                                                           BUFFER_LENGTH) == 0); 
-        } else if (mg_http_match_uri(hm, "/api/creategame/")) { 
+        } else if (mg_http_match_uri(hm, "/api/creategame/")
+            || mg_http_match_uri(hm, "/api/creategame")) { 
             serverCreateGameCommand(s, c, hm);            
-        } else if (mg_http_match_uri(hm, "/api/")) {
+        } else if (mg_http_match_uri(hm, "/api/")
+                || mg_http_match_uri(hm, "/api")) {
             mg_http_reply(c, 200, "", HELP_STR);
         } else if (mg_http_match_uri(hm, "/replay*")) {
             
