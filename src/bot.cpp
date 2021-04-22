@@ -367,8 +367,8 @@ char *getReplayFileName(int gameID,
                 }
             }
         } else if (gameNameCP[i] == '/' && i + 1 < length) {
-            gameNameCP[i + 1] = gameNameCP[i + 1] == '/' *'_' 
-                              + gameNameCP[i + 1] != '/' * gameNameCP[i + 1];
+            gameNameCP[i + 1] = (gameNameCP[i + 1] == '/') * '_' 
+                              + (gameNameCP[i + 1] != '/') * gameNameCP[i + 1];
         }
     }      
     
