@@ -346,7 +346,7 @@ char *getReplayFileName(int gameID,
     char *gameNameCP = (char *) malloc(sizeof(char) * (length + 1));
     strncpy(gameNameCP, gameNameUnfiltered, length + 1);
     if (cleanUpStringInput(gameNameCP, length + 1)) {
-        printf("[WARNING]: A tournament with unprintable chars in its name was detected!\n");
+        printf("[WARNING]: A tournament with unprintable chars in its name was detected! All unprintable chars were changed to underscores.\n");
     }    
     
     int makeDIR = baseDIR != NULL;
@@ -355,19 +355,20 @@ char *getReplayFileName(int gameID,
      * Security check remove all ../
      */
     for (int i = 0; i < length; i++) {
-        if (gameNameCP[i] == '.') {
-            if (i + 2 < length) {
-                if (gameNameCP[i + 1] == '.' && gameNameCP[i + 2] == '/') {
-                    gameNameCP[i] = '_';
-                    gameNameCP[i + 1] = '_';
-                    gameNameCP[i + 2] = '_';
-                    
-                    if(makeDIR) {
-                        printf("[WARNING]: A tournament tried to create a replay in ../ in the path but was stopped. ");
-                        printf("The ../ (slash) was changed to ___.\n");
-                    }
+        if (gameNameCP[i] == '.' && i + 2 < length) {
+            if (gameNameCP[i + 1] == '.' && gameNameCP[i + 2] == '/') {
+                gameNameCP[i] = '_';
+                gameNameCP[i + 1] = '_';
+                gameNameCP[i + 2] = '_';
+                
+                if(makeDIR) {
+                    printf("[WARNING]: A tournament tried to create a replay in ../ in the path but was stopped. ");
+                    printf("The ../ (slash) was changed to ___.\n");
                 }
             }
+        } else if (gameNameCP[i] == '/' && i + 1 < length) {
+            gameNameCP[i + 1] = gameNameCP[i + 1] == '/' *'_' 
+                              + gameNameCP[i + 1] != '/' * gameNameCP[i + 1];
         }
     }      
     

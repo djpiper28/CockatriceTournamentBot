@@ -10,9 +10,29 @@
     grid-template-rows: 1fr 1fr 1fr;
     gap: 0px 0px;
     grid-template-areas:
-        "index content content ."
-        "index content content ."
-        "index content content .";
+        "content content content content"
+        "content content content content"
+        "index index index index";
+}
+
+.index { 
+    grid-area: index; 
+    color: white;
+    font-family: verdana;
+    padding: 32px;
+}
+
+@Media (min-width: 500px) {
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr;                
+        gap: 0px 0px;
+        grid-template-areas:
+            "index content content ."
+            "index content content ."
+            "index content content .";
+    }
 }
 
 .content {
@@ -28,14 +48,6 @@
     margin-left: 32px;
     margin-right: 32px;
     margin-top: 32px;
-}
-
-
-.index { 
-    grid-area: index; 
-    color: white;
-    font-family: verdana;
-    padding: 32px;
 }
 
 .bg {
