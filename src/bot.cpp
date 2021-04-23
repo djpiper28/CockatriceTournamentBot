@@ -65,6 +65,7 @@
 #define SESSION_EVENT 1
 #define GAME_EVENT_CONTAINER 2
 #define ROOM_EVENT 3
+#define MAX_GAME_WAIT 1800
 
 /**
  * This macro is to reduce code repetition in the session event method which
@@ -126,6 +127,7 @@ void initBot(struct triceBot *b,
     b->lastPingTime = 0;
     b->id = 0;
     b->lastSend = 0;    
+    b->lastGameWaitCheck = 0;
 }
 
 static struct pendingCommand *prepCmdNTS(struct triceBot *b, 
@@ -968,6 +970,37 @@ static void botEventHandler(struct mg_connection *c,
             
             b->roomRequested = 1;
         }
+        
+        long currentTime = time(NULL);
+        if (b->lastGameWaitCheck != currentTime) {
+            //Itter over games
+            pthread_mutex_lock(&b->gameList.mutex);
+            struct gameListNode *current = b->gameList.gamesHead;
+            while (current != NULL) {
+                //Check for game start timeout
+                if (!current->currentGame->started 
+                    && currentTime - current->currentGame->creationTime > MAX_GAME_WAIT) {
+                    Command_LeaveGame leaveGame;                    
+                    CommandContainer cont;  
+                    GameCommand *gc = cont.add_game_command();
+                    gc->MutableExtension(Command_LeaveGame::ext)->CopyFrom(leaveGame);
+                
+                    //IDs are set in prepCMD
+                    struct pendingCommand *cmd = prepCmdNTS(b, 
+                                                            cont, 
+                                                            current->currentGame->gameID, 
+                                                            b->magicRoomID);
+                
+                    enq(cmd, &b->sendQueue);
+                }
+                
+                current = current->nextGame;
+            }
+            
+            pthread_mutex_unlock(&b->gameList.mutex);
+        }
+        
+        b->lastGameWaitCheck = currentTime;
         pthread_mutex_unlock(&b->mutex);
         
         //Send commands

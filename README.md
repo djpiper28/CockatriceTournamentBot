@@ -1,11 +1,13 @@
 # Marchesa Bot (or the boring name of CockatriceTournamentBot)
 (Linux only due to pthread and unistd dependancies)
 
-## Interfacing with it 
+## Interfacing with the bot
 The bot will host an https server (with self signed keys probably) and apps that
 interface with the bot will use that to connect and send commands which will then
 get a response (see src/helppage.gen.html for details). A sample implementation is
 in python in a file called `tricebot.py`.
+
+Do note empty games are deleted after 30 minutes by this bot.
 
 ## Config file
 The file (config.conf) should be in this format:
@@ -26,7 +28,9 @@ Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:
 
 The clientID is the client ID of the discord bot attched, use -DDISCORD=0 if you
-are not using a discord bot and set the client ID to your IP or random noise.
+are not using a discord bot and set the client ID to your IP or random noise. If
+discord is set to 1, then the index page of the bot will be an invite link for
+that bot (perms are set to admin by default).
 
 ```yaml
 username=not this
@@ -41,9 +45,10 @@ CA certificates because it is not web-facing. Ideal configuration would have the
 bot running on the same machine as the program that uses it.
 
 ## Help it is borked
-compile with `make build-debug` and then run it with a debugger and get the full
-backtrace of the program. Make sure that the program is called with an argument of
-`3` to get some verbose mongoose logs.
+Compile with `make -j` and have DEBUG enabled in the makefile and then run it 
+with a debugger and get the full
+backtrace of the program. Make sure that the program is called with an argument
+of `3` to get some verbose mongoose logs.
 
 ## TODO:
 - add tricebot rate limit (wip)

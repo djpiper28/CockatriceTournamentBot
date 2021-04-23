@@ -58,6 +58,7 @@ struct game *createGame(int gameID) {
     g->gameID = gameID;
     g->started = 0;
     g->startTime = -1;
+    g->creationTime = time(NULL);
     
     return g;
 }

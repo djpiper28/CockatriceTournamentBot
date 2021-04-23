@@ -108,7 +108,9 @@ struct triceBot {
         cmdID,
         running,
         id;
-    long lastPingTime, lastSend;
+    long lastGameWaitCheck,
+         lastPingTime, 
+         lastSend;
     
     //Event Function Pointers for session events    
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,

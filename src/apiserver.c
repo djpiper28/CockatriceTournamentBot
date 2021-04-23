@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <signal.h>
 #include "botconf.h"
 #include "gamestruct.h"
 #include "version.h"
@@ -127,8 +128,8 @@ static void serverCreateGameCommand(struct ServerConnection *s,
             size_t valueLen = line.len - eqPtr - 1;
             size_t propLen = eqPtr;
             
-            //Error case - no prop len
-            if (propLen != 0) {
+            //Error case - no prop len or, value len
+            if (propLen != 0 || valueLen != 0) {
                 //Read value of the tag
                 char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
                 size_t j = 0;
@@ -415,6 +416,10 @@ static void *pollingThread(void *apiIn) {
 }
 
 int startServer(struct apiServer *api) {     
+    //WARNING: -probably bad
+    signal(SIGPIPE, SIG_IGN);
+    
+    
     pthread_mutex_lock(&api->bottleneck);      
     if (api->running) {        
         pthread_mutex_unlock(&api->bottleneck);
@@ -422,12 +427,9 @@ int startServer(struct apiServer *api) {
         return 0;
     } else {    
         printf("[INFO]: Starting api server, listening on %s\n", api->config.bindAddr);
-        
-        #if _SSL
         printf("-> SSL enabled. cert: %s & certkey: %s.\n",
                api->config.cert,
                api->config.certkey);
-        #endif
         printf("-> Serving replays on /replay* and %s\n",
                api->replayFolerWildcard);
         

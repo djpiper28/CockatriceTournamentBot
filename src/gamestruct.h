@@ -30,7 +30,8 @@ struct gameListNode {
 struct game {
     int gameID, 
         started;
-    long startTime;
+    long startTime,
+         creationTime;
 };
 
 // Add to non-circular linked-list
