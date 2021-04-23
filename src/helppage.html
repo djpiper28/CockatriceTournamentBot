@@ -101,45 +101,48 @@ h1, h2, h3 {
             <a href="/github">github repo</a> and make an issue.</p>
 
             <p name="top"/>
-            <h3 name="help">../api/</h3>
-            returns this page :)
+            <h3 name="../api/">../api/</h3>
+            -> Returns this page :)
 
-            <h3 name="version">../api/version</h3>
-            request body should be null
-            returns the server version i.e:
+            <h3 name="../api/version">../api/version</h3>
+            -> Request body should be null
+            -> Returns the server version i.e:
             <blockquote>
             v1.0
             </blockquote>
 
-            <h3 name="check auth key">../api/checkauthkey</h3>
-            request body is auth token i.e:
+            <h3 name="../api/checkauthkey">../api/checkauthkey</h3>
+            -> Request body is auth token i.e:
 
             <blockquote>
             sampleauthtoken
             </blockquote>
 
-            returns 1 if the auth token is valid, 0 if not. i.e:
+            -> Returns 1 if the auth token is valid, 0 if not. i.e:
             <blockquote>
             valid=1
             </blockquote>
-            if it is valid or
+            -> If it is valid or
             <blockquote>
             valid=0
             </blockquote>
-            if it is invalid
+            -> If it is invalid
 
-            <h3 name="invalid auth token">Invalid Auth Tokens</h3>
-            <p>
-            Any of the below requests that have an invalid auth token will give an error with 
-            response code 401 and body of
-            </p>
-
+            <h3 name="Invalid Auth Tokens">Invalid Auth Tokens</h3>
+            -> Any of the below requests that have an invalid auth token will give an error with response code 401 and body of
             <blockquote>
             invalid auth token
             </blockquote>
+            
+            <h3 name="Invalid Commands">Invalid Commands</h3>
+            -> Any invalid command will receive a 404 response.
+            <blockquote>
+            error 404
+            </blockquote>
 
-            <h3 name="create game">../api/creategame</h3>
-            request body follows this format (case-sensitive):
+            <h3 name="../api/creategame">../api/creategame</h3>
+            <h4>Creates a game</h4>            
+            -> Request body follows this format (case-sensitive):
             <br>
             <blockquote>
             authtoken=token
@@ -162,13 +165,12 @@ h1, h2, h3 {
             </blockquote>
 
             <b>
-            The slot for the bot is automatically made so player count should be the amount 
-            of human players
+            -> The slot for the bot is automatically made so player count should be the amount of human players.
             </b>
 
             <br>
 
-            returns the game id if the game is made; or error if it is not made. i.e:
+            -> Returns the game id if the game is made; or error if it is not made. i.e:
             <blockquote>
             gameid=123456
             replayName=replay-test-3.cor
@@ -179,15 +181,42 @@ h1, h2, h3 {
             </blockquote>
             if it is not made
 
-            <h3 name="replays">../replay-%s-%d.cor</h3>
+            <h3 name="../api/kickplayer">../api/kickplayer</h3>
+            <h4>Kicks a player</h4>
+            
+            -> Request body should be in this format:
+            <blockquote>
+            authtoken=token
+            <br>
+            gameid=id returned by creategame
+            <br>
+            target=player name
+            </blockquote>
+            
+            -> Response will be success if the bot issued the command.
+            <blockquote>
+            success
+            </blockquote>
+            -> If the player is not in the game then a response of error not found will be send
+            <blockquote>
+            error not found
+            </blockquote>
+            
+            -> Due to cockatrice <b>spaghetti</b> there is no nice-non-<b>spaghetti</b> way for the bot to kick the player and give better output because the CMD ID is ignored by servatrice. Feel free to add this functionality if it is important.
+            
+            <h3 name="../replay-%s-%d.cor">../replay-%s-%d.cor</h3>
+            <h3 name="../${REPLAY_FOLDER}/**/*%s-%d.cor">../${REPLAY_FOLDER}/**/*%s-%d.cor</h3>
+            <h4>Downloads a replay or shows an error if the replay does not exist.</h4>
             %d is the game ID as returned by creategame and %s is the game name sent to the api.
             The replay may be overwritten after 
             enough time. Returns the replay file.
+            
+            If a game name contains one or more slashes then it is stored in a folder within the replay folder and the returned URL from creategame will show where it is stored.
 
-            <a name="bottom"/>
+            <p name="bottom"/>
 
-            <h3 name ="version"><a href="/api/version">Version info</a> | <a href="/github">
-            Github repo</a> | Marchesa Bot by Danny Piper (djpiper28)</h3>
+            <h3 name ="Version info"><a href="/api/version">Version info</a> | <a href="/github">
+            Github repo</a> | Marchesa Bot by Danny Piper (djpiper28) | Powered by <a href="https://github.com/cesanta/mongoose/">Mongoose</a></h3>
 
             </p>
         </div>

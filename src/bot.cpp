@@ -609,7 +609,6 @@ static void replayReady(struct triceBot *b,
 
 /**
  * Called when a game event occurs
- * TODO: game event functions
  */ 
 static void handleGameEvent(struct triceBot *b,
                             ServerMessage *newServerMessage) {    
@@ -621,6 +620,7 @@ static void handleGameEvent(struct triceBot *b,
     if (currentGame != NULL) {
         struct game g = *currentGame;
         
+        //Track state
         int size = gameEventContainer.event_list_size();
         for (int i = 0; i < size; i++) {
             GameEvent event = gameEventContainer.event_list().Get(i);
@@ -653,9 +653,32 @@ static void handleGameEvent(struct triceBot *b,
                 
                 MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventStateChanged,
                                                        Event_GameStateChanged)
-            }                   
+            }    
             
-            //Game events
+            //Add player to list
+            if (event.HasExtension(Event_Join::ext)) {
+                Event_Join jEvent = event.GetExtension(Event_Join::ext);
+                if (jEvent.has_player_properties()) {
+                    ServerInfo_PlayerProperties pp = jEvent.player_properties();
+                    
+                    //Track non-spectator, non-judge players.
+                    if (!pp.spectator() && !pp.judge()) {
+                        addPlayer(&b->gameList, 
+                                  currentGame, 
+                                  pp.user_info().name().c_str(),
+                                  pp.player_id());         
+                    }
+                }
+            }
+            
+            //Remove player from list
+            if (event.HasExtension(Event_Leave::ext)) {
+                removePlayer(&b->gameList, 
+                             currentGame, 
+                             event.player_id());    
+            }
+            
+            //Game event call
             MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventJoin,
                                                    Event_Join)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventLeave,
@@ -714,6 +737,13 @@ static void handleGameEvent(struct triceBot *b,
                                                         Event_ChangeZoneProperties)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventReverseTurn,
                                                         Event_ReverseTurn)
+                                                
+            //Free game. Call after event functions to stop seg fault
+            if (event.HasExtension(Event_GameClosed::ext)) {
+                //Free game
+                removeGame(&b->gameList, currentGame);
+                return; //Return to stop any potential seg faults
+            }
         }
     }
 }
@@ -727,7 +757,8 @@ static void handleGameCreate(struct triceBot *b,
                                               listGames.game_info().description().c_str());
     if (cmd != NULL) {
         //Create and add game item to the list
-        addGame(&b->gameList, createGame(listGames.game_info().game_id()));   
+        addGame(&b->gameList, createGame(listGames.game_info().game_id(),
+                                         listGames.game_info().player_count()));   
         
         //Game create callback
         struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *) 

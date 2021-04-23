@@ -13,8 +13,9 @@
 #include "bot.h"
 #include "mongoose.h"
 #include "botcflags.h"
+#include "cmd_queue.h"
 
-#include "room_commands.pb.h"
+#include "command_kick_from_game.pb.h"
 #include "commands.pb.h"
 #include "game_commands.pb.h"
 #include "get_pb_extension.h"
@@ -102,6 +103,110 @@ static struct str readNextLine(const char *buffer,
     return string;
 }
 
+static void serverKickPlayerCommand(struct ServerConnection *s, 
+                                    struct mg_connection *c, 
+                                    struct mg_http_message *hm) {
+    char *authToken = NULL, 
+         *playerName = NULL; 
+    int gameID = -1;
+    //Read the buffer line by line
+    size_t ptr = 0;
+    while (ptr < hm->body.len - 1) {
+        struct str line = readNextLine(hm->body.ptr, &ptr, hm->body.len);
+        
+        size_t eqPtr = 0;
+        for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
+        
+        //Check is line has equals with non-null strings on each side
+        if (eqPtr < line.len - 1 && eqPtr > 1) {
+            size_t valueLen = line.len - eqPtr - 1;
+            size_t propLen = eqPtr;
+            
+            //Error case - no prop len or, value len
+            if (propLen != 0 || valueLen != 0) {
+                //Read value of the tag
+                char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
+                size_t j = 0;
+                for (size_t i = eqPtr + 1; j < valueLen; i++) {
+                    tmp[j] = line.ptr[i];
+                    j++;
+                }
+                tmp[valueLen] = 0;
+                
+                //Read prop tag into prop
+                char *prop = (char *) malloc(sizeof(char) * (propLen + 1));
+                for (size_t i = 0; i < eqPtr; i++)
+                    prop[i] = line.ptr[i]; 
+                prop[propLen] = 0;            
+                
+                //Process line
+                //Prop len
+                #define MAX_PROP_LEN 22
+                if (MAX_PROP_LEN < propLen)
+                    propLen = MAX_PROP_LEN;
+                
+                if (strncmp(prop, "authtoken", propLen) == 0) {                
+                    authToken = tmp;
+                } else if (strncmp(prop, "target", propLen) == 0) {
+                    playerName = tmp;
+                } else {
+                    //Check is number
+                    int isNum = valueLen < 3, 
+                    number = atoi(tmp);
+                    
+                    if (isNum) {
+                        readNumberIfPropertiesMatch(number, 
+                                                    &gameID, 
+                                                    "gameid", 
+                                                    prop);
+                    }
+                    
+                    //Free tmp here as it is not assigned to a ptr
+                    free(tmp);   
+                }
+            }
+        }
+    }
+    
+    //Check all fields have data
+    int valid = authToken != NULL && playerName != NULL && gameID != -1;
+    if (valid) {        
+        //Check authtoken 
+        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {            
+            int playerID = getPlayerIDForGameIDAndName(&s->api->triceBot->gameList,
+                                                       gameID, 
+                                                       playerName);            
+            if (playerID == -1) {
+                mg_http_reply(c, 200, "", "error not found");
+            } else {            
+                Command_KickFromGame kickCommand;
+                kickCommand.set_player_id(playerID);
+                
+                CommandContainer cont;
+                GameCommand *gc = cont.add_game_command();
+                gc->MutableExtension(Command_KickFromGame::ext)->CopyFrom(kickCommand);
+                
+                struct pendingCommand *cmd = prepCmd(s->api->triceBot,
+                                                    cont, 
+                                                    gameID, 
+                                                    s->api->triceBot->magicRoomID);
+                enq(cmd, &s->api->triceBot->sendQueue);
+            }
+        } else {
+            sendInvalidAuthTokenResponse(c);
+        }
+    } else {        
+        printf("[ERROR]: Invalid kick player command.\n");
+        send404(c);
+    }
+    
+    //Free the temp vars
+    if (playerName != NULL)
+        free(playerName);
+    if (authToken != NULL)
+        free(authToken);
+}
+
 static void serverCreateGameCommand(struct ServerConnection *s, 
                                     struct mg_connection *c, 
                                     struct mg_http_message *hm) {
@@ -175,7 +280,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                                                     &spectatorsNeedPassword, 
                                                     "spectatorsNeedPassword", 
                                                     prop);
-                        readNumberIfPropertiesMatch(number, 
+                        readNumberIfPropertiesMatch(number,
                                                     &spectatorsCanChat, 
                                                     "spectatorsCanChat", 
                                                     prop);
@@ -244,6 +349,7 @@ static void ErrorCallback(struct gameCreateCallbackWaitParam *param) {
     printf("[ERROR]: Game create callback error - api client disconnected.\n");
 }
 
+#define MAX_MSG_LENGTH_BYTES 4096
 static void eventHandler(struct mg_connection *c,
                          int event,
                          void *ev_data,
@@ -277,13 +383,22 @@ static void eventHandler(struct mg_connection *c,
         #endif
             
         if (mg_http_match_uri(hm, "/github")) {
-            mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />", 
+            mg_http_reply(c, 301, "", 
+                          "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />", 
                           GITHUB_REPO);
         } else if (mg_http_match_uri(hm, "/api/version/") 
             || mg_http_match_uri(hm, "/api/version")) {
             mg_http_reply(c, 200, "", "v%d.%d", 
                         VERSION_MAJOR, VERSION_MINOR);  
-        } else if (mg_http_match_uri(hm, "/api/checkauthkey/")
+        } 
+        //Check message is short enough for the api to care about
+        else if (hm->body.len > MAX_MSG_LENGTH_BYTES) {
+            mg_http_reply(c, 413, "", 
+                          "ERROR YOUR MESSAGE EXCEEDS THE MAX SIZE OF %d BYTES",
+                          MAX_MSG_LENGTH_BYTES);  
+        }
+        
+        else if (mg_http_match_uri(hm, "/api/checkauthkey/")
             || mg_http_match_uri(hm, "/api/checkauthkey")) {
             mg_http_reply(c, 200, "", "valid=%d", strncmp(hm->body.ptr,
                                                           api->config.authToken, 
@@ -291,6 +406,9 @@ static void eventHandler(struct mg_connection *c,
         } else if (mg_http_match_uri(hm, "/api/creategame/")
             || mg_http_match_uri(hm, "/api/creategame")) { 
             serverCreateGameCommand(s, c, hm);            
+        } else if (mg_http_match_uri(hm, "/api/kickplayer/")
+            || mg_http_match_uri(hm, "/api/kickplayer")) {
+            serverKickPlayerCommand(s, c, hm);
         } else if (mg_http_match_uri(hm, "/api/")
                 || mg_http_match_uri(hm, "/api")) {
             mg_http_reply(c, 200, "", HELP_STR);
@@ -340,7 +458,7 @@ static void eventHandler(struct mg_connection *c,
                     printf("[INFO]: Game created with ID %d.\n",
                            paramdata->gameID);
                     
-                    mg_http_reply(c, 200, "", data);  
+                    mg_http_reply(c, 201, "", data);  
                     
                     free(data);
                     free(replayName);
@@ -396,7 +514,9 @@ static void *pollingThread(void *apiIn) {
                        apiIn);
     
     if (c == NULL) {
-        //TODO: Handle error state
+        printf("[ERROR]: Unable to init mongoose.\n");
+        exit(13);
+        //TODO: Handle error state!
     }
     
     pthread_mutex_lock(&api->bottleneck);    
@@ -426,7 +546,8 @@ int startServer(struct apiServer *api) {
         printf("[ERROR]: Server has already started.\n");
         return 0;
     } else {    
-        printf("[INFO]: Starting api server, listening on %s\n", api->config.bindAddr);
+        printf("[INFO]: Starting api server, listening on %s\n",
+               api->config.bindAddr);
         printf("-> SSL enabled. cert: %s & certkey: %s.\n",
                api->config.cert,
                api->config.certkey);

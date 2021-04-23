@@ -27,15 +27,38 @@ struct gameListNode {
     struct gameListNode *nextGame;
 };
 
+//playerArr has length playerCount. NULL players in playerArr haven't joined yet
 struct game {
     int gameID, 
-        started;
+        started,
+        playerCount;
     long startTime,
          creationTime;
+    struct player *playerArr;
+};
+
+struct player {
+    int playerID;
+    char *playerName;
 };
 
 // Add to non-circular linked-list
-struct game *createGame(int gameID);
+struct game *createGame(int gameID, int playerCount);
+
+/**
+ * Adds a player to a game, playerName is copied
+ * playerName input must NULL terminated
+ * Returns 1 if addition was successful
+ * Returns 0 if the array is full or NULL
+ */ 
+int addPlayer(struct gameList *gl, struct game *g, const char *playerName, int playerID);
+
+/**
+ * Removes a player from a game
+ * Returns 1 if addition was successful
+ * Returns 0 if the array has no player with that ID or is NULL
+ */ 
+int removePlayer(struct gameList *gl, struct game *g, int playerID);
 
 // Init the game list structure
 void initGameList(struct gameList *gl);
@@ -45,6 +68,9 @@ void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp);
 void freeGameListNode(struct gameList *g, struct gameListNode *gl);
 
 void freeGameList(struct gameList *g);
+
+// Returns -1 if the player is not found
+int getPlayerIDForGameIDAndName(struct gameList *g, int gameID, char *playerName);
 
 struct game *getGameWithID(struct gameList *g, int gameID);
 

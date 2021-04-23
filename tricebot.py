@@ -24,9 +24,40 @@ class TriceBot:
     def checkauthkey(self):
         return self.req("api/checkauthkey", self.authToken) == "1"
     
-    def getDownloadLink(self, replayName):
+    def getDownloadLink(self, replayName: str):
         return self.externURL + "/" + replayName
     
+    #  1 if success
+    #  0 if auth token is bad or error404
+    # -1 if player not found
+    # -2 if an unknown error occurred
+    def kickPlayer(self, gameID: int, name: str) -> int:
+        body = "authtoken=" + self.authToken + "\n"
+        body += "gameid=" + str(gameID) + "\n"
+        body += "playername" + name        
+        
+        try:
+            message = self.req("api/kickplayer/", body)   
+            print(message)
+        except OSError as exc:
+            #Network issues
+            print("[TRICEBOT ERROR]: Netty error")
+            return 0
+        
+        #Check for server error
+        if (message == "timeout error" or message == "error 404" or message == "invalid auth token"):
+            #Server issues         
+            print("[TRICEBOT ERROR]: " + message)
+            return 0
+        
+        if (message == "success"):
+            return 1
+        elif (message == "error not found"):
+            return -1
+        
+        return -2
+    
+    #Returns a GameMade object that stores state
     def createGame(self, gamename: str, password: str, playercount: int, spectatorsallowed: bool, spectatorsneedpassword: bool, spectatorscanchat: bool, spectatorscanseehands: bool, onlyregistered: bool):
         body = "authtoken=" + self.authToken + "\n"
         body += "gamename=" + gamename + "\n"
