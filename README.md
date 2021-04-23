@@ -38,7 +38,7 @@ username=this is used
 
 ```
 
-## certfile and certkeyfile
+### certfile and certkeyfile
 Generate some ssl keys and slap them in the folder with the executable and then
 change the config file to have the correct names. The api server does not support
 CA certificates because it is not web-facing. Ideal configuration would have the
