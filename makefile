@@ -16,11 +16,10 @@ all:
 	@echo "-> Done :)"
 	make prep-src
 	make comp
-
+	
 comp: $(objectsc) $(objectscc) $(objectscpp)
 	@echo Creating executable
 	${BASE_CC} buildtmp/*.o -pie -o botExecutable
-	cp -f buildtmp/botExecutable botExecutable
 	
 $(objectsc): %.c: %
 $(objectscc): %.cc: %
