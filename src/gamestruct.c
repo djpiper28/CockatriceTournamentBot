@@ -143,7 +143,7 @@ int getPlayerIDForGameIDAndName(struct gameList *g, int gameID, char *playerName
 }
 
 struct game *createGame(int gameID, int playerCount) {
-    struct game *g = (struct game *) malloc(sizeof(struct game *));
+    struct game *g = (struct game *) malloc(sizeof(struct game));
     g->gameID = gameID;
     g->started = 0;
     g->startTime = -1;

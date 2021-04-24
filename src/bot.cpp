@@ -456,17 +456,20 @@ static void replayResponseDownload(struct triceBot *b,
     
     //start spaghetti
     GameReplay gameReplay;
-    gameReplay.ParseFromArray(replay.replay_data().c_str(),
+    gameReplay.ParseFromArray(replayData,
                               replay.replay_data().length());
     //end spaghetti
     char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH * 2);
+    const char *gameName = gameReplay.game_info().description().c_str();
+    
     char *replayName = getReplayFileName(gameReplay.game_info().game_id(),
-                                         gameReplay.game_info().description().c_str(),
+                                         gameName,
                                          gameReplay.game_info().description().length(),
                                          b->config.replayFolder);
     
     snprintf(fileName, BUFFER_LENGTH, "%s/%s", b->config.replayFolder, replayName);
     free(replayName);
+    delete[] gameName;
     
     DIR* dir = opendir(b->config.replayFolder);
     if (dir) {
@@ -488,6 +491,7 @@ static void replayResponseDownload(struct triceBot *b,
         printf("[ERROR]: An error occurred saving the replay as %s.\n", fileName);
     }
     
+    delete[] replayData;
     if (fileName != NULL)
         free(fileName);      
 }
@@ -538,8 +542,9 @@ static void roomsListed(struct triceBot *b,
         int found = 0;
         for (int i = 0; i < size && !found; i++) {
             ServerInfo_Room room = listRooms.room_list().Get(i);
+            const char *roomName = room.name().c_str();
             
-            if (strncmp(b->config.roomName, room.name().c_str(), BUFFER_LENGTH) == 0) {
+            if (strncmp(b->config.roomName, roomName, BUFFER_LENGTH) == 0) {
                 //Send room join cmd
                 Command_JoinRoom roomJoin;
                 roomJoin.set_room_id(room.room_id());
@@ -555,6 +560,8 @@ static void roomsListed(struct triceBot *b,
                 found = 1;
                 printf("[INFO]: Automatic room join being sent.\n");    
             }
+            
+            delete[] roomName;
         }    
     }  
     
@@ -663,10 +670,13 @@ static void handleGameEvent(struct triceBot *b,
                     
                     //Track non-spectator, non-judge players.
                     if (!pp.spectator() && !pp.judge()) {
+                        const char *name = pp.user_info().name().c_str();
                         addPlayer(&b->gameList, 
                                   currentGame, 
-                                  pp.user_info().name().c_str(),
+                                  name,
                                   pp.player_id());         
+                        //let me use free c++ please
+                        delete[] name;
                     }
                 }
             }
@@ -752,9 +762,12 @@ static void handleGameEvent(struct triceBot *b,
  * Called when a game is created
  */ 
 static void handleGameCreate(struct triceBot *b,
-                             const Event_GameJoined listGames) {    
+                             const Event_GameJoined listGames) {  
+    const char *gameName = listGames.game_info().description().c_str();
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
-                                              listGames.game_info().description().c_str());
+                                              gameName);    
+    delete[] gameName;
+    
     if (cmd != NULL) {
         //Create and add game item to the list
         addGame(&b->gameList, createGame(listGames.game_info().game_id(),
@@ -969,7 +982,9 @@ static void botEventHandler(struct mg_connection *c,
         int messageType = newServerMessage.message_type();
         
         #if MEGA_DEBUG
-        printf("[MEGA_DEBUG]: %s\n", newServerMessage.DebugString().c_str());
+        const char *msg = newServerMessage.DebugString().c_str();
+        printf("[MEGA_DEBUG]: %s\n", msg);
+        delete[] msg;
         #endif
         
         /**

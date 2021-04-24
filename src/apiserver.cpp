@@ -411,7 +411,7 @@ static void eventHandler(struct mg_connection *c,
             serverKickPlayerCommand(s, c, hm);
         } else if (mg_http_match_uri(hm, "/api/")
                 || mg_http_match_uri(hm, "/api")) {
-            mg_http_reply(c, 200, "", HELP_STR);
+            mg_http_reply(c, 200, "", "%s", HELP_STR);
         } else if (mg_http_match_uri(hm, "/replay*")) {
             
             struct mg_http_serve_opts opts = {

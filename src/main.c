@@ -131,7 +131,9 @@ void DebugFor##fn (struct triceBot *b, type event) {\
     info = localtime( &rawtime );\
     strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
     \
-    printf("[DEBUG] (%s) %s: %s\n",#fn , buffer, event.DebugString().c_str());\
+    const char *msg = event.DebugString().c_str();\
+    printf("[DEBUG] (%s) %s: %s\n",#fn , buffer, msg);\
+    delete[] msg;\
 }
 
 #define MACRO_DEBUG_FOR_GAME_EVENT(fn,type)\

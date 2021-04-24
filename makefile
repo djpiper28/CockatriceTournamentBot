@@ -6,7 +6,6 @@ PROTOBUF=`pkg-config --cflags -libs protobuf`
 LIBS=-pthread -lpthread ${PROTOBUF} ${MBEDTLS}
 MG_ARGS=-DMG_ENABLE_IPV6=1 -DMG_ENABLE_LINES=1 -DMG_ENABLE_DIRECTORY_LISTING=1 -DMG_ENABLE_FS=1
 DO_DEBUG=-DDEBUG=1 -g -DDEBUG=1 -DMEGA_DEBUG=1
-
 BASE_CC=g++ -Wall $(CFLAGS) ${LIBS} ${MG_ARGS} ${DO_DEBUG}
 
 objectsc=$(wildcard buildtmp/*.c) 
@@ -20,7 +19,7 @@ all:
 
 comp: $(objectsc) $(objectscc) $(objectscpp)
 	@echo Creating executable
-	cd buildtmp/ && ${BASE_CC} *.o -pie -o botExecutable
+	${BASE_CC} buildtmp/*.o -pie -o botExecutable
 	cp -f buildtmp/botExecutable botExecutable
 	
 $(objectsc): %.c: %

@@ -28,7 +28,7 @@ class TriceBot:
         return self.externURL + "/" + replayName
     
     #  1 if success
-    #  0 if auth token is bad or error404
+    #  0 auth token is bad or error404 or network issue
     # -1 if player not found
     # -2 if an unknown error occurred
     def kickPlayer(self, gameID: int, name: str) -> int:
