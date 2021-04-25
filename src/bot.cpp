@@ -469,7 +469,6 @@ static void replayResponseDownload(struct triceBot *b,
     
     snprintf(fileName, BUFFER_LENGTH, "%s/%s", b->config.replayFolder, replayName);
     free(replayName);
-    delete[] gameName;
     
     DIR* dir = opendir(b->config.replayFolder);
     if (dir) {
@@ -491,7 +490,6 @@ static void replayResponseDownload(struct triceBot *b,
         printf("[ERROR]: An error occurred saving the replay as %s.\n", fileName);
     }
     
-    delete[] replayData;
     if (fileName != NULL)
         free(fileName);      
 }
@@ -559,9 +557,7 @@ static void roomsListed(struct triceBot *b,
                 
                 found = 1;
                 printf("[INFO]: Automatic room join being sent.\n");    
-            }
-            
-            delete[] roomName;
+            }            
         }    
     }  
     
@@ -670,13 +666,9 @@ static void handleGameEvent(struct triceBot *b,
                     
                     //Track non-spectator, non-judge players.
                     if (!pp.spectator() && !pp.judge()) {
-                        const char *name = pp.user_info().name().c_str();
                         addPlayer(&b->gameList, 
                                   currentGame, 
-                                  name,
-                                  pp.player_id());         
-                        //let me use free c++ please
-                        delete[] name;
+                                  pp.user_info().name().c_str(),                                pp.player_id());         
                     }
                 }
             }
@@ -765,8 +757,7 @@ static void handleGameCreate(struct triceBot *b,
                              const Event_GameJoined listGames) {  
     const char *gameName = listGames.game_info().description().c_str();
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
-                                              gameName);    
-    delete[] gameName;
+                                              gameName);   
     
     if (cmd != NULL) {
         //Create and add game item to the list
@@ -982,9 +973,7 @@ static void botEventHandler(struct mg_connection *c,
         int messageType = newServerMessage.message_type();
         
         #if MEGA_DEBUG
-        const char *msg = newServerMessage.DebugString().c_str();
-        printf("[MEGA_DEBUG]: %s\n", msg);
-        delete[] msg;
+        printf("[MEGA_DEBUG]: %s\n", newServerMessage.DebugString().c_str());
         #endif
         
         /**

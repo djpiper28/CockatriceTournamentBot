@@ -5,7 +5,8 @@
 
 #define SUCCESS 1
 #define ERROR 0
-#define BUFFER_LENGTH 1024
+#define BUFFER_LENGTH 4096 //aprox one page
+#define CONF_FILE "config.conf"
 
 struct Config {
     #if LOGIN_AUTOMATICALLY
@@ -30,6 +31,12 @@ struct Config {
     int success;
 };
 
+/**
+ * Reads the configuration from CONF_FILE to *config.
+ * Returns 1 if the file was read successfully
+ * Returns 0 if there was an error reading the file
+ * Returns -1 if the file doesn't exist and was made
+ */ 
 int readConf(struct Config *config);
 
 void freeConf(struct Config *config);

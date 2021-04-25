@@ -119,8 +119,8 @@ static int toBase64 (int c) {
 
 static void makeNewFile(struct Config *config) {
     // No file    
-    FILE * configFile = fopen("config.conf", "w+");
-    if (configFile != 0 && access("config.conf", W_OK) == 0) {
+    FILE * configFile = fopen(CONF_FILE, "w+");
+    if (configFile != 0 && access(CONF_FILE, W_OK) == 0) {
         // Create a new config file
         config->success = SUCCESS;
         
@@ -153,14 +153,23 @@ static void makeNewFile(struct Config *config) {
     }
 }
 
+/**
+ * Reads the configuration from CONF_FILE to *config.
+ * Returns 1 if the file was read successfully
+ * Returns 0 if there was an error reading the file
+ * Returns -1 if the file doesn't exist and was made
+ */ 
 int readConf(struct Config *config) {
-    if (access("config.conf", F_OK) == 0) {
-        if (access("config.conf", R_OK) == 0) {
-            // Read file
+    if (access(CONF_FILE, F_OK) == 0) {
+        if (access(CONF_FILE, R_OK) == 0) {
+            // Read file            
+            FILE * configFile = fopen(CONF_FILE, "r");
+            
+            // Guard statement
+            if (configFile == NULL)
+                return 0;
+            
             config->success = SUCCESS;
-            
-            FILE * configFile = fopen("config.conf", "r");
-            
             char * lineBuffer = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
             while (fgets(lineBuffer, BUFFER_LENGTH, configFile) != NULL) {  
                 // Process line         
@@ -177,7 +186,8 @@ int readConf(struct Config *config) {
         }
     } else { 
         makeNewFile(config);   
-        return 0;
+        config->success = ERROR;
+        return -1;
     }
 }
 

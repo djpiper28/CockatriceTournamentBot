@@ -131,9 +131,7 @@ void DebugFor##fn (struct triceBot *b, type event) {\
     info = localtime( &rawtime );\
     strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
     \
-    const char *msg = event.DebugString().c_str();\
-    printf("[DEBUG] (%s) %s: %s\n",#fn , buffer, msg);\
-    delete[] msg;\
+    printf("[DEBUG] (%s) %s: %s\n",#fn , buffer, event.DebugString().c_str());\
 }
 
 #define MACRO_DEBUG_FOR_GAME_EVENT(fn,type)\
@@ -332,19 +330,27 @@ int main (int argc, char * args[]) {
         
     struct tournamentBot bot;
     bot.running = 1;
-    readConf(&bot.config); 
-    initBot(&bot.b, bot.config);
-    initServer(&bot.server, &bot.b, bot.config);
+    
+    int status = readConf(&bot.config);
+    if (status) {
+        printf("[INFO]: Config read successfully.\n");
+        initBot(&bot.b, bot.config);
+        initServer(&bot.server, &bot.b, bot.config);
         
-    #if DEBUG
-    addDebugFunctions(&bot.b);
-    #endif
-    
-    set_onGameEnd(&onGameEnd, &bot.b);
-    set_onBotDisconnect(&onBotDisconnect, &bot.b);
-    
-    startServer(&bot.server);
-    startBot(&bot.b);
-    
-    startConsoleListener(&bot);
+        #if DEBUG
+        addDebugFunctions(&bot.b);
+        #endif
+        
+        set_onGameEnd(&onGameEnd, &bot.b);
+        set_onBotDisconnect(&onBotDisconnect, &bot.b);
+        
+        startServer(&bot.server);
+        startBot(&bot.b);
+        
+        startConsoleListener(&bot);           
+    } else if (status == 0) {     
+        printf("[ERROR]: There was an error reading the config.\n");
+    } else if (status == -1) {
+        printf("[ERROR]: No config file exists, a new one was made.\n");        
+    }
 }
