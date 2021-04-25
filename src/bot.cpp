@@ -1047,6 +1047,10 @@ static void botEventHandler(struct mg_connection *c,
                                                             cont, 
                                                             current->currentGame->gameID, 
                                                             b->magicRoomID);
+                    
+                    printf("[INFO]: Leaving game %d after %d seconds of inactivity.\n",
+                           current->currentGame->gameID,
+                           MAX_GAME_WAIT);
                 
                     enq(cmd, &b->sendQueue);
                 }
