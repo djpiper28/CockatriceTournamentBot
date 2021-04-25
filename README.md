@@ -2,8 +2,6 @@
 
 ## Build status
 [![CodeQL](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
-(remind me to fix the automated build)
-
 
 (Linux only due to pthread and unistd dependancies)
 
