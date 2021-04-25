@@ -1,3 +1,6 @@
+#ifndef BOTCFLAGS_
+#define BOTCFLAGS_
+
 #ifndef DOWNLOAD_REPLAYS
 #define DOWNLOAD_REPLAYS 1
 #endif
@@ -20,4 +23,6 @@
 
 #ifndef DISCORD
 #define DISCORD 1
+#endif
+
 #endif

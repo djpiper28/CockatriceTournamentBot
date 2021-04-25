@@ -5,8 +5,9 @@ PROTOBUF=`pkg-config --cflags --libs protobuf`
 #Use openssl or mbedtls
 LIBS=-pthread -lpthread ${PROTOBUF} ${MBEDTLS}
 MG_ARGS=-DMG_ENABLE_IPV6=1 -DMG_ENABLE_LINES=1 -DMG_ENABLE_DIRECTORY_LISTING=1 -DMG_ENABLE_FS=1
-DO_DEBUG=-DDEBUG=1 -g -DDEBUG=0 -DMEGA_DEBUG=0
-BASE_CC=g++ -Wall $(CFLAGS) ${LIBS} ${MG_ARGS} ${DO_DEBUG}
+DO_DEBUG=-DDEBUG=1 -g -DDEBUG=1 -DMEGA_DEBUG=1
+BASE_CC=clang++ -Wall $(CFLAGS) ${LIBS} ${MG_ARGS}
+#${DO_DEBUG}
 
 objectsc=$(wildcard buildtmp/*.c) 
 objectscc=$(wildcard buildtmp/*.cc)
@@ -19,7 +20,7 @@ all:
 	
 comp: $(objectsc) $(objectscc) $(objectscpp)
 	@echo Creating executable
-	${BASE_CC} buildtmp/*.o -pie -o botExecutable
+	${BASE_CC} buildtmp/*.o -fpie -o botExecutable
 	
 $(objectsc): %.c: %
 $(objectscc): %.cc: %
