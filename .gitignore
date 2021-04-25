@@ -1,4 +1,4 @@
-buildtmp
+build
 replays
 *.conf
 *.pem
@@ -7,3 +7,5 @@ botExecutable
 MSG_RAW
 log
 *.log
+__pycache__
+compile_commands.json

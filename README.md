@@ -48,6 +48,18 @@ change the config file to have the correct names. The api server does not suppor
 CA certificates because it is not web-facing. Ideal configuration would have the
 bot running on the same machine as the program that uses it.
 
+## Compiling
+Install dependencies:
+`cmake g++ libmbedtls-dev libprotobuf-dev protobuf-compiler`
+
+Create build directory and use cmake:
+```sh
+mkdir build
+cd build
+cmake .. # -DCMAKE_BUILD_TYPE=Debug
+cmake --build . # --parallel x
+```
+
 ## Help it is borked
 Compile with `make -j` and have DEBUG enabled in the makefile and then run it 
 with a debugger and get the full
