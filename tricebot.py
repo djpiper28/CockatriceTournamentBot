@@ -24,9 +24,9 @@ class TriceBot:
     def checkauthkey(self):
         return self.req("api/checkauthkey", self.authToken) == "1"
     
-    def getDownloadLink(self, replayName: str):
+    def getDownloadLink(self, replayName):
         return self.externURL + "/" + replayName
-    
+            
     #  1 if success
     #  0 auth token is bad or error404 or network issue
     # -1 if player not found
@@ -34,10 +34,10 @@ class TriceBot:
     def kickPlayer(self, gameID: int, name: str) -> int:
         body = "authtoken=" + self.authToken + "\n"
         body += "gameid=" + str(gameID) + "\n"
-        body += "playername" + name        
+        body += "target=" + name        
         
         try:
-            message = self.req("api/kickplayer/", body)   
+            message = self.req("api/kickplayer", body)   
             print(message)
         except OSError as exc:
             #Network issues
@@ -57,7 +57,6 @@ class TriceBot:
         
         return -2
     
-    #Returns a GameMade object that stores state
     def createGame(self, gamename: str, password: str, playercount: int, spectatorsallowed: bool, spectatorsneedpassword: bool, spectatorscanchat: bool, spectatorscanseehands: bool, onlyregistered: bool):
         body = "authtoken=" + self.authToken + "\n"
         body += "gamename=" + gamename + "\n"
@@ -99,7 +98,7 @@ class TriceBot:
             body +="0"
             
         try:
-            message = self.req("api/creategame/", body)   
+            message = self.req("api/creategame", body)   
             print(message)
         except OSError as exc:
             #Network issues

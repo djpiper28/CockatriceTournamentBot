@@ -27,7 +27,7 @@ int addPlayer(struct gameList *gl,
               const char *playerName, 
               int playerID) {
     pthread_mutex_lock(&gl->mutex);
-    int done = playerName == NULL; //Check for null
+    int done = 0;
     for (int i = 0; !done && i < g->playerCount; i++) {
         if (g->playerArr[i].playerName == NULL) {
             size_t nameLength = strlen(playerName) + 1; //NULL terminator
@@ -37,6 +37,10 @@ int addPlayer(struct gameList *gl,
             struct player p = {playerID, playerNameCP};
             g->playerArr[i] = p;
             done = 1;
+            
+            printf("[INFO]: Player %s joined game %d.\n",
+                   playerNameCP,
+                   g->gameID);
         }
     }
     pthread_mutex_unlock(&gl->mutex);
@@ -58,6 +62,10 @@ int removePlayer(struct gameList *gl,
     for (int i = 0; i < g->playerCount && !done; i++) {
         struct player *p = &g->playerArr[i];
         if (p->playerName != NULL && p->playerID == playerID) {
+            printf("[INFO]: Player %s left game %d.\n",
+                   p->playerName,
+                   g->gameID);
+            
             free (p->playerName);
             p->playerName = NULL;
         }

@@ -105,7 +105,7 @@ static struct str readNextLine(const char *buffer,
 
 static void serverKickPlayerCommand(struct ServerConnection *s, 
                                     struct mg_connection *c, 
-                                    struct mg_http_message *hm) {
+                                    struct mg_http_message *hm) {    
     char *authToken = NULL, 
          *playerName = NULL; 
     int gameID = -1;
@@ -151,7 +151,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
                     playerName = tmp;
                 } else {
                     //Check is number
-                    int isNum = valueLen < 3, 
+                    int isNum = valueLen < 8, 
                     number = atoi(tmp);
                     
                     if (isNum) {
@@ -190,7 +190,10 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
                                                     cont, 
                                                     gameID, 
                                                     s->api->triceBot->magicRoomID);
+                
                 enq(cmd, &s->api->triceBot->sendQueue);
+                
+                mg_http_reply(c, 200, "", "success");
             }
         } else {
             sendInvalidAuthTokenResponse(c);

@@ -685,12 +685,12 @@ static void handleGameEvent(struct triceBot *b,
                 Event_Join jEvent = event.GetExtension(Event_Join::ext);
                 if (jEvent.has_player_properties()) {
                     ServerInfo_PlayerProperties pp = jEvent.player_properties();
-                    
+                                        
                     //Track non-spectator, non-judge players.
                     if (!pp.spectator() && !pp.judge()) {
                         addPlayer(&b->gameList, 
                                   currentGame, 
-                                  pp.user_info().name().c_str(),                                pp.player_id());         
+                                  pp.user_info().name().c_str(),                                pp.player_id());   
                     }
                 }
             }
@@ -784,9 +784,9 @@ static void handleGameCreate(struct triceBot *b,
     if (cmd != NULL) {
         //Create and add game item to the list
         addGame(&b->gameList, createGame(listGames.game_info().game_id(),
-                                         listGames.game_info().player_count()));   
+                                         listGames.game_info().max_players()));   
         
-        //Game create callback
+        //Game create callbackQueue
         struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *) 
                                                    cmd->param;        
         //Check for null pointer
