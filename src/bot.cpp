@@ -409,12 +409,13 @@ char *getReplayFileName(int gameID,
                 DIR* dir = opendir(tempFolderName);
                 if (dir) {
                     closedir(dir);
-                    printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
-                           tempFolderName);
                 } else if (ENOENT == errno) {
                     // Directory does not exist. 
                     mkdir(tempFolderName, 0700);
                     printf("[INFO]: Made dir %s for replays.\n", 
+                           tempFolderName);
+                } else {                    
+                    printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
                            tempFolderName);
                 }
             }            
