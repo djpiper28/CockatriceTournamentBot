@@ -405,16 +405,37 @@ char *getReplayFileName(int gameID,
                 tempFolderName = (char *) malloc(sizeof(char) * (i + 1)); 
                 snprintf(tempFolderName, tempFolderBaseLength + i + 1, "%s/%s", baseDIR, gameNameCP);
                 
-                // make directory
                 DIR* dir = opendir(tempFolderName);
                 if (dir) {
+                    // Directory exists so close it
                     closedir(dir);
                 } else if (ENOENT == errno) {
-                    // Directory does not exist. 
-                    mkdir(tempFolderName, 0700);
-                    printf("[INFO]: Made dir %s for replays.\n", 
-                           tempFolderName);
-                } else {                    
+                    // Directory does not exist so make directory
+                    int code = mkdir(tempFolderName, 0700);
+                    if (code == -1) {                        
+                        printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
+                               tempFolderName);
+                        
+                        switch (errno) {
+                            case EACCES :
+                                printf("-> The parent directory does not allow write.\n");
+                                break;
+                            case EEXIST:
+                                printf("-> Pathname already exists.\n");
+                                break;
+                            case ENAMETOOLONG:
+                                printf("-> Pathname is too long.\n");
+                                break;
+                            default:
+                                perror("-> Mkdir failed.\n");
+                                break;
+                        }
+                    } else {
+                        printf("[INFO]: Made dir %s for replays.\n", 
+                               tempFolderName);
+                    }
+                } else {
+                    // Error message
                     printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
                            tempFolderName);
                 }
