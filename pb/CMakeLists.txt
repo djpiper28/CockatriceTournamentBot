@@ -1,0 +1,5 @@
+file(GLOB PROTO_FILES *.proto)
+find_package(Protobuf REQUIRED)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+add_library(proto ${PROTO_SRCS})
+target_link_libraries(proto ${Protobuf_LIBRARIES})
