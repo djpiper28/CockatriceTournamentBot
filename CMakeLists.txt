@@ -29,10 +29,14 @@ set(CMAKE_C_FLAGS "-xc++")
 set(MBEDTLS_LIBS -lcrypto -lmbedtls -lmbedcrypto -lmbedx509)
 
 # mongoose
-set(MG_ENABLE_MBEDTLS 1)
-set(MG_ENABLE_IPV6 1)
-set(MG_ENABLE_LINES 1)
-set(MG_ENABLE_DIRECTORY_LISTING 1)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DMG_ENABLE_IPV6=1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DMG_ENABLE_LINES=1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DMG_ENABLE_DIRECTORY_LISTING=1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DMG_ENABLE_FS=1")
+
+# enable mbedtls in mongoose
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DMG_ENABLE_MBEDTLS=1")
+
 add_library(mongoose src/mongoose.c)
 
 # src
