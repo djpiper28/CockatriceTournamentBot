@@ -499,17 +499,21 @@ static void replayResponseDownload(struct triceBot *b,
         // Directory does not exist. 
         mkdir(b->config.replayFolder, 0700);
     }
-    
-    FILE *replayFile = fopen(fileName, "wb+");
-    if (replayFile != NULL) {
-        for (int i = 0; i < len; i++)
-            fputc(replayData[i], replayFile);
         
-        fclose (replayFile);    //close file like a good boy
-        
-        printf("[INFO]: Replay %s saved.\n", fileName);
-    } else {
-        printf("[ERROR]: An error occurred saving the replay as %s.\n", fileName);
+    if (access(fileName, F_OK) == 0) {
+        printf("[INFO]: Replay %s exists already, it was not overriden.\n", fileName);        
+    } else {    
+        FILE *replayFile = fopen(fileName, "wb+");
+        if (replayFile != NULL) {
+            for (int i = 0; i < len; i++)
+                fputc(replayData[i], replayFile);
+            
+            fclose (replayFile);    //close file like a good boy
+            
+            printf("[INFO]: Replay %s saved.\n", fileName);
+        } else {
+            printf("[ERROR]: An error occurred saving the replay as %s.\n", fileName);
+        }
     }
     
     if (fileName != NULL)
