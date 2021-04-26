@@ -120,9 +120,8 @@ static int toBase64 (int c) {
 static void makeNewFile(struct Config *config) {
     // No file    
     FILE * configFile = fopen(CONF_FILE, "w+");
-    if (configFile != 0 && access(CONF_FILE, W_OK) == 0) {
-        // Create a new config file
-        config->success = SUCCESS;
+    if (configFile != NULL && access(CONF_FILE, W_OK) == 0) {
+        // Create a new config file;
         
         char *generatedAuthToken = (char *) 
         malloc(sizeof(char) * (TOKEN_LENGTH + 1));
@@ -149,7 +148,7 @@ static void makeNewFile(struct Config *config) {
         fclose (configFile);    //close file like a good boy
     } else {
         // Invalid permissions to make a new file
-        config->success = ERROR;
+        printf("[ERROR]: Unable to create config.conf.\n");
     }
 }
 
@@ -165,11 +164,11 @@ int readConf(struct Config *config) {
             // Read file            
             FILE * configFile = fopen(CONF_FILE, "r");
             
-            // Guard statement
-            if (configFile == NULL)
+            // Guard statement - null file pointer due to unreadable file
+            if (configFile == NULL) {
                 return 0;
+            }
             
-            config->success = SUCCESS;
             char * lineBuffer = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
             while (fgets(lineBuffer, BUFFER_LENGTH, configFile) != NULL) {  
                 // Process line         
@@ -181,12 +180,10 @@ int readConf(struct Config *config) {
             return 1;
         } else {
             // Unreadable file
-            config->success = ERROR;
             return 0;
         }
     } else { 
         makeNewFile(config);   
-        config->success = ERROR;
         return -1;
     }
 }

@@ -1,12 +1,13 @@
-build
-replays
+#ignore config files
 *.conf
+#ignore certificates
 *.pem
 *.cert
-botExecutable
-MSG_RAW
-log
-*.log
+#ignore folders
 __pycache__
+replays
+.kdev4
+#ignore build folders
 compile_commands.json
-pb/buildtmp
+build
+CMakeFiles

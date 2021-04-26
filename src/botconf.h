@@ -3,8 +3,6 @@
 
 #include "botcflags.h"
 
-#define SUCCESS 1
-#define ERROR 0
 #define BUFFER_LENGTH 4096 //aprox one page
 #define CONF_FILE "config.conf"
 
@@ -24,11 +22,9 @@ struct Config {
          
          //Tournament bot data TODO: move them elsewhere
          *cert, 
-         *authToken,
          *certkey, 
-         *bindAddr,
-         *externalAddr;
-    int success;
+         *authToken,
+         *bindAddr;
 };
 
 /**

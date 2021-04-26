@@ -4,6 +4,9 @@ BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x
 [ClangTidy]
 CheckSystemHeaders=true
 
+[Clazy]
+checks=level2
+
 [Cppcheck]
 checkConfig=true
 checkInformation=true

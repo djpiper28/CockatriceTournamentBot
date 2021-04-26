@@ -332,22 +332,96 @@ int main (int argc, char * args[]) {
     bot.running = 1;
     
     int status = readConf(&bot.config);
-    if (status) {
-        printf("[INFO]: Config read successfully.\n");
-        initBot(&bot.b, bot.config);
-        initServer(&bot.server, &bot.b, bot.config);
+    int valid = 1;
+    
+    // Check conf is valid
+    if (valid && status) {
+        if (bot.config.cockatriceUsername == NULL) {
+            valid = 0;
+            printf("[ERROR]: Cockatrice username is not defined in config.conf.\n");
+        }
+        if (bot.config.cockatricePassword == NULL) {
+            valid = 0;
+            printf("[ERROR]: Cockatrice password is not defined in config.conf.\n");
+        }
+        if (bot.config.roomName == NULL) {
+            valid = 0;
+            printf("[ERROR]: Cockatrice room name is not defined in config.conf.\n");
+        }
+        if (bot.config.cockatriceServer == NULL) {
+            valid = 0;
+            printf("[ERROR]: Cockatrice server address is not defined in config.conf.\n");
+        }
+        if (bot.config.clientID == NULL) {
+            valid = 0;
+            printf("[ERROR]: Cockatrice client ID is not defined in config.conf.\n");
+        }
+        if (bot.config.replayFolder == NULL) {
+            valid = 0;
+            printf("[ERROR]: Replay folder is not defined in config.conf.\n");
+        }
+        if (bot.config.authToken == NULL) {
+            valid = 0;
+            printf("[ERROR]: Authentication token is not defined in config.conf.\n");
+        }
+        if (bot.config.bindAddr == NULL) {
+            valid = 0;
+            printf("[ERROR]: API server bind address is not defined in config.conf.\n");
+        }   
         
-        #if DEBUG
-        addDebugFunctions(&bot.b);
-        #endif
+        // Check certs exist and are readable.    
+        if (bot.config.cert == NULL) {
+            valid = 0;
+            printf("[ERROR]: SSL certificate file is not defined in config.conf.\n");
+        } else {
+            if (access(bot.config.cert, F_OK) != 0) {
+                valid = 0;
+                printf("[ERROR]: SSL certificate file defined in config.conf does not exist.\n");                
+            } else {
+                if (access(bot.config.cert, R_OK) != 0) {
+                    valid = 0;
+                    printf("[ERROR]: SSL certificate file defined in config.conf cannot be read.\n");
+                    
+                }
+            }
+        }
         
-        set_onGameEnd(&onGameEnd, &bot.b);
-        set_onBotDisconnect(&onBotDisconnect, &bot.b);
+        if (bot.config.certkey == NULL) {
+            valid = 0;
+            printf("[ERROR]: SSL certificate key file is not defined in config.conf.\n");
+        } else {
+            if (access(bot.config.certkey, F_OK) != 0) {
+                valid = 0;
+                printf("[ERROR]: SSL certificate key file defined in config.conf does not exist.\n");                
+            } else {
+                if (access(bot.config.certkey, R_OK) != 0) {
+                    valid = 0;
+                    printf("[ERROR]: SSL certificate key file defined in config.conf cannot be read.\n");
+                    
+                }
+            }
+        }
         
-        startServer(&bot.server);
-        startBot(&bot.b);
-        
-        startConsoleListener(&bot);           
+        if (valid) {
+            printf("[INFO]: Config read successfully.\n");
+            initBot(&bot.b, bot.config);
+            initServer(&bot.server, &bot.b, bot.config);
+            
+            #if DEBUG
+            addDebugFunctions(&bot.b);
+            #endif
+            
+            set_onGameEnd(&onGameEnd, &bot.b);
+            set_onBotDisconnect(&onBotDisconnect, &bot.b);
+            
+            startServer(&bot.server);
+            startBot(&bot.b);
+            
+            startConsoleListener(&bot);   
+        } else {
+            printf("[ERROR]: Missing properties in config file, see README.md at %s/blob/main/README.md.\n",
+                   GITHUB_REPO);
+        }
     } else if (status == 0) {     
         printf("[ERROR]: There was an error reading the config.\n");
     } else if (status == -1) {
