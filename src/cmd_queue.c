@@ -105,6 +105,7 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue *queue,
                                     const char *gameName) {  
     pthread_mutex_lock(&queue->mutex);    
     if (isGameEq(gameName, queue->head->payload)) {
+        pthread_mutex_unlock(&queue->mutex);    
         return deqNTS(queue);
     }
       

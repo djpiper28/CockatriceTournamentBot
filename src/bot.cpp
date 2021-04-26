@@ -1023,16 +1023,23 @@ static void botEventHandler(struct mg_connection *c,
             c->MutableExtension(Command_ListRooms::ext);
             
             struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);  
+            pthread_mutex_unlock(&b->mutex);
             enq(cmd, &b->sendQueue);  
+            pthread_mutex_lock(&b->mutex);
             
             b->roomRequested = 1;
         }
+        pthread_mutex_unlock(&b->mutex);
         
+        //new game game timeouts
         long currentTime = time(NULL);
         if (b->lastGameWaitCheck != currentTime) {
             //Itter over games
+            pthread_mutex_lock(&b->mutex);
             pthread_mutex_lock(&b->gameList.mutex);
             struct gameListNode *current = b->gameList.gamesHead;
+            pthread_mutex_unlock(&b->mutex);
+            
             while (current != NULL) {
                 //Check for game start timeout
                 if (!current->currentGame->started 
@@ -1051,26 +1058,25 @@ static void botEventHandler(struct mg_connection *c,
                     printf("[INFO]: Leaving game %d after %d seconds of inactivity.\n",
                            current->currentGame->gameID,
                            MAX_GAME_WAIT);
-                
+                    
+                    pthread_mutex_unlock(&b->mutex);
                     enq(cmd, &b->sendQueue);
+                    pthread_mutex_lock(&b->mutex);
                 }
                 
                 current = current->nextGame;
-            }
-            
-            pthread_mutex_unlock(&b->gameList.mutex);
+            }            
         }
+        pthread_mutex_unlock(&b->gameList.mutex);
         
         b->lastGameWaitCheck = currentTime;
-        pthread_mutex_unlock(&b->mutex);
         
         //Send commands
         struct timeval val;
         gettimeofday(&val, NULL);        
         
-        if (hasNext(&b->sendQueue)) {           
-            struct pendingCommand *cmd = deq(&b->sendQueue);   
-            
+        struct pendingCommand *cmd = deq(&b->sendQueue); 
+        if (cmd != NULL) {     
             mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);  
             
             enq(cmd, &b->callbackQueue);
@@ -1081,22 +1087,24 @@ static void botEventHandler(struct mg_connection *c,
         }
         
         //Check for callback that has timed out
-        if (hasNext(&b->callbackQueue)) {
-            struct pendingCommand *cmd = peek(&b->callbackQueue);
-            
-            if (cmd != NULL) {
-                if (time(NULL) - cmd->timeSent >= TIMEOUT) {
-                    struct pendingCommand *cmdd = deq(&b->callbackQueue);
-                    executeCallback(b, cmdd, NULL);   
-                }
+        cmd = deq(&b->callbackQueue);
+        if (cmd != NULL) {
+            if (time(NULL) - cmd->timeSent >= TIMEOUT) {
+                executeCallback(b, cmd, NULL);   
+            } else {
+                enq(cmd, &b->callbackQueue);
             }
-        }            
+        }
         
         //Send ping if needed
+        pthread_mutex_lock(&b->mutex);
         if (needsPing(b->lastPingTime)) {
+            pthread_mutex_unlock(&b->mutex);
             sendPing(b);
+            pthread_mutex_lock(&b->mutex);
             b->lastPingTime = time(NULL);
         }    
+        pthread_mutex_unlock(&b->mutex);
     } 
     
     pthread_mutex_lock(&b->mutex);
