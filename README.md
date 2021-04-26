@@ -61,9 +61,18 @@ cmake --build . # --parallel x
 ```
 
 ## Help it is borked
-Compile with `make -j` and have DEBUG enabled in the makefile and then run it 
-with a debugger and get the full
-backtrace of the program. Make sure that the program is called with an argument
+Create an issue or look through issues for your problem.
+
+### The program is crashing or hanging
+Compile with 
+```sh
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+cmake --build . # --parallel x
+``` 
+then run with a debugger and get the full backtrace of the program. 
+Make sure that the program is called with an argument
 of `3` to get some verbose mongoose logs.
 
 ## TODO:
