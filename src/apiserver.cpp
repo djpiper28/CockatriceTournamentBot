@@ -416,13 +416,101 @@ static void eventHandler(struct mg_connection *c,
                 || mg_http_match_uri(hm, "/api")) {
             mg_http_reply(c, 200, "", "%s", HELP_STR);
         } else if (mg_http_match_uri(hm, "/replay*")) {
+            int gameID = -1;
+            // Parse gameId from URI in form ../(<FOLDER>/)*<NAME>-id.cor
+            /** FST
+             * 0 -> 1 '-' else 0
+             * 1 -> 2 /[0-9]/ else 0
+             * state 2:
+             *   2 -> 2 [0-9] 
+             *   2 -> 3 . 
+             *   else 0
+             * 3 -> 4 c else 0
+             * 4 -> 5 o else 0
+             * 5 -> 6 r else 0 (accepting state)
+             */ 
+            int state = 0, gameIdStartPtr, gameIdEndPtr;
+            for (int i = 0; i < hm->uri.len; i++) {
+                switch(hm->uri.ptr[i]) {
+                    case '-':
+                        state = 1;
+                        break;
+                    case '0' - '9':
+                        if (state == 1) {
+                            state = 2;
+                            gameIdStartPtr = i;
+                        } else if (state != 2) {
+                            state = 0;
+                        }
+                        break;
+                    case '.':
+                        if (state == 2) {
+                            gameIdEndPtr = i - 1;
+                            // To not be misleading it will point to the last byte
+                            state = 3;
+                        } else {
+                            state = 0;
+                        }
+                        break;
+                    case 'c':
+                        if (state == 3) {
+                            state = 4;
+                        } else {
+                            state = 0;
+                        }
+                        break;
+                    case 'o':
+                        if (state == 4) {
+                            state = 5;
+                        } else {
+                            state = 0;
+                        }
+                        break;
+                    case 'r':
+                        if (state == 5) {
+                            state = 6; //accepting
+                        } else {
+                            state = 0;
+                        }
+                        break;
+                    default:
+                        state = 0;
+                        break;
+                }
+            }
             
-            struct mg_http_serve_opts opts = {
-                .root_dir = api->config.replayFolder,
-                .extra_headers = DOWNLOAD_HEADER
-            };
-            
-            mg_http_serve_dir(c, hm, &opts);
+            // Accepting state
+            if (state == 6) {
+                // +1 for off by one error, +1 for null terminator
+                int len = gameIdEndPtr - gameIdStartPtr + 2;
+                char *gameIDCp = (char *) malloc (sizeof(char) * len);
+                strncpy(gameIDCp, hm->uri.ptr + gameIdStartPtr, len);
+                
+                gameID = atoi(gameIDCp);
+                free(gameIDCp); // Free the tmp var
+                
+                struct game *g = getGameWithID(&api->triceBot->gameList, gameID);
+                int gameFinished = g == NULL;
+                
+                if (gameFinished) {
+                    struct mg_http_serve_opts opts = {
+                        .root_dir = api->config.replayFolder,
+                        .extra_headers = DOWNLOAD_HEADER
+                    };
+                    
+                    mg_http_serve_dir(c, hm, &opts);
+                } else {
+                    mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0;"
+                    "URL=cockatrice://%s?roomID=%d&gameID=%d\" />"
+                    "<p>Waiting for game to finish, your browser should open the game.</p>",
+                    api->config.clientID,
+                    api->config.cockatriceServer,
+                    gameID,
+                    api->triceBot->magicRoomID);
+                }
+            } else {
+                send404(c);
+            }
         } else if (mg_http_match_uri(hm, api->replayFolerWildcard)) {      
             
             struct mg_http_serve_opts opts = {

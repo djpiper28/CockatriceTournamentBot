@@ -467,7 +467,7 @@ char *getReplayFileName(int gameID,
 }
 
 /**
- * Downloads a replay to ./replays/
+ * Downloads a replay to ./replays/ use getReplayFileName to get the URI
  * -> Fails silently
  * Is subject to cockaspagheti
  */ 
@@ -592,7 +592,7 @@ static void roomsListed(struct triceBot *b,
 
 //Join the room in config
 static void handleRoomEvent(struct triceBot *b,
-                     ServerMessage *newServerMessage) {
+                            ServerMessage *newServerMessage) {
     const RoomEvent event = newServerMessage->room_event();    
     
     if (event.HasExtension(Event_JoinRoom::ext)) {
