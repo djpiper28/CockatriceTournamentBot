@@ -430,7 +430,7 @@ static void eventHandler(struct mg_connection *c,
              * 5 -> 6 r else 0 (accepting state)
              */ 
             int state = 0, gameIdStartPtr, gameIdEndPtr;
-            for (int i = 0; i < hm->uri.len; i++) {
+            for (size_t i = 0; i < hm->uri.len; i++) {
                 switch(hm->uri.ptr[i]) {
                     case '-':
                         state = 1;
@@ -503,7 +503,6 @@ static void eventHandler(struct mg_connection *c,
                     mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0;"
                     "URL=cockatrice://%s?roomID=%d&gameID=%d\" />"
                     "<p>Waiting for game to finish, your browser should open the game.</p>",
-                    api->config.clientID,
                     api->config.cockatriceServer,
                     gameID,
                     api->triceBot->magicRoomID);

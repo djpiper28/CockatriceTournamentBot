@@ -125,11 +125,11 @@ void startConsoleListener (struct tournamentBot *bot) {
 #define MACRO_DEBUG_FOR_EVENT(fn, type)\
 void DebugFor##fn (struct triceBot *b, type event) {\
     time_t rawtime;\
-    struct tm *info;\
+    struct tm info;\
     char buffer[80];\
     time(&rawtime);\
-    info = localtime( &rawtime );\
-    strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
+    localtime_r(&rawtime , &info);\
+    strftime(buffer, 80, "%x - %H:%M:%S %Z", &info);\
     \
     printf("[DEBUG] (%s) %s: %s\n",#fn , buffer, event.DebugString().c_str());\
 }
@@ -137,11 +137,11 @@ void DebugFor##fn (struct triceBot *b, type event) {\
 #define MACRO_DEBUG_FOR_GAME_EVENT(fn,type)\
 void DebugFor##fn (struct triceBot *b, struct game, type event) {\
     time_t rawtime;\
-    struct tm *info;\
+    struct tm info;\
     char buffer[80];\
     time(&rawtime);\
-    info = localtime( &rawtime );\
-    strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
+    localtime_r(&rawtime , &info);\
+    strftime(buffer, 80, "%x - %H:%M:%S %Z", &info);\
     \
     printf("[DEBUG] %s: %s\n", buffer, #fn);\
 }
@@ -149,11 +149,11 @@ void DebugFor##fn (struct triceBot *b, struct game, type event) {\
 #define MACRO_DEBUG_FOR_STATE_CHANGE(fn)\
 void DebugFor##fn (struct triceBot *b) {\
     time_t rawtime;\
-    struct tm *info;\
+    struct tm info;\
     char buffer[80];\
     time(&rawtime);\
-    info = localtime( &rawtime );\
-    strftime(buffer, 80, "%x - %H:%M:%S %Z", info);\
+    localtime_r(&rawtime , &info);\
+    strftime(buffer, 80, "%x - %H:%M:%S %Z", &info);\
     \
     printf("[DEBUG] %s: %s\n", buffer, #fn);\
 }
