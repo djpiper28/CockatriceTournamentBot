@@ -694,7 +694,8 @@ static void handleGameEvent(struct triceBot *b,
                     if (!pp.spectator() && !pp.judge()) {
                         addPlayer(&b->gameList, 
                                   currentGame, 
-                                  pp.user_info().name().c_str(),                                pp.player_id());   
+                                  pp.user_info().name().c_str(),   
+                                  pp.player_id());   
                     }
                 }
             }
