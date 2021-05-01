@@ -35,25 +35,25 @@ jobs:
         
     - name: install libs
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake cppunit
         
     - name: make release
       shell: bash
-      #run: make -j
       run : |
         if [ ! -d "build/" ]; then mkdir build; fi
         cd build
         cmake .. # -DCMAKE_BUILD_TYPE=Debug
         cmake --build . # --parallel x
+        ctest
 
     - name: make debug
       shell: bash
-      #run: make -j
       run : |
         if [ ! -d "build/" ]; then mkdir build; fi
         cd build
         cmake .. -DCMAKE_BUILD_TYPE=Debug
-        cmake --build . # --parallel x
+        cmake --build .
+        ctest
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
