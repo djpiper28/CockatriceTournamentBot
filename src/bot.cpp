@@ -125,7 +125,7 @@ void initBot(struct triceBot *b,
     
     b->magicRoomID = -1;
     b->lastPingTime = 0;
-    b->id = 0;
+    b->cmdID = 0;
     b->lastSend = 0;    
     b->lastGameWaitCheck = 0;
 }
@@ -152,7 +152,7 @@ static struct pendingCommand *prepCmdNTS(struct triceBot *b,
     //returned command is edited by the user before queue addition
     pending->message  = data;
     pending->size     = msgLength; 
-    pending->cmdID    = b->id;
+    pending->cmdID    = b->cmdID;
     pending->timeSent = time(NULL);
     pending->isGame   = 0;
     pending->callbackFunction = NULL;
@@ -1146,7 +1146,7 @@ static void *botThread(void *in) {
     b->loggedIn = 0;
     b->magicRoomID = -1;
     b->roomRequested = 0;
-    b->id = 0;
+    b->cmdID = 0;
     pthread_mutex_unlock(&b->mutex);
     
     // Event handler flips it to true  

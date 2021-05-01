@@ -40,21 +40,37 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DMG_ENABLE_MBEDTLS=1")
 add_library(mongoose src/mongoose.c)
 
 # src
+set(MAIN
+    src/main.c
+    )
 set(SRC_FILES
     src/apiserver.cpp
     src/bot.cpp
     src/botconf.c
     src/cmd_queue.c
     src/gamestruct.c
-    src/main.c
     src/trice_structs.c
     )
-add_executable(CockatriceTournamentBot ${SRC_FILES})
+add_executable(CockatriceTournamentBot ${SRC_FILES} ${MAIN})
 target_include_directories(CockatriceTournamentBot PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})
 target_link_libraries(CockatriceTournamentBot
     proto mongoose ${Protobuf_LIBRARIES} ${MBEDTLS_LIBS})
 add_dependencies(CockatriceTournamentBot gendocs)
+
+# tests
+set (TEST_FILES
+    ${SRC_FILES}
+    tests/runner.cpp
+    tests/testTriceStructs.cpp
+    )
+add_executable(CockatriceTournamentBotTests ${TEST_FILES})
+target_include_directories(CockatriceTournamentBotTests PUBLIC 
+    ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})
+target_link_libraries(CockatriceTournamentBotTests
+    proto mongoose cppunit ${Protobuf_LIBRARIES} ${MBEDTLS_LIBS})
+add_dependencies(CockatriceTournamentBotTests gendocs)
+add_test(NAME CockatriceTournamentBotTests COMMAND CockatriceTournamentBotTests)
 
 # packaging?
 #set(CPACK_PACKAGE_CONTACT "")

@@ -106,8 +106,7 @@ struct triceBot {
         magicRoomID, 
         roomRequested,
         cmdID,
-        running,
-        id;
+        running;
     long lastGameWaitCheck,
          lastPingTime, 
          lastSend;
