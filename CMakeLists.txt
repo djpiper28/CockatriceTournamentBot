@@ -63,6 +63,7 @@ set (TEST_FILES
     ${SRC_FILES}
     tests/runner.cpp
     tests/testTriceStructs.cpp
+    tests/testBot.cpp
     )
 add_executable(CockatriceTournamentBotTests ${TEST_FILES})
 target_include_directories(CockatriceTournamentBotTests PUBLIC 

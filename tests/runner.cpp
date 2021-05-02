@@ -11,17 +11,19 @@
 #include <cppunit/ui/text/TestRunner.h>
 
 #include "testTriceStructs.h"
+#include "testBot.h"
 
 #define XMLOUT
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( TestTriceStructs, "test_trice_structs.h" );
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestTriceStructs, "test_trice_structs.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBot, "test_bot.h");
 
 // register test suite
 CppUnit::Test *suite() {
     CppUnit::TestFactoryRegistry &registry =
-    CppUnit::TestFactoryRegistry::getRegistry();
+        CppUnit::TestFactoryRegistry::getRegistry();
     registry.registerFactory(
-        &CppUnit::TestFactoryRegistry::getRegistry( "test_money_cppunit" ) );
+        &CppUnit::TestFactoryRegistry::getRegistry("test_trice_bot"));
     return registry.makeTest();
 }
 
@@ -47,7 +49,7 @@ int main(int argc, char* argv[]) {
     runner.addTest( suite() );
     try {
         std::cout  << std::endl;
-        std::cout << "test Money class with cppunit" << std::endl;
+        std::cout << "test trice bot classes with cppunit" << std::endl;
         std::cout << "========================="  << std::endl;
         runner.run( controller, testPath );
         std::cout << "=========================" << std::endl;
