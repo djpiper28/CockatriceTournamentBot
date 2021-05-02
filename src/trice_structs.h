@@ -3,11 +3,11 @@
 
 #include <pthread.h>
 #include <unistd.h>
-#include "botconf.h"
-#include "gamestruct.h"
-#include "response.pb.h"
+#include "bot_conf.h"
+#include "game_struct.h"
 #include "mongoose.h"
 
+#include "response.pb.h"
 #include "event_set_card_attr.pb.h"
 #include "event_set_card_counter.pb.h"
 #include "event_set_active_phase.pb.h"

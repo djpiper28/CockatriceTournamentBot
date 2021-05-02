@@ -7,8 +7,8 @@
 #include <unistd.h>
 
 #include "commands.pb.h"
-#include "gamestruct.h"
-#include "botconf.h"
+#include "game_struct.h"
+#include "bot_conf.h"
 #include "trice_structs.h"
 
 //Type defs moved to trice_structs.h due to circlular references

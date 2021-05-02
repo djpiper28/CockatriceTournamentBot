@@ -9,14 +9,14 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "botconf.h"
-#include "gamestruct.h"
+#include "bot_conf.h"
+#include "game_struct.h"
 #include "version_string.h"
 #include "mongoose.h"
 #include "get_pb_extension.h"
 #include "cmd_queue.h"
 #include "trice_structs.h"
-#include "botcflags.h"
+#include "bot_c_flags.h"
 
 //Pb imports
 #include "game_replay.pb.h"

@@ -2,8 +2,8 @@
 #include <stdlib.h> 
 #include <pthread.h>
 #include <string.h>
-#include "botconf.h"
-#include "apiserver.h"
+#include "bot_conf.h"
+#include "api_server.h"
 #include "trice_structs.h"
 #include "bot.h"
 #include "version.h"

@@ -1,7 +1,7 @@
 #include "testBot.h"
 #include "../src/trice_structs.h"
 #include "../src/bot.h"
-#include "../src/botconf.h"
+#include "../src/bot_conf.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TestBot);
 

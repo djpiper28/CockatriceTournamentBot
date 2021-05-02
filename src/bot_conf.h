@@ -1,7 +1,7 @@
 #ifndef BOTCONF_H_
 #define BOTCONF_H_
 
-#include "botcflags.h"
+#include "bot_c_flags.h"
 
 #define BUFFER_LENGTH 4096 //aprox one page
 #define CONF_FILE "config.conf"

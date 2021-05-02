@@ -44,11 +44,11 @@ set(MAIN
     src/main.c
     )
 set(SRC_FILES
-    src/apiserver.cpp
-    src/bot.cpp
-    src/botconf.c
+    src/api_server.c
+    src/bot.c
+    src/bot_conf.c
     src/cmd_queue.c
-    src/gamestruct.c
+    src/game_struct.c
     src/trice_structs.c
     )
 add_executable(CockatriceTournamentBot ${SRC_FILES} ${MAIN})

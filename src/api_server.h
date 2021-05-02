@@ -2,7 +2,7 @@
 #define APISERVER_H_
 
 #include "trice_structs.h"
-#include "botconf.h"
+#include "bot_conf.h"
 
 struct response {
     char *data;

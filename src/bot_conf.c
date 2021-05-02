@@ -1,7 +1,7 @@
 #ifndef BOTCONF_
 #define BOTCONF_
 
-#include "botconf.h"
+#include "bot_conf.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

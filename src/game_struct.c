@@ -1,6 +1,6 @@
 #ifndef GAMESTRUCT_
 #define GAMESTRUCT_
-#include "gamestruct.h"
+#include "game_struct.h"
 
 #include <string.h>
 #include <stdlib.h>

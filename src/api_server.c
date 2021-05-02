@@ -1,18 +1,18 @@
 #ifndef APISERVER_
 #define APISERVER_
-#include "apiserver.h"
+#include "api_server.h"
 
 #include <stdlib.h>
 #include <pthread.h>
 #include <signal.h>
-#include "botconf.h"
-#include "gamestruct.h"
+#include "bot_conf.h"
+#include "game_struct.h"
 #include "version.h"
 #include "helppage.h"
 #include "trice_structs.h"
 #include "bot.h"
 #include "mongoose.h"
-#include "botcflags.h"
+#include "bot_c_flags.h"
 #include "cmd_queue.h"
 
 #include "command_kick_from_game.pb.h"
