@@ -498,19 +498,22 @@ static void eventHandler(struct mg_connection *c,
                         .extra_headers = DOWNLOAD_HEADER
                     };
                     
-                    mg_http_serve_dir(c, hm, &opts);
+                    mg_http_serve_dir(c,
+                                      hm,
+                                      &opts);
                 } else {
-                    mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0;"
-                    "URL=cockatrice://%s?roomID=%d&gameID=%d\" />"
-                    "<p>Waiting for game to finish, your browser should open the game.</p>",
-                    api->config.cockatriceServer,
-                    gameID,
-                    api->triceBot->magicRoomID);
+                    mg_http_reply(c, 
+                                  301, 
+                                  "", 
+                                  "Game %d is in progress on %s.",
+                                  gameID,
+                                  api->config.cockatriceServer);
                 }
             } else {
                 send404(c);
             }
-        } else if (mg_http_match_uri(hm, api->replayFolerWildcard)) {      
+        } else if (mg_http_match_uri(hm,
+                                     api->replayFolerWildcard)) {      
             
             struct mg_http_serve_opts opts = {
                 .root_dir = ".",
@@ -540,7 +543,9 @@ static void eventHandler(struct mg_connection *c,
                                                          paramdata->gameNameLength,
                                                          NULL);
                     
-                    snprintf(data, BUFFER_LENGTH, "gameid=%d\nreplayName=%s/%s", 
+                    snprintf(data, 
+                             BUFFER_LENGTH, 
+                             "gameid=%d\nreplayName=%s/%s", 
                              paramdata->gameID,
                              api->config.replayFolder,
                              replayName);
@@ -548,7 +553,11 @@ static void eventHandler(struct mg_connection *c,
                     printf("[INFO]: Game created with ID %d.\n",
                            paramdata->gameID);
                     
-                    mg_http_reply(c, 201, "", data);  
+                    mg_http_reply(c, 
+                                  201, 
+                                  "", 
+                                  "%s",
+                                  data);  
                     
                     free(data);
                     free(replayName);
@@ -560,7 +569,10 @@ static void eventHandler(struct mg_connection *c,
             
             //Timeout
             else if (time(NULL) - s->startTime > TIMEOUT && !s->closing) {
-                mg_http_reply(c, 408, "", "timeout error");
+                mg_http_reply(c, 
+                              408, 
+                              "", 
+                              "timeout error");
                 s->closing = 1;
             } else if (s->closing) {
                 c->is_closing = 1;
@@ -648,9 +660,9 @@ int startServer(struct apiServer *api) {
         pthread_mutex_unlock(&api->bottleneck);
         
         return pthread_create(&api->pollingThreadT, 
-                            NULL, 
-                            pollingThread, 
-                            (void *) api);
+                              NULL, 
+                              pollingThread, 
+                              (void *) api);
     }
 }
 
