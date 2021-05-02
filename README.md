@@ -57,8 +57,10 @@ Create build directory and use cmake:
 mkdir build
 cd build
 cmake .. # -DCMAKE_BUILD_TYPE=Debug
-cmake --build . # --parallel x
+cmake --build . # -j x
 ```
+Tests are compiled with this program by default, to run
+these tests use the command `ctest`.
 
 ## Help it is borked
 Create an issue or look through issues for your problem.
@@ -69,7 +71,7 @@ Compile with
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
-cmake --build . # --parallel x
+cmake --build . # -j x
 ``` 
 then run with a debugger and get the full backtrace of the program. 
 Make sure that the program is called with an argument
