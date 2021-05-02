@@ -13,7 +13,7 @@ in python in a file called `tricebot.py`.
 
 Do note empty games are deleted after 30 minutes by this bot.
 
-## Config file
+## Configuring The Bot
 The file (config.conf) should be in this format:
 
 ```yaml
@@ -49,8 +49,8 @@ CA certificates because it is not web-facing. Ideal configuration would have the
 bot running on the same machine as the program that uses it.
 
 ## Compiling
-Install dependencies:
-`cmake g++ libmbedtls-dev libprotobuf-dev protobuf-compiler`
+Install dependencies (ubuntu package names):
+`cmake g++ or clang++ libmbedtls-dev libprotobuf-dev protobuf-compiler libcppunit-dev`
 
 Create build directory and use cmake:
 ```sh
@@ -59,23 +59,65 @@ cd build
 cmake .. # -DCMAKE_BUILD_TYPE=Debug
 cmake --build . # -j x
 ```
-Tests are compiled with this program by default, to run
-these tests use the command `ctest`.
+Tests are compiled with this program by default, to runthese tests use the command 
+`ctest` after compiling.
 
 ## Help it is borked
-Create an issue or look through issues for your problem.
+Create an issue or look through issues for your problem, if the program crashes or 
+hangs, please provide debug information, see below for help with that.
 
-### The program is crashing or hanging
-Compile with 
+### Providing Debug Information
+Compile a debug build with 
 ```sh
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 cmake --build . # -j x
-``` 
-then run with a debugger and get the full backtrace of the program. 
-Make sure that the program is called with an argument
+```
+Please copy and paste the logs from before the crash/hangand put them in your 
+issue, then (optional) run with a debugger and get the full backtrace of the 
+program. Make sure that the program is called with an argument
 of `3` to get some verbose mongoose logs.
+
+## Code Styling
+Where possible, code should be ISO C with exceptions for protobuf or cppunit
+library binds.
+
+### Indentation And New Lines
+ - Indentation should be with spaces not tabs (4 spaces).
+ - Functions should have each arg on separate lines that are indented to the function name's end.
+i.e:
+```c
+sampleFunction(argOne,
+               argTwo);
+```
+ - Structs should be indented to one level worth. 
+ - When two or more variables in a struct have the same type they should be defined on separate lines.
+i.e:
+```c
+struct a = {
+    int a;
+    char *b,
+          c;
+};
+```
+
+### Compiler Directives
+ - All defines should be named in SCREAMING_SNAKE_CASE
+ - All compiler directives should be at the top of the code if possible
+ - The `#ifndef #define` should be used to guard against multiple header inclusions
+
+### Naming Conventions
+ - camelCase for function names and variable names
+ - PascalCase for struct names
+ - snake_case for file cxx file names
+ - camelCase for python file names
+
+### Comments
+ - Please add comments
+
+### Constants
+ - #define them please
 
 ## TODO:
 - add tricebot rate limit (wip)
