@@ -7,22 +7,22 @@
 #define CONF_FILE "config.conf"
 
 struct Config {
-    #if LOGIN_AUTOMATICALLY
-    char *cockatriceUsername, 
+#if LOGIN_AUTOMATICALLY
+    char *cockatriceUsername,
          *cockatricePassword;
-    #endif
-    
-    #if JOIN_ROOM_AUTOMATICALLY
+#endif
+         
+#if JOIN_ROOM_AUTOMATICALLY
     char *roomName;
-    #endif    
+#endif
     
-    char *cockatriceServer, 
+    char *cockatriceServer,
          *clientID,
          *replayFolder,
          
          //Tournament bot data TODO: move them elsewhere
-         *cert, 
-         *certkey, 
+         *cert,
+         *certkey,
          *authToken,
          *bindAddr;
 };
@@ -32,7 +32,7 @@ struct Config {
  * Returns 1 if the file was read successfully
  * Returns 0 if there was an error reading the file
  * Returns -1 if the file doesn't exist and was made
- */ 
+ */
 int readConf(struct Config *config);
 
 void freeConf(struct Config *config);

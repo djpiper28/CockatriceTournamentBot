@@ -11,22 +11,22 @@ struct response {
 
 struct apiServer {
     pthread_t pollingThreadT;
-    pthread_mutex_t bottleneck;    
+    pthread_mutex_t bottleneck;
     struct mg_tls_opts opts;
-    struct triceBot *triceBot; 
+    struct triceBot *triceBot;
     struct Config config;
     int running;
     char * replayFolerWildcard;
 };
 
-void initServer(struct apiServer *server, 
-                struct triceBot *triceBot, 
+void initServer(struct apiServer *server,
+                struct triceBot *triceBot,
                 struct Config config);
 
 void freeServer(struct apiServer *api);
 
-int startServer (struct apiServer *api);
+int startServer(struct apiServer *api);
 
-void stopServer (struct apiServer *api);
+void stopServer(struct apiServer *api);
 
 #endif

@@ -5,7 +5,7 @@
 | Version | Supported          |
 | ------- | ------------------ |
 | v1.3    | :heavy_check_mark: (in development) |
-| v1.2    | :heavy_check_mark: (early access)   |
+| v1.2    | :x:                |
 | v1.1    | :x:                |
 | < v1.0  | :x:                |
 # Reporting a Vulnerability

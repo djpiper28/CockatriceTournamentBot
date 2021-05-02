@@ -11,3 +11,4 @@ replays
 compile_commands.json
 build
 CMakeFiles
+*.orig

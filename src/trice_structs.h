@@ -61,10 +61,10 @@ struct pendingCommand {
     char *message;
     void *param;
     int size = 0;
-    int cmdID = -1; 
-    int timeSent = -1; 
+    int cmdID = -1;
+    int timeSent = -1;
     int isGame = 0;
-    void (*callbackFunction) (struct triceBot *b, const Response *resp, void *param);
+    void (*callbackFunction)(struct triceBot *b, const Response *resp, void *param);
 };
 
 struct pendingCommandQueueNode {
@@ -82,7 +82,7 @@ struct pendingCommandQueue {
  * are consistent and to reduce the amount of code that I have to type.
  * A good interactive tester for macro expansions is https://godbolt.org/ with
  * gcc arguments of -E
- */ 
+ */
 #define MACRO_CREATE_EVENT_FUNCTION_PTR(fn, type)\
 void (*fn) (struct triceBot *, type) = NULL;
 
@@ -102,16 +102,16 @@ struct triceBot {
     pthread_mutex_t mutex;
     struct pendingCommandQueue sendQueue, callbackQueue;
     struct gameList gameList;
-    int loggedIn, 
-        magicRoomID, 
+    int loggedIn,
+        magicRoomID,
         roomRequested,
         cmdID,
         running;
     long lastGameWaitCheck,
-         lastPingTime, 
+         lastPingTime,
          lastSend;
-    
-    //Event Function Pointers for session events    
+         
+    //Event Function Pointers for session events
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,
                                     Event_ServerIdentification)
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerCompleteList,
@@ -140,7 +140,7 @@ struct triceBot {
                                     Event_NotifyUser)
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventReplayAdded,
                                     Event_ReplayAdded)
-    
+                                    
     //Event Function Pointers for room events
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventJoinRoom,
                                     Event_JoinRoom)
@@ -148,7 +148,7 @@ struct triceBot {
                                     Event_LeaveRoom)
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventRoomSay,
                                     Event_RoomSay)
-    
+                                    
     //Game events
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventJoin,
                                          Event_Join)
@@ -210,7 +210,7 @@ struct triceBot {
                                          Event_ChangeZoneProperties)
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventReverseTurn,
                                          Event_ReverseTurn)
-    
+                                         
     //Game state changes
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(onGameStart)
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(onGameEnd)
@@ -237,108 +237,108 @@ void set_##fn (void (*event) (struct triceBot *), struct triceBot *b);
 void set_##fn (void (*event) (struct triceBot *, struct game), struct triceBot *b);
 /**
  * For each of the onEvent.* (regex) function pointers in the triceBot structure
- * there is a set_onEvent.* function that is thread safe. They are made with 
+ * there is a set_onEvent.* function that is thread safe. They are made with
  * macros to ensure that they are consistent
- */ 
+ */
 
 //Server events
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerIdentifictaion,
-                                              Event_ServerIdentification)
+        Event_ServerIdentification)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerCompleteList,
-                                              Event_ServerCompleteList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerMessage, 
-                                              Event_ServerMessage)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerShutdown, 
-                                              Event_ServerShutdown)
+        Event_ServerCompleteList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerMessage,
+        Event_ServerMessage)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventServerShutdown,
+        Event_ServerShutdown)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventConnectionClosed,
-                                              Event_ConnectionClosed)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserMessage, 
-                                              Event_UserMessage)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventListRooms, 
-                                              Event_ListRooms)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventAddToList, 
-                                              Event_AddToList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventRemoveFromList, 
-                                              Event_RemoveFromList)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserJoined, 
-                                              Event_UserJoined)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserLeft, 
-                                              Event_UserLeft)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventGameJoined, 
-                                              Event_GameJoined)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventNotifyUser, 
-                                              Event_NotifyUser)
-MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventReplayAdded, 
-                                              Event_ReplayAdded)
+        Event_ConnectionClosed)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserMessage,
+        Event_UserMessage)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventListRooms,
+        Event_ListRooms)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventAddToList,
+        Event_AddToList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventRemoveFromList,
+        Event_RemoveFromList)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserJoined,
+        Event_UserJoined)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventUserLeft,
+        Event_UserLeft)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventGameJoined,
+        Event_GameJoined)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventNotifyUser,
+        Event_NotifyUser)
+MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventReplayAdded,
+        Event_ReplayAdded)
 
 //Room events
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventJoinRoom,
-                                              Event_JoinRoom)
+        Event_JoinRoom)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventLeaveRoom,
-                                              Event_LeaveRoom)
+        Event_LeaveRoom)
 MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF(onEventRoomSay,
-                                              Event_RoomSay)
+        Event_RoomSay)
 //Game events
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventJoin,
-                                                   Event_Join)
+        Event_Join)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventLeave,
-                                                   Event_Leave)
+        Event_Leave)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventGameClosed,
-                                                   Event_GameClosed)
+        Event_GameClosed)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventHostChanged,
-                                                   Event_GameHostChanged)
+        Event_GameHostChanged)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventPlayerKicked,
-                                                   Event_Kicked)
+        Event_Kicked)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventStateChanged,
-                                                   Event_GameStateChanged)
+        Event_GameStateChanged)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventPlayerPropertyChanged,
-                                                   Event_PlayerPropertiesChanged)
+        Event_PlayerPropertiesChanged)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventGameSay,
-                                                   Event_GameSay)
+        Event_GameSay)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventCreateArrow,
-                                                   Event_CreateArrow)
+        Event_CreateArrow)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDeleteArrow,
-                                                   Event_DeleteArrow)
+        Event_DeleteArrow)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventCreateCounter,
-                                                   Event_CreateCounter)
+        Event_CreateCounter)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetCounter,
-                                                   Event_SetCounter)
+        Event_SetCounter)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDelCounter,
-                                                   Event_DelCounter)
+        Event_DelCounter)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDrawCards,
-                                                   Event_DrawCards)
+        Event_DrawCards)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventRevealCards,
-                                                   Event_RevealCards)
+        Event_RevealCards)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventShuffle,
-                                                   Event_Shuffle)
+        Event_Shuffle)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventRollDie,
-                                                   Event_RollDie)
+        Event_RollDie)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventMoveCard,
-                                                   Event_MoveCard)
+        Event_MoveCard)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventFlipCard,
-                                                   Event_FlipCard)
+        Event_FlipCard)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDestroyCard,
-                                                   Event_DestroyCard)
+        Event_DestroyCard)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventAttachCard,
-                                                   Event_AttachCard)
+        Event_AttachCard)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventCreateToken,
-                                                   Event_CreateToken)
+        Event_CreateToken)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetCardAttr,
-                                                   Event_SetCardAttr)
+        Event_SetCardAttr)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetCardCounter,
-                                                   Event_SetCardCounter)
+        Event_SetCardCounter)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetActivePlayer,
-                                                   Event_SetActivePlayer)
+        Event_SetActivePlayer)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventSetActivePhase,
-                                                   Event_SetActivePhase)
+        Event_SetActivePhase)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventDumpZone,
-                                                   Event_DumpZone)
+        Event_DumpZone)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventStopDumpZone,
-                                                   Event_StopDumpZone)
+        Event_StopDumpZone)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventChangeZoneProperties,
-                                                   Event_ChangeZoneProperties)
+        Event_ChangeZoneProperties)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(onGameEventReverseTurn,
-                                                   Event_ReverseTurn)
+        Event_ReverseTurn)
 //Game state changes
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF_1(onGameStart)
 MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF_1(onGameEnd)

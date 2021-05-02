@@ -7,13 +7,13 @@
  * Used for game create callback
  * Only the gameID is mutable, use the mutex when accessing or modifying it
  */
-struct gameCreateCallbackWaitParam {   
+struct gameCreateCallbackWaitParam {
     char *gameName;
-    int   gameID, 
+    int   gameID,
           sendTime,
           gameNameLength;
     pthread_mutex_t mutex;
-    void (*callbackFn) (struct gameCreateCallbackWaitParam *);
+    void (*callbackFn)(struct gameCreateCallbackWaitParam *);
 };
 
 //Game list
@@ -29,7 +29,7 @@ struct gameListNode {
 
 //playerArr has length playerCount. NULL players in playerArr haven't joined yet
 struct game {
-    int gameID, 
+    int gameID,
         started,
         playerCount;
     long startTime,
@@ -50,14 +50,14 @@ struct game *createGame(int gameID, int playerCount);
  * playerName input must NULL terminated
  * Returns 1 if addition was successful
  * Returns 0 if the array is full or NULL
- */ 
+ */
 int addPlayer(struct gameList *gl, struct game *g, const char *playerName, int playerID);
 
 /**
  * Removes a player from a game
  * Returns 1 if addition was successful
  * Returns 0 if the array has no player with that ID or is NULL
- */ 
+ */
 int removePlayer(struct gameList *gl, struct game *g, int playerID);
 
 // Init the game list structure
@@ -74,8 +74,8 @@ int getPlayerIDForGameIDAndName(struct gameList *g, int gameID, char *playerName
 
 struct game *getGameWithID(struct gameList *g, int gameID);
 
-void addGame (struct gameList *g, struct game *gamePointer);
+void addGame(struct gameList *g, struct game *gamePointer);
 
-void removeGame (struct gameList *g, struct game *gamePointer);
+void removeGame(struct gameList *g, struct game *gamePointer);
 
 #endif

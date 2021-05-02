@@ -32,7 +32,7 @@ struct ServerConnection {
     long startTime;
 };
 
-static void initServerConnection(struct ServerConnection *s, 
+static void initServerConnection(struct ServerConnection *s,
                                  struct apiServer *api) {
     s->startTime = time(NULL);
     s->isGameCreate = 0;
@@ -41,13 +41,13 @@ static void initServerConnection(struct ServerConnection *s,
     s->closing = 0;
 }
 
-void initServer(struct apiServer *server, 
-                struct triceBot *triceBot, 
+void initServer(struct apiServer *server,
+                struct triceBot *triceBot,
                 struct Config config) {
     server->bottleneck = PTHREAD_MUTEX_INITIALIZER;
     server->config = config;
     server->triceBot = triceBot;
-    server->running = 0;    
+    server->running = 0;
     
     if (mg_url_is_ssl(server->config.bindAddr)) {
         server->opts.cert = server->config.cert;
@@ -58,7 +58,7 @@ void initServer(struct apiServer *server,
     server->replayFolerWildcard = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
     snprintf(server->replayFolerWildcard,
              BUFFER_LENGTH,
-             "/%s/**/*", server->config.replayFolder);    
+             "/%s/**/*", server->config.replayFolder);
 }
 
 void freeServer(struct apiServer *api) {
@@ -71,12 +71,12 @@ static void sendInvalidAuthTokenResponse(struct mg_connection *c) {
 }
 
 static void send404(struct mg_connection *c) {
-    mg_http_reply(c, 404, "", "error 404");  
+    mg_http_reply(c, 404, "", "error 404");
 }
 
-static void readNumberIfPropertiesMatch(int number, 
-                                        int *dest, 
-                                        const char *property, 
+static void readNumberIfPropertiesMatch(int number,
+                                        int *dest,
+                                        const char *property,
                                         char *readProperty) {
     if (strncmp(property, readProperty, BUFFER_LENGTH) == 0) {
         *dest = number;
@@ -88,33 +88,37 @@ struct str {
     size_t len;
 };
 
-static struct str readNextLine(const char *buffer, 
-                               size_t *ptr, 
-                               size_t len) {    
+static struct str readNextLine(const char *buffer,
+                               size_t *ptr,
+                               size_t len) {
     size_t i = 0;
     size_t tmp = *ptr;
-    while (*ptr < len && buffer[*ptr] != '\n') { 
+    
+    while (*ptr < len && buffer[*ptr] != '\n') {
         i++;
         *ptr += 1;
     }
+    
     *ptr += 1;
     
     struct str string = {buffer + tmp, i};
     return string;
 }
 
-static void serverKickPlayerCommand(struct ServerConnection *s, 
-                                    struct mg_connection *c, 
-                                    struct mg_http_message *hm) {    
-    char *authToken = NULL, 
-         *playerName = NULL; 
+static void serverKickPlayerCommand(struct ServerConnection *s,
+                                    struct mg_connection *c,
+                                    struct mg_http_message *hm) {
+    char *authToken = NULL,
+          *playerName = NULL;
     int gameID = -1;
     //Read the buffer line by line
     size_t ptr = 0;
+    
     while (ptr < hm->body.len - 1) {
         struct str line = readNextLine(hm->body.ptr, &ptr, hm->body.len);
         
         size_t eqPtr = 0;
+        
         for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
         
         //Check is line has equals with non-null strings on each side
@@ -127,42 +131,49 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
                 //Read value of the tag
                 char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
                 size_t j = 0;
+                
                 for (size_t i = eqPtr + 1; j < valueLen; i++) {
                     tmp[j] = line.ptr[i];
                     j++;
                 }
+                
                 tmp[valueLen] = 0;
                 
                 //Read prop tag into prop
                 char *prop = (char *) malloc(sizeof(char) * (propLen + 1));
-                for (size_t i = 0; i < eqPtr; i++)
-                    prop[i] = line.ptr[i]; 
-                prop[propLen] = 0;            
+                
+                for (size_t i = 0; i < eqPtr; i++) {
+                    prop[i] = line.ptr[i];
+                }
+                
+                prop[propLen] = 0;
                 
                 //Process line
                 //Prop len
-                #define MAX_PROP_LEN 22
-                if (MAX_PROP_LEN < propLen)
-                    propLen = MAX_PROP_LEN;
+#define MAX_PROP_LEN 22
                 
-                if (strncmp(prop, "authtoken", propLen) == 0) {                
+                if (MAX_PROP_LEN < propLen) {
+                    propLen = MAX_PROP_LEN;
+                }
+                
+                if (strncmp(prop, "authtoken", propLen) == 0) {
                     authToken = tmp;
                 } else if (strncmp(prop, "target", propLen) == 0) {
                     playerName = tmp;
                 } else {
                     //Check is number
-                    int isNum = valueLen < 8, 
-                    number = atoi(tmp);
-                    
+                    int isNum = valueLen < 8,
+                        number = atoi(tmp);
+                        
                     if (isNum) {
-                        readNumberIfPropertiesMatch(number, 
-                                                    &gameID, 
-                                                    "gameid", 
+                        readNumberIfPropertiesMatch(number,
+                                                    &gameID,
+                                                    "gameid",
                                                     prop);
                     }
                     
                     //Free tmp here as it is not assigned to a ptr
-                    free(tmp);   
+                    free(tmp);
                 }
             }
         }
@@ -170,15 +181,17 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
     
     //Check all fields have data
     int valid = authToken != NULL && playerName != NULL && gameID != -1;
-    if (valid) {        
-        //Check authtoken 
-        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {            
+    
+    if (valid) {
+        //Check authtoken
+        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
             int playerID = getPlayerIDForGameIDAndName(&s->api->triceBot->gameList,
-                                                       gameID, 
-                                                       playerName);            
+                           gameID,
+                           playerName);
+                           
             if (playerID == -1) {
                 mg_http_reply(c, 200, "", "error not found");
-            } else {            
+            } else {
                 Command_KickFromGame kickCommand;
                 kickCommand.set_player_id(playerID);
                 
@@ -187,10 +200,10 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
                 gc->MutableExtension(Command_KickFromGame::ext)->CopyFrom(kickCommand);
                 
                 struct pendingCommand *cmd = prepCmd(s->api->triceBot,
-                                                    cont, 
-                                                    gameID, 
-                                                    s->api->triceBot->magicRoomID);
-                
+                                                     cont,
+                                                     gameID,
+                                                     s->api->triceBot->magicRoomID);
+                                                     
                 enq(cmd, &s->api->triceBot->sendQueue);
                 
                 mg_http_reply(c, 200, "", "success");
@@ -198,37 +211,42 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
         } else {
             sendInvalidAuthTokenResponse(c);
         }
-    } else {        
+    } else {
         printf("[ERROR]: Invalid kick player command.\n");
         send404(c);
     }
     
     //Free the temp vars
-    if (playerName != NULL)
+    if (playerName != NULL) {
         free(playerName);
-    if (authToken != NULL)
+    }
+    
+    if (authToken != NULL) {
         free(authToken);
+    }
 }
 
-static void serverCreateGameCommand(struct ServerConnection *s, 
-                                    struct mg_connection *c, 
+static void serverCreateGameCommand(struct ServerConnection *s,
+                                    struct mg_connection *c,
                                     struct mg_http_message *hm) {
-    char *authToken = NULL, 
-         *gameName = NULL, 
-         *password = NULL;
-    int playerCount = -1, 
-        spectatorsAllowed = -1, 
+    char *authToken = NULL,
+          *gameName = NULL,
+           *password = NULL;
+    int playerCount = -1,
+        spectatorsAllowed = -1,
         spectatorsNeedPassword = -1,
-        spectatorsCanChat = -1, 
-        spectatorsCanSeeHands = -1, 
+        spectatorsCanChat = -1,
+        spectatorsCanSeeHands = -1,
         onlyRegistered = -1;
-            
+        
     //Read the buffer line by line
     size_t ptr = 0;
+    
     while (ptr < hm->body.len - 1) {
         struct str line = readNextLine(hm->body.ptr, &ptr, hm->body.len);
         
         size_t eqPtr = 0;
+        
         for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
         
         //Check is line has equals with non-null strings on each side
@@ -241,25 +259,32 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 //Read value of the tag
                 char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
                 size_t j = 0;
+                
                 for (size_t i = eqPtr + 1; j < valueLen; i++) {
                     tmp[j] = line.ptr[i];
                     j++;
                 }
+                
                 tmp[valueLen] = 0;
                 
                 //Read prop tag into prop
                 char *prop = (char *) malloc(sizeof(char) * (propLen + 1));
-                for (size_t i = 0; i < eqPtr; i++)
-                    prop[i] = line.ptr[i]; 
-                prop[propLen] = 0;            
+                
+                for (size_t i = 0; i < eqPtr; i++) {
+                    prop[i] = line.ptr[i];
+                }
+                
+                prop[propLen] = 0;
                 
                 //Process line
                 //Prop len
-                #define MAX_PROP_LEN 22
-                if (MAX_PROP_LEN < propLen)
-                    propLen = MAX_PROP_LEN;
+#define MAX_PROP_LEN 22
                 
-                if (strncmp(prop, "authtoken", propLen) == 0) {                
+                if (MAX_PROP_LEN < propLen) {
+                    propLen = MAX_PROP_LEN;
+                }
+                
+                if (strncmp(prop, "authtoken", propLen) == 0) {
                     authToken = tmp;
                 } else if (strncmp(prop, "gamename", propLen) == 0) {
                     gameName = tmp;
@@ -267,55 +292,55 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     password = tmp;
                 } else {
                     //Check is number
-                    int isNum = valueLen < 3, 
-                    number = atoi(tmp);
-                    
+                    int isNum = valueLen < 3,
+                        number = atoi(tmp);
+                        
                     if (isNum) {
-                        readNumberIfPropertiesMatch(number, 
-                                                    &playerCount, 
-                                                    "playerCount", 
-                                                    prop);
-                        readNumberIfPropertiesMatch(number, 
-                                                    &spectatorsAllowed, 
-                                                    "spectatorsAllowed", 
-                                                    prop);
-                        readNumberIfPropertiesMatch(number, 
-                                                    &spectatorsNeedPassword, 
-                                                    "spectatorsNeedPassword", 
+                        readNumberIfPropertiesMatch(number,
+                                                    &playerCount,
+                                                    "playerCount",
                                                     prop);
                         readNumberIfPropertiesMatch(number,
-                                                    &spectatorsCanChat, 
-                                                    "spectatorsCanChat", 
+                                                    &spectatorsAllowed,
+                                                    "spectatorsAllowed",
                                                     prop);
-                        readNumberIfPropertiesMatch(number, 
-                                                    &spectatorsCanSeeHands, 
-                                                    "spectatorsCanSeeHands", 
+                        readNumberIfPropertiesMatch(number,
+                                                    &spectatorsNeedPassword,
+                                                    "spectatorsNeedPassword",
                                                     prop);
-                        readNumberIfPropertiesMatch(number, 
-                                                    &onlyRegistered, 
-                                                    "onlyRegistered", 
+                        readNumberIfPropertiesMatch(number,
+                                                    &spectatorsCanChat,
+                                                    "spectatorsCanChat",
+                                                    prop);
+                        readNumberIfPropertiesMatch(number,
+                                                    &spectatorsCanSeeHands,
+                                                    "spectatorsCanSeeHands",
+                                                    prop);
+                        readNumberIfPropertiesMatch(number,
+                                                    &onlyRegistered,
+                                                    "onlyRegistered",
                                                     prop);
                     }
                     
                     //Free tmp here as it is not assigned to a ptr
-                    free(tmp);   
+                    free(tmp);
                 }
             }
         }
     }
     
     //Check all fields have data
-    int valid = authToken != NULL && s->api->config.authToken != NULL 
-        && gameName != NULL && password != NULL 
-        && playerCount != -1 && spectatorsAllowed != -1 
-        && spectatorsNeedPassword != -1 && spectatorsCanChat != -1 
-        && spectatorsCanSeeHands != -1 && onlyRegistered != -1; 
-        
-    if (valid) { 
-        //Check authtoken 
+    int valid = authToken != NULL && s->api->config.authToken != NULL
+                && gameName != NULL && password != NULL
+                && playerCount != -1 && spectatorsAllowed != -1
+                && spectatorsNeedPassword != -1 && spectatorsCanChat != -1
+                && spectatorsCanSeeHands != -1 && onlyRegistered != -1;
+                
+    if (valid) {
+        //Check authtoken
         if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
             s->param = sendCreateGameCommand(s->api->triceBot,
-                                             gameName,              
+                                             gameName,
                                              password,
                                              playerCount,
                                              1,
@@ -328,24 +353,29 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                                              NULL);
             s->isGameCreate = 1;
             
-            printf("[INFO]: Creating game called '%s' with %d players\n", 
-                   gameName, 
+            printf("[INFO]: Creating game called '%s' with %d players\n",
+                   gameName,
                    playerCount);
         } else {
             sendInvalidAuthTokenResponse(c);
         }
-    } else {        
+    } else {
         printf("[ERROR]: Invalid game create command.\n");
         send404(c);
     }
     
     //Free the temp vars
-    if (gameName != NULL)
+    if (gameName != NULL) {
         free(gameName);
-    if (authToken != NULL)
+    }
+    
+    if (authToken != NULL) {
         free(authToken);
-    if (password != NULL)
+    }
+    
+    if (password != NULL) {
         free(password);
+    }
 }
 
 static void ErrorCallback(struct gameCreateCallbackWaitParam *param) {
@@ -362,10 +392,10 @@ static void eventHandler(struct mg_connection *c,
     if (event == MG_EV_ACCEPT) {
         //Init connection struct
         struct ServerConnection *s = (struct ServerConnection *)
-            malloc (sizeof(struct ServerConnection));
+                                     malloc(sizeof(struct ServerConnection));
         initServerConnection(s, api);
         
-        c->fn_data = (void *) s;        
+        c->fn_data = (void *) s;
         
         if (mg_url_is_ssl(api->config.bindAddr)) {
             mg_tls_init(c, &api->opts);
@@ -375,156 +405,169 @@ static void eventHandler(struct mg_connection *c,
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
         api = s->api;
         
-        #if DISCORD
-        if (mg_http_match_uri(hm, "/index") 
-            || mg_http_match_uri(hm, "/index/")
-            || mg_http_match_uri(hm, "/")) {
-            mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL="
-            "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\" />",
-                          api->config.clientID);
-        } else 
-        #endif
-            
-        if (mg_http_match_uri(hm, "/github")) {
-            mg_http_reply(c, 301, "", 
-                          "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />", 
-                          GITHUB_REPO);
-        } else if (mg_http_match_uri(hm, "/api/version/") 
-            || mg_http_match_uri(hm, "/api/version")) {
-            mg_http_reply(c, 200, "", "v%d.%d", 
-                        VERSION_MAJOR, VERSION_MINOR);  
-        } 
-        //Check message is short enough for the api to care about
-        else if (hm->body.len > MAX_MSG_LENGTH_BYTES) {
-            mg_http_reply(c, 413, "", 
-                          "ERROR YOUR MESSAGE EXCEEDS THE MAX SIZE OF %d BYTES",
-                          MAX_MSG_LENGTH_BYTES);  
-        }
+#if DISCORD
         
-        else if (mg_http_match_uri(hm, "/api/checkauthkey/")
-            || mg_http_match_uri(hm, "/api/checkauthkey")) {
-            mg_http_reply(c, 200, "", "valid=%d", strncmp(hm->body.ptr,
-                                                          api->config.authToken, 
-                                                          BUFFER_LENGTH) == 0); 
-        } else if (mg_http_match_uri(hm, "/api/creategame/")
-            || mg_http_match_uri(hm, "/api/creategame")) { 
-            serverCreateGameCommand(s, c, hm);            
-        } else if (mg_http_match_uri(hm, "/api/kickplayer/")
-            || mg_http_match_uri(hm, "/api/kickplayer")) {
-            serverKickPlayerCommand(s, c, hm);
-        } else if (mg_http_match_uri(hm, "/api/")
-                || mg_http_match_uri(hm, "/api")) {
-            mg_http_reply(c, 200, "", "%s", HELP_STR);
-        } else if (mg_http_match_uri(hm, "/replay*")) {
-            int gameID = -1;
-            // Parse gameId from URI in form ../(<FOLDER>/)*<NAME>-id.cor
-            /** FST
-             * 0 -> 1 '-' else 0
-             * 1 -> 2 /[0-9]/ else 0
-             * state 2:
-             *   2 -> 2 [0-9] 
-             *   2 -> 3 . 
-             *   else 0
-             * 3 -> 4 c else 0
-             * 4 -> 5 o else 0
-             * 5 -> 6 r else 0 (accepting state)
-             */ 
-            int state = 0, gameIdStartPtr, gameIdEndPtr;
-            for (size_t i = 0; i < hm->uri.len; i++) {
-                switch(hm->uri.ptr[i]) {
-                    case '-':
-                        state = 1;
-                        break;
-                    case '0' - '9':
-                        if (state == 1) {
-                            state = 2;
-                            gameIdStartPtr = i;
-                        } else if (state != 2) {
-                            state = 0;
-                        }
-                        break;
-                    case '.':
-                        if (state == 2) {
-                            gameIdEndPtr = i - 1;
-                            // To not be misleading it will point to the last byte
-                            state = 3;
-                        } else {
-                            state = 0;
-                        }
-                        break;
-                    case 'c':
-                        if (state == 3) {
-                            state = 4;
-                        } else {
-                            state = 0;
-                        }
-                        break;
-                    case 'o':
-                        if (state == 4) {
-                            state = 5;
-                        } else {
-                            state = 0;
-                        }
-                        break;
-                    case 'r':
-                        if (state == 5) {
-                            state = 6; //accepting
-                        } else {
-                            state = 0;
-                        }
-                        break;
-                    default:
-                        state = 0;
-                        break;
-                }
+        if (mg_http_match_uri(hm, "/index")
+                || mg_http_match_uri(hm, "/index/")
+                || mg_http_match_uri(hm, "/")) {
+            mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL="
+                          "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\" />",
+                          api->config.clientID);
+        } else
+#endif
+        
+            if (mg_http_match_uri(hm, "/github")) {
+                mg_http_reply(c, 301, "",
+                              "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />",
+                              GITHUB_REPO);
+            } else if (mg_http_match_uri(hm, "/api/version/")
+                       || mg_http_match_uri(hm, "/api/version")) {
+                mg_http_reply(c, 200, "", "v%d.%d",
+                              VERSION_MAJOR, VERSION_MINOR);
+            }
+        //Check message is short enough for the api to care about
+            else if (hm->body.len > MAX_MSG_LENGTH_BYTES) {
+                mg_http_reply(c, 413, "",
+                              "ERROR YOUR MESSAGE EXCEEDS THE MAX SIZE OF %d BYTES",
+                              MAX_MSG_LENGTH_BYTES);
             }
             
-            // Accepting state
-            if (state == 6) {
-                // +1 for off by one error, +1 for null terminator
-                int len = gameIdEndPtr - gameIdStartPtr + 2;
-                char *gameIDCp = (char *) malloc (sizeof(char) * len);
-                strncpy(gameIDCp, hm->uri.ptr + gameIdStartPtr, len);
+            else if (mg_http_match_uri(hm, "/api/checkauthkey/")
+                     || mg_http_match_uri(hm, "/api/checkauthkey")) {
+                mg_http_reply(c, 200, "", "valid=%d", strncmp(hm->body.ptr,
+                              api->config.authToken,
+                              BUFFER_LENGTH) == 0);
+            } else if (mg_http_match_uri(hm, "/api/creategame/")
+                       || mg_http_match_uri(hm, "/api/creategame")) {
+                serverCreateGameCommand(s, c, hm);
+            } else if (mg_http_match_uri(hm, "/api/kickplayer/")
+                       || mg_http_match_uri(hm, "/api/kickplayer")) {
+                serverKickPlayerCommand(s, c, hm);
+            } else if (mg_http_match_uri(hm, "/api/")
+                       || mg_http_match_uri(hm, "/api")) {
+                mg_http_reply(c, 200, "", "%s", HELP_STR);
+            } else if (mg_http_match_uri(hm, "/replay*")) {
+                int gameID = -1;
+                // Parse gameId from URI in form ../(<FOLDER>/)*<NAME>-id.cor
+                /** FST
+                 * 0 -> 1 '-' else 0
+                 * 1 -> 2 /[0-9]/ else 0
+                 * state 2:
+                 *   2 -> 2 [0-9]
+                 *   2 -> 3 .
+                 *   else 0
+                 * 3 -> 4 c else 0
+                 * 4 -> 5 o else 0
+                 * 5 -> 6 r else 0 (accepting state)
+                 */
+                int state = 0, gameIdStartPtr, gameIdEndPtr;
                 
-                gameID = atoi(gameIDCp);
-                free(gameIDCp); // Free the tmp var
-                
-                struct game *g = getGameWithID(&api->triceBot->gameList, gameID);
-                int gameFinished = g == NULL;
-                
-                if (gameFinished) {
-                    struct mg_http_serve_opts opts = {
-                        .root_dir = api->config.replayFolder,
-                        .extra_headers = DOWNLOAD_HEADER
-                    };
-                    
-                    mg_http_serve_dir(c,
-                                      hm,
-                                      &opts);
-                } else {
-                    mg_http_reply(c, 
-                                  301, 
-                                  "", 
-                                  "Game %d is in progress on %s.",
-                                  gameID,
-                                  api->config.cockatriceServer);
+                for (size_t i = 0; i < hm->uri.len; i++) {
+                    switch (hm->uri.ptr[i]) {
+                        case '-':
+                            state = 1;
+                            break;
+                            
+                        case '0' - '9':
+                            if (state == 1) {
+                                state = 2;
+                                gameIdStartPtr = i;
+                            } else if (state != 2) {
+                                state = 0;
+                            }
+                            
+                            break;
+                            
+                        case '.':
+                            if (state == 2) {
+                                gameIdEndPtr = i - 1;
+                                // To not be misleading it will point to the last byte
+                                state = 3;
+                            } else {
+                                state = 0;
+                            }
+                            
+                            break;
+                            
+                        case 'c':
+                            if (state == 3) {
+                                state = 4;
+                            } else {
+                                state = 0;
+                            }
+                            
+                            break;
+                            
+                        case 'o':
+                            if (state == 4) {
+                                state = 5;
+                            } else {
+                                state = 0;
+                            }
+                            
+                            break;
+                            
+                        case 'r':
+                            if (state == 5) {
+                                state = 6; //accepting
+                            } else {
+                                state = 0;
+                            }
+                            
+                            break;
+                            
+                        default:
+                            state = 0;
+                            break;
+                    }
                 }
+                
+                // Accepting state
+                if (state == 6) {
+                    // +1 for off by one error, +1 for null terminator
+                    int len = gameIdEndPtr - gameIdStartPtr + 2;
+                    char *gameIDCp = (char *) malloc(sizeof(char) * len);
+                    strncpy(gameIDCp, hm->uri.ptr + gameIdStartPtr, len);
+                    
+                    gameID = atoi(gameIDCp);
+                    free(gameIDCp); // Free the tmp var
+                    
+                    struct game *g = getGameWithID(&api->triceBot->gameList, gameID);
+                    int gameFinished = g == NULL;
+                    
+                    if (gameFinished) {
+                        struct mg_http_serve_opts opts = {
+                            .root_dir = api->config.replayFolder,
+                            .extra_headers = DOWNLOAD_HEADER
+                        };
+                        
+                        mg_http_serve_dir(c,
+                                          hm,
+                                          &opts);
+                    } else {
+                        mg_http_reply(c,
+                                      301,
+                                      "",
+                                      "Game %d is in progress on %s.",
+                                      gameID,
+                                      api->config.cockatriceServer);
+                    }
+                } else {
+                    send404(c);
+                }
+            } else if (mg_http_match_uri(hm,
+                                         api->replayFolerWildcard)) {
+                                         
+                struct mg_http_serve_opts opts = {
+                    .root_dir = ".",
+                    .extra_headers = DOWNLOAD_HEADER
+                };
+                
+                mg_http_serve_dir(c, hm, &opts);
             } else {
                 send404(c);
             }
-        } else if (mg_http_match_uri(hm,
-                                     api->replayFolerWildcard)) {      
-            
-            struct mg_http_serve_opts opts = {
-                .root_dir = ".",
-                .extra_headers = DOWNLOAD_HEADER
-            };
-            
-            mg_http_serve_dir(c, hm, &opts);
-        } else{
-            send404(c);
-        }      
-    } else if (event == MG_EV_POLL && c->is_accepted) {         
+    } else if (event == MG_EV_POLL && c->is_accepted) {
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
         
         if (s != NULL) {
@@ -535,43 +578,43 @@ static void eventHandler(struct mg_connection *c,
                 pthread_mutex_lock(&paramdata->mutex);
                 int ID = paramdata->gameID;
                 pthread_mutex_unlock(&paramdata->mutex);
-                        
-                if (ID != -1) {                     
+                
+                if (ID != -1) {
                     char *data = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
                     char *replayName = getReplayFileName(paramdata->gameID,
                                                          paramdata->gameName,
                                                          paramdata->gameNameLength,
                                                          NULL);
-                    
-                    snprintf(data, 
-                             BUFFER_LENGTH, 
-                             "gameid=%d\nreplayName=%s/%s", 
+                                                         
+                    snprintf(data,
+                             BUFFER_LENGTH,
+                             "gameid=%d\nreplayName=%s/%s",
                              paramdata->gameID,
                              api->config.replayFolder,
                              replayName);
-                    
+                             
                     printf("[INFO]: Game created with ID %d.\n",
                            paramdata->gameID);
-                    
-                    mg_http_reply(c, 
-                                  201, 
-                                  "", 
+                           
+                    mg_http_reply(c,
+                                  201,
+                                  "",
                                   "%s",
-                                  data);  
-                    
+                                  data);
+                                  
                     free(data);
                     free(replayName);
                     freeGameCreateCallbackWaitParam(paramdata);
                     
                     s->isGameCreate = 0;
                 }
-            } 
+            }
             
             //Timeout
             else if (time(NULL) - s->startTime > TIMEOUT && !s->closing) {
-                mg_http_reply(c, 
-                              408, 
-                              "", 
+                mg_http_reply(c,
+                              408,
+                              "",
                               "timeout error");
                 s->closing = 1;
             } else if (s->closing) {
@@ -581,12 +624,14 @@ static void eventHandler(struct mg_connection *c,
     } else if ((event == MG_EV_CLOSE || event == MG_EV_ERROR) && c->is_accepted) {
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
         
-        if (s != NULL) { 
+        if (s != NULL) {
             api = s->api;
+            
             if (s->isGameCreate) {
                 pthread_mutex_lock(&s->param->mutex);
                 
                 int ID = s->param->gameID;
+                
                 if (ID != -1) {
                     freeGameCreateCallbackWaitParam(s->param);
                     free(s);
@@ -594,8 +639,9 @@ static void eventHandler(struct mg_connection *c,
                     s->param->callbackFn = &ErrorCallback;
                 }
                 
-                pthread_mutex_unlock(&s->param->mutex);            
+                pthread_mutex_unlock(&s->param->mutex);
             }
+            
             c->fn_data = NULL;
         }
     }
@@ -610,44 +656,45 @@ static void *pollingThread(void *apiIn) {
     
     mg_mgr_init(&mgr);
     
-    c = mg_http_listen(&mgr, 
-                       api->config.bindAddr, 
-                       eventHandler, 
+    c = mg_http_listen(&mgr,
+                       api->config.bindAddr,
+                       eventHandler,
                        apiIn);
-    
+                       
     if (c == NULL) {
         printf("[ERROR]: Unable to init mongoose.\n");
         exit(13);
         //TODO: Handle error state!
     }
     
-    pthread_mutex_lock(&api->bottleneck);    
+    pthread_mutex_lock(&api->bottleneck);
     int cont = api->running;
     pthread_mutex_unlock(&api->bottleneck);
     
-    while (cont) {   
-        mg_mgr_poll(&mgr, 100);  
+    while (cont) {
+        mg_mgr_poll(&mgr, 100);
         
-        pthread_mutex_lock(&api->bottleneck); 
-        cont = api->running;    
+        pthread_mutex_lock(&api->bottleneck);
+        cont = api->running;
         pthread_mutex_unlock(&api->bottleneck);
     }
-        
-    mg_mgr_free(&mgr);    
+    
+    mg_mgr_free(&mgr);
     pthread_exit(NULL);
 }
 
-int startServer(struct apiServer *api) {     
+int startServer(struct apiServer *api) {
     //WARNING: -probably bad
     signal(SIGPIPE, SIG_IGN);
     
     
-    pthread_mutex_lock(&api->bottleneck);      
-    if (api->running) {        
+    pthread_mutex_lock(&api->bottleneck);
+    
+    if (api->running) {
         pthread_mutex_unlock(&api->bottleneck);
         printf("[ERROR]: Server has already started.\n");
         return 0;
-    } else {    
+    } else {
         printf("[INFO]: Starting api server, listening on %s\n",
                api->config.bindAddr);
         printf("-> SSL enabled. cert: %s & certkey: %s.\n",
@@ -655,18 +702,18 @@ int startServer(struct apiServer *api) {
                api->config.certkey);
         printf("-> Serving replays on /replay* and %s\n",
                api->replayFolerWildcard);
-        
+               
         api->running = 1;
         pthread_mutex_unlock(&api->bottleneck);
         
-        return pthread_create(&api->pollingThreadT, 
-                              NULL, 
-                              pollingThread, 
+        return pthread_create(&api->pollingThreadT,
+                              NULL,
+                              pollingThread,
                               (void *) api);
     }
 }
 
-void stopServer(struct apiServer *api) {    
+void stopServer(struct apiServer *api) {
     pthread_mutex_lock(&api->bottleneck);
     api->running = 0;
     pthread_mutex_unlock(&api->bottleneck);

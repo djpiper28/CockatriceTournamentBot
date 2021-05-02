@@ -15,18 +15,18 @@ int hasNext(struct pendingCommandQueue *queue);
 
 struct pendingCommand *deq(struct pendingCommandQueue *queue);
 
-int isGameEq(const char *gameName, 
+int isGameEq(const char *gameName,
              struct pendingCommand *node);
 
 struct pendingCommand *gameWithName(struct pendingCommandQueue *queue,
                                     const char *gameName);
 
-struct pendingCommand *cmdForCMDId (int CMDId, 
-                                    struct pendingCommandQueue *queue);
-                                    
-void enq(struct pendingCommand *cmd, 
+struct pendingCommand *cmdForCMDId(int CMDId,
+                                   struct pendingCommandQueue *queue);
+
+void enq(struct pendingCommand *cmd,
          struct pendingCommandQueue *queue);
-         
+
 struct pendingCommand *peek(struct pendingCommandQueue *queue);
 
 void freePendingCommandQueue(struct pendingCommandQueue *queue);
