@@ -23,7 +23,10 @@
  * 
  * Set baseDIR to NULL if you do not want to make the folders yet
  */ 
-char *getReplayFileName(int gameID, const char *gameNameUnfiltered, int length, char *baseDIR);
+char *getReplayFileName(int gameID,
+                        const char *gameNameUnfiltered,
+                        int length,
+                        char *baseDIR);
 
 /**
  * struct triceBot *b -> pointer to the bot to init

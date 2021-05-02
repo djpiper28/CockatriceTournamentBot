@@ -11,7 +11,7 @@ void initPendingCommandQueue(struct pendingCommandQueue *q);
 //Queue methods
 void freePendingCommand(struct pendingCommand *cmd);
 
-int hasNext(struct pendingCommandQueue *queue) ;
+int hasNext(struct pendingCommandQueue *queue);
 
 struct pendingCommand *deq(struct pendingCommandQueue *queue);
 
