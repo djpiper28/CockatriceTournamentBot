@@ -46,7 +46,7 @@ int readNum(const char *msg) {
     for (len = 0; len < LEN && buffer[len] != ' '
             && buffer[len] != '\n'; len++);
             
-    buffer[len] = 0; //null terminator at line end or space or buffer end
+    buffer[LEN - 1] = 0; //null terminator at line end or space or buffer end
     
     int number = atoi(buffer);
     free(buffer);
@@ -67,7 +67,7 @@ void startConsoleListener(struct tournamentBot *bot) {
         for (len = 0; len < LEN && commandBuffer[len] != ' '
                 && commandBuffer[len] != '\n'; len++);
                 
-        commandBuffer[len] = 0; //null terminator at line end or space or buffer end
+        commandBuffer[LEN - 1] = 0; //null terminator at line end or space or buffer end
         
         if (strncmp("exit", commandBuffer, LEN) == 0) {
             listening = 0;
@@ -82,7 +82,7 @@ void startConsoleListener(struct tournamentBot *bot) {
             //Remove line feed
             for (len = 0; len < LEN && gameName[len] != '\n'; len++);
             
-            gameName[len] = 0; //null terminator at line end or space or buffer end
+            gameName[LEN - 1] = 0; //null terminator at line end or space or buffer end
             
             //Read password
             printf("> Game Password: ");
@@ -92,7 +92,7 @@ void startConsoleListener(struct tournamentBot *bot) {
             //Remove line feed
             for (len = 0; len < LEN && password[len] != '\n'; len++);
             
-            password[len] = 0; //null terminator at line end or space or buffer end
+            password[LEN - 1] = 0; //null terminator at line end or space or buffer end
             
             
             sendCreateGameCommand(&bot->b,
