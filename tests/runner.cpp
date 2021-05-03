@@ -34,26 +34,28 @@ int main(int argc, char* argv[]) {
     
     // Add a listener that colllects test result
     CppUnit::TestResultCollector result;
-    controller.addListener( &result );
+    controller.addListener(&result);
     
     // Add a listener that print dots as test run.
     //CppUnit::TextTestProgressListener progress;
     
     // Add a listener that print name of methods as test run.
     CppUnit::BriefTestProgressListener progress;
-    controller.addListener( &progress );
+    controller.addListener(&progress);
     
     // Add the top suite to the test runner
     CppUnit::TestRunner runner;
-    runner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
-    runner.addTest( suite() );
+    runner.addTest(CppUnit::TestFactoryRegistry::getRegistry().makeTest());
+    runner.addTest(suite());
+    
     try {
         std::cout  << std::endl;
         std::cout << "test trice bot classes with cppunit" << std::endl;
         std::cout << "========================="  << std::endl;
-        runner.run( controller, testPath );
+        runner.run(controller, testPath);
         std::cout << "=========================" << std::endl;
         std::cout << std::endl;
+        
         // Print test in XML or compiler compatible format.
         #if defined XMLOUT
         CppUnit::XmlOutputter outputter( &result, std::cerr );
@@ -61,10 +63,9 @@ int main(int argc, char* argv[]) {
         CppUnit::CompilerOutputter outputter( &result, std::cerr );
         #endif
         outputter.write();
-    } catch ( std::invalid_argument& e ) { // Test path not resolved
-        std::cerr  <<  std::endl
-        <<  "ERROR: "  <<  e.what()
-        << std::endl;
+    } catch ( std::invalid_argument& e ) { 
+        // Test path not resolved
+        std::cerr << std::endl << "ERROR: " << e.what() << std::endl;
         return 0;
     }
     return result.wasSuccessful() ? 0 : 1;

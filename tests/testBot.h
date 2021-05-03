@@ -6,10 +6,14 @@
 class TestBot : public CppUnit::TestCase {
         CPPUNIT_TEST_SUITE(TestBot);
         CPPUNIT_TEST(testTriceBotInitAndFree);
+        CPPUNIT_TEST(testGetReplayFileName);
+        CPPUNIT_TEST(testPrepCMD);
         CPPUNIT_TEST_SUITE_END();
     public:
         TestBot(void);
         void testTriceBotInitAndFree();
+        void testGetReplayFileName();
+        void testPrepCMD();
 };
 
 #endif

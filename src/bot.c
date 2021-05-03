@@ -131,9 +131,9 @@ void initBot(struct triceBot *b,
 }
 
 static struct pendingCommand *prepCmdNTS(struct triceBot *b,
-        CommandContainer cont,
-        int gameID,
-        int roomID) {
+                                         CommandContainer cont,
+                                         int gameID,
+                                         int roomID) {
     if (gameID != -1) {
         cont.set_game_id(gameID);
     }
@@ -412,7 +412,10 @@ char *getReplayFileName(int gameID,
             if (makeDIR) {
                 free(tempFolderName);
                 tempFolderName = (char *) malloc(sizeof(char) * (i + 1));
-                snprintf(tempFolderName, tempFolderBaseLength + i + 1, "%s/%s", baseDIR, gameNameCP);
+                snprintf(tempFolderName, tempFolderBaseLength + i + 1, 
+                         "%s/%s", 
+                         baseDIR, 
+                         gameNameCP);
                 
                 DIR* dir = opendir(tempFolderName);
                 
