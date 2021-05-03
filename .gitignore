@@ -11,4 +11,5 @@ replays
 compile_commands.json
 build
 CMakeFiles
+#ignore code formatter backups
 *.orig

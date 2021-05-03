@@ -115,7 +115,6 @@ void freeGameList(struct gameList *g) {
         while (current->nextGame != NULL) {
             struct gameListNode *tmp = current;
             
-            tmp = current;
             current = current->nextGame;
             
             freeGameListNodeNTS(tmp);
@@ -227,26 +226,26 @@ void removeGame(struct gameList *g, struct game *gamePointer) {
     
     if (g != NULL) {
         struct gameListNode *current = g->gamesHead;
+        int found = 0;
         
         if (current->currentGame == gamePointer) {
             struct gameListNode *next = current->nextGame;
-            freeGameListNodeNTS(next);
+            freeGameListNodeNTS(current);
             
             g->gamesHead = next;
-        }
-        
-        int found = 0;
-        
-        while (current->nextGame != NULL && !found) {
-            if (current->nextGame->currentGame == gamePointer) {
-                //Remove
-                struct gameListNode *next = current->nextGame;
-                
-                current->nextGame = next->nextGame;
-                freeGameListNodeNTS(next);
-                found = 1;
-            } else {
-                current = current->nextGame;
+            found = 1;
+        } else {
+            while (current->nextGame != NULL && !found) {
+                if (current->nextGame->currentGame == gamePointer) {
+                    //Remove
+                    struct gameListNode *next = current->nextGame;
+                    
+                    current->nextGame = next->nextGame;
+                    freeGameListNodeNTS(next);
+                    found = 1;
+                } else {
+                    current = current->nextGame;
+                }
             }
         }
     }

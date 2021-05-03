@@ -175,6 +175,8 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
                     //Free tmp here as it is not assigned to a ptr
                     free(tmp);
                 }
+                
+                free(prop);
             }
         }
     }
@@ -325,6 +327,8 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     //Free tmp here as it is not assigned to a ptr
                     free(tmp);
                 }
+                
+                free(prop);
             }
         }
     }
@@ -625,7 +629,7 @@ static void eventHandler(struct mg_connection *c,
         struct ServerConnection *s = (struct ServerConnection *) c->fn_data;
         
         if (s != NULL) {
-            api = s->api;
+            //api = s->api;
             
             if (s->isGameCreate) {
                 pthread_mutex_lock(&s->param->mutex);
@@ -637,9 +641,8 @@ static void eventHandler(struct mg_connection *c,
                     free(s);
                 } else {
                     s->param->callbackFn = &ErrorCallback;
+                    pthread_mutex_unlock(&s->param->mutex);
                 }
-                
-                pthread_mutex_unlock(&s->param->mutex);
             }
             
             c->fn_data = NULL;

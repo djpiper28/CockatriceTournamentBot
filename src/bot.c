@@ -410,6 +410,7 @@ char *getReplayFileName(int gameID,
             lastSlash = i;
             
             if (makeDIR) {
+                free(tempFolderName);
                 tempFolderName = (char *) malloc(sizeof(char) * (i + 1));
                 snprintf(tempFolderName, tempFolderBaseLength + i + 1, "%s/%s", baseDIR, gameNameCP);
                 
