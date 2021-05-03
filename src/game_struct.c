@@ -226,15 +226,15 @@ void removeGame(struct gameList *g, struct game *gamePointer) {
     
     if (g != NULL) {
         struct gameListNode *current = g->gamesHead;
-        int found = 0;
         
         if (current->currentGame == gamePointer) {
             struct gameListNode *next = current->nextGame;
             freeGameListNodeNTS(current);
             
             g->gamesHead = next;
-            found = 1;
         } else {
+            int found = 0;
+            
             while (current->nextGame != NULL && !found) {
                 if (current->nextGame->currentGame == gamePointer) {
                     //Remove
