@@ -734,97 +734,69 @@ static void handleGameEvent(struct triceBot *b,
             //Game event call
             MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventJoin,
                                                    Event_Join)
-            else
-                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventLeave,
-                                                       Event_Leave)
-                else
-                    MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameClosed,
-                                                           Event_GameClosed)
-                    else
-                        MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventHostChanged,
-                                                               Event_GameHostChanged)
-                        else
-                            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerKicked,
-                                                                   Event_Kicked)
-                            else
-                                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerPropertyChanged,
-                                                                       Event_PlayerPropertiesChanged)
-                                else
-                                    MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameSay,
-                                                                           Event_GameSay)
-                                    else
-                                        MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateArrow,
-                                                                               Event_CreateArrow)
-                                        else
-                                            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDeleteArrow,
-                                                                                   Event_DeleteArrow)
-                                            else
-                                                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateCounter,
-                                                                                       Event_CreateCounter)
-                                                else
-                                                    MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCounter,
-                                                                                           Event_SetCounter)
-                                                    else
-                                                        MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDelCounter,
-                                                                                               Event_DelCounter)
-                                                        else
-                                                            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDrawCards,
-                                                                                                   Event_DrawCards)
-                                                            else
-                                                                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRevealCards,
-                                                                                                       Event_RevealCards)
-                                                                else
-                                                                    MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventShuffle,
-                                                                                                           Event_Shuffle)
-                                                                    else
-                                                                        MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRollDie,
-                                                                                                               Event_RollDie)
-                                                                        else
-                                                                            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventMoveCard,
-                                                                                                                   Event_MoveCard)
-                                                                            else
-                                                                                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventFlipCard,
-                                                                                                                       Event_FlipCard)
-                                                                                else
-                                                                                    MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDestroyCard,
-                                                                                                                           Event_DestroyCard)
-                                                                                    else
-                                                                                        MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventAttachCard,
-                                                                                                                               Event_AttachCard)
-                                                                                        else
-                                                                                            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateToken,
-                                                                                                                                   Event_CreateToken)
-                                                                                            else
-                                                                                                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardAttr,
-                                                                                                                                       Event_SetCardAttr)
-                                                                                                else
-                                                                                                    MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardCounter,
-                                                                                                                                           Event_SetCardCounter)
-                                                                                                    else
-                                                                                                        MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePlayer,
-                                                                                                                                               Event_SetActivePlayer)
-                                                                                                        else
-                                                                                                            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePhase,
-                                                                                                                                                   Event_SetActivePhase)
-                                                                                                            else
-                                                                                                                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDumpZone,
-                                                                                                                                                       Event_DumpZone)
-                                                                                                                else
-                                                                                                                    MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventStopDumpZone,
-                                                                                                                                                           Event_StopDumpZone)
-                                                                                                                    else
-                                                                                                                        MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventChangeZoneProperties,
-                                                                                                                                                               Event_ChangeZoneProperties)
-                                                                                                                        else
-                                                                                                                            MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventReverseTurn,
-                                                                                                                                                                   Event_ReverseTurn)
-                                                                                                                                                                   
-                                                                                                                            //Free game. Call after event functions to stop seg fault
-                                                                                                                            if (event.HasExtension(Event_GameClosed::ext)) {
-                                                                                                                                //Free game
-                                                                                                                                removeGame(&b->gameList, currentGame);
-                                                                                                                                return; //Return to stop any potential seg faults
-                                                                                                                            }
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventLeave,
+                                                        Event_Leave)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameClosed,
+                                                        Event_GameClosed)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventHostChanged,
+                                                        Event_GameHostChanged)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerKicked,
+                                                        Event_Kicked)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerPropertyChanged,
+                                                        Event_PlayerPropertiesChanged)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameSay,
+                                                        Event_GameSay)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateArrow,
+                                                        Event_CreateArrow)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDeleteArrow,
+                                                        Event_DeleteArrow)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateCounter,
+                                                        Event_CreateCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCounter,
+                                                        Event_SetCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDelCounter,
+                                                        Event_DelCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDrawCards,
+                                                        Event_DrawCards)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRevealCards,
+                                                        Event_RevealCards)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventShuffle,
+                                                        Event_Shuffle)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRollDie,
+                                                        Event_RollDie)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventMoveCard,
+                                                        Event_MoveCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventFlipCard,
+                                                        Event_FlipCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDestroyCard,
+                                                        Event_DestroyCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventAttachCard,
+                                                        Event_AttachCard)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateToken,
+                                                        Event_CreateToken)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardAttr,
+                                                        Event_SetCardAttr)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardCounter,
+                                                        Event_SetCardCounter)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePlayer,
+                                                        Event_SetActivePlayer)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePhase,
+                                                        Event_SetActivePhase)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDumpZone,
+                                                        Event_DumpZone)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventStopDumpZone,
+                                                        Event_StopDumpZone)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventChangeZoneProperties,
+                                                        Event_ChangeZoneProperties)
+            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventReverseTurn,
+                                                        Event_ReverseTurn)
+                                                                                                                            
+            //Free game. Call after event functions to stop seg fault
+            if (event.HasExtension(Event_GameClosed::ext)) {
+                //Free game
+                removeGame(&b->gameList, currentGame);
+                return; //Return to stop any potential seg faults                
+            }
         }
     }
 }
