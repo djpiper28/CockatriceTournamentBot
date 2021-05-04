@@ -10,9 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # compiler flags
 set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -DDEBUG=1 -DMEGA_DEBUG=1")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -DDEBUG=1 -DMEGA_DEBUG=1")
+set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 set(CMAKE_C_FLAGS_RELEASE "-O2")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 
 # gendocs generates doc source files from html with helpToSrc.py
 set(HELPTOSOURCE_PY "${CMAKE_SOURCE_DIR}/helpToSrc.py")
@@ -59,6 +59,9 @@ target_link_libraries(CockatriceTournamentBot
 add_dependencies(CockatriceTournamentBot gendocs)
 
 # tests
+set(CMAKE_C_FLAGS_RELEASE "-g -O0 -Wall -Wextra -DDEBUG=1 -DMEGA_DEBUG=1")
+set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+
 set (TEST_FILES
     ${SRC_FILES}
     tests/runner.cpp

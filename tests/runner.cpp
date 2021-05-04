@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     runner.addTest(suite());
     
     try {
-        std::cout  << std::endl;
+        std::cout << std::endl;
         std::cout << "test trice bot classes with cppunit" << std::endl;
         std::cout << "========================="  << std::endl;
         runner.run(controller, testPath);
@@ -68,5 +68,6 @@ int main(int argc, char* argv[]) {
         std::cerr << std::endl << "ERROR: " << e.what() << std::endl;
         return 0;
     }
+    
     return result.wasSuccessful() ? 0 : 1;
 }
