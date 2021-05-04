@@ -333,7 +333,7 @@ int main(int argc, char * args[]) {
     struct tournamentBot bot;
     bot.running = 1;
     
-    int status = readConf(&bot.config);
+    int status = readConf(&bot.config, "config.conf");
     int valid = 1;
     
     // Check conf is valid

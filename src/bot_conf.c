@@ -123,11 +123,11 @@ static int toBase64(int c) {
     }
 }
 
-static void makeNewFile(struct Config *config) {
+static void makeNewFile(struct Config *config, char *filename) {
     // No file
-    FILE * configFile = fopen(CONF_FILE, "w+");
+    FILE * configFile = fopen(filename, "w+");
     
-    if (configFile != NULL && access(CONF_FILE, W_OK) == 0) {
+    if (configFile != NULL && access(filename, W_OK) == 0) {
         // Create a new config file;
         
         char *generatedAuthToken = (char *)
@@ -143,7 +143,7 @@ static void makeNewFile(struct Config *config) {
         fprintf(configFile, "username=changeme\n"); // vv
         fprintf(configFile, "password=changeme\n"); // For auto login
         fprintf(configFile, "serveraddress=ws://server.cockatrice.us:4748\n");
-        fprintf(configFile, "roomName=Magic\nauthRequired=0\n"); //For auto room join
+        fprintf(configFile, "roomName=Magic\n"); //For auto room join
         
         //Tournament bot data TODO: move them elsewhere
         fprintf(configFile, "authtoken=%s\n", generatedAuthToken);
@@ -166,11 +166,11 @@ static void makeNewFile(struct Config *config) {
  * Returns 0 if there was an error reading the file
  * Returns -1 if the file doesn't exist and was made
  */
-int readConf(struct Config *config) {
-    if (access(CONF_FILE, F_OK) == 0) {
-        if (access(CONF_FILE, R_OK) == 0) {
+int readConf(struct Config *config, char *filename) {
+    if (access(filename, F_OK) == 0) {
+        if (access(filename, R_OK) == 0) {
             // Read file
-            FILE * configFile = fopen(CONF_FILE, "r");
+            FILE * configFile = fopen(filename, "r");
             
             // Guard statement - null file pointer due to unreadable file
             if (configFile == NULL) {
@@ -192,7 +192,7 @@ int readConf(struct Config *config) {
             return 0;
         }
     } else {
-        makeNewFile(config);
+        makeNewFile(config, filename);
         return -1;
     }
 }

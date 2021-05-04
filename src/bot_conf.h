@@ -4,7 +4,6 @@
 #include "bot_c_flags.h"
 
 #define BUFFER_LENGTH 4096 //aprox one page
-#define CONF_FILE "config.conf"
 
 struct Config {
 #if LOGIN_AUTOMATICALLY
@@ -33,8 +32,12 @@ struct Config {
  * Returns 0 if there was an error reading the file
  * Returns -1 if the file doesn't exist and was made
  */
-int readConf(struct Config *config);
+int readConf(struct Config *config, char *filename);
 
+/**
+ * Frees the config file, requires all the structs to
+ * be malloced, which is done in readConf
+ */ 
 void freeConf(struct Config *config);
 
 #endif
