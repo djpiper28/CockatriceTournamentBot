@@ -46,62 +46,72 @@ static void readProperty(char *line, struct Config *config) {
 #if LOGIN_AUTOMATICALLY
     
     if (strncmp("username", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->cockatriceUsername != NULL) free(config->cockatriceUsername);
         config->cockatriceUsername = valueStr;
     } else if (strncmp("password", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->cockatricePassword != NULL) free(config->cockatricePassword);
         config->cockatricePassword = valueStr;
     } else
 #endif
     
 #if JOIN_ROOM_AUTOMATICALLY
         if (strncmp("roomName", propertyStr, BUFFER_LENGTH) == 0) {
-            config->roomName = valueStr;
-        } else
-#endif
-        
-            if (strncmp("serveraddress", propertyStr, BUFFER_LENGTH) == 0) {
-                config->cockatriceServer = valueStr;
-            } else if (strncmp("authtoken", propertyStr, BUFFER_LENGTH) == 0) {
-                config->authToken = valueStr;
-            } else if (strncmp("replayFolder", propertyStr, BUFFER_LENGTH) == 0) {
-                config->replayFolder = valueStr;
+            if (config->roomName != NULL) free(config->roomName);
+        config->roomName = valueStr;        
+    } else
+#endif        
+    
+    if (strncmp("serveraddress", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->cockatriceServer != NULL) free(config->cockatriceServer);
+        config->cockatriceServer = valueStr;
+    } else if (strncmp("authtoken", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->authToken != NULL) free(config->authToken);
+        config->authToken = valueStr;
+    } else if (strncmp("replayFolder", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->replayFolder != NULL) free(config->replayFolder);
+        config->replayFolder = valueStr;
                 
-                //Remove trailing slashes i,e:
-                //    test///// to test
-                //    test/test/ to test/test
-                for (int i = valueLen - 2, trailingSlashes = 1; i >= 0 && trailingSlashes; i--) {
-                    if (config->replayFolder[i] == '/') {
-                        config->replayFolder[i] = 0;
-                    } else {
-                        trailingSlashes = 0;
-                    }
-                }
+        //Remove trailing slashes i,e:
+        //    test///// to test
+        //    test/test/ to test/test
+        for (int i = valueLen - 2, trailingSlashes = 1;
+             i >= 0 && trailingSlashes; 
+             i--) {
+            if (config->replayFolder[i] == '/') {
+                config->replayFolder[i] = 0;
+            } else {
+                trailingSlashes = 0;
+            }
+        }
                 
-                //Warn the user that the location is absolute and they might be trying to write to /replays/
-                if (valueLen >= 1) {
-                    if (config->replayFolder[0] == '/') {
-                        printf("[WARNING]: Replay folder is an absolute location (%s)\n",
-                               config->replayFolder);
-                    }
-                }
-            } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
-                config->clientID = valueStr;
-            } else
+        //Warn the user that the location is absolute and they might be trying to write to /replays/
+        if (valueLen >= 1) {
+            if (config->replayFolder[0] == '/') {
+                printf("[WARNING]: Replay folder is an absolute location (%s)\n",
+                       config->replayFolder);
+            }        
+        }
+    } else if (strncmp("clientID", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->clientID != NULL) free(config->clientID);
+        config->clientID = valueStr;
+    } else
             
-                //API Server config
-                if (strncmp("certfile", propertyStr, BUFFER_LENGTH) == 0) {
-                    config->cert = valueStr;
-                } else if (strncmp("certkeyfile", propertyStr, BUFFER_LENGTH) == 0) {
-                    config->certkey = valueStr;
-                } else
-                
-                    if (strncmp("bindAddr", propertyStr, BUFFER_LENGTH) == 0) {
-                        config->bindAddr = valueStr;
-                    }
+    //API Server config
+    if (strncmp("certfile", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->cert != NULL) free(config->cert);
+        config->cert = valueStr;
+    } else if (strncmp("certkeyfile", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->certkey != NULL) free(config->certkey);
+        config->certkey = valueStr;
+    } else if (strncmp("bindAddr", propertyStr, BUFFER_LENGTH) == 0) {
+        if (config->bindAddr != NULL) free(config->bindAddr);
+        config->bindAddr = valueStr;
+    }
                     
     //Free string if not used
-                    else {
-                        free(valueStr);
-                    }
+    else {
+        free(valueStr);
+    }
                     
     free(propertyStr);
 }
@@ -123,13 +133,12 @@ static int toBase64(int c) {
     }
 }
 
-static void makeNewFile(struct Config *config, char *filename) {
+static void makeNewFile(char *filename) {
     // No file
     FILE * configFile = fopen(filename, "w+");
     
     if (configFile != NULL && access(filename, W_OK) == 0) {
-        // Create a new config file;
-        
+        // Create a new config file;        
         char *generatedAuthToken = (char *)
                                    malloc(sizeof(char) * (TOKEN_LENGTH + 1));
                                    
@@ -192,7 +201,7 @@ int readConf(struct Config *config, char *filename) {
             return 0;
         }
     } else {
-        makeNewFile(config, filename);
+        makeNewFile(filename);
         return -1;
     }
 }
