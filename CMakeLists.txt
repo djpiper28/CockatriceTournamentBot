@@ -9,9 +9,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # compiler flags
-set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -DDEBUG=1 -DMEGA_DEBUG=1")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wno-unused-parameter -DDEBUG=1 -DMEGA_DEBUG=1")
 set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
-set(CMAKE_C_FLAGS_RELEASE "-O2")
+set(CMAKE_C_FLAGS_RELEASE "-O2 -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 
 # gendocs generates doc source files from html with helpToSrc.py
@@ -67,6 +67,7 @@ set (TEST_FILES
     tests/runner.cpp
     tests/testTriceStructs.cpp
     tests/testBot.cpp
+    tests/testBotConfig.cpp
     )
 add_executable(CockatriceTournamentBotTests ${TEST_FILES})
 target_include_directories(CockatriceTournamentBotTests PUBLIC 

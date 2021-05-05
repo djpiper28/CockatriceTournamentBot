@@ -12,11 +12,13 @@
 
 #include "testTriceStructs.h"
 #include "testBot.h"
+#include "testBotConfig.h"
 
 #define XMLOUT
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestTriceStructs, "test_trice_structs.h");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBot, "test_bot.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBotConfig, "test_bot_config.h");
 
 // register test suite
 CppUnit::Test *suite() {

@@ -26,6 +26,12 @@ struct Config {
          *bindAddr;
 };
 
+// Creates a new file with the arbitary settings, is not path safe
+void makeNewFile(char *filename);
+
+// Reads the configuration from a buffer: char *data, of length: int length
+void readConfFromBuffer(struct Config *config, char *data, int length);
+
 /**
  * Reads the configuration from CONF_FILE to *config.
  * Returns 1 if the file was read successfully

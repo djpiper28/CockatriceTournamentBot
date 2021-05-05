@@ -1,7 +1,7 @@
 # Marchesa Bot (or the boring name of CockatriceTournamentBot)
 
 ## Build status
-[![CodeQL](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
+[![CodeQL - Build and Test (Ubuntu)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
 
 (Linux only due to pthread and unistd dependancies)
 
@@ -16,7 +16,7 @@ Do note empty games are deleted after 30 minutes by this bot.
 ## Configuring The Bot
 The file (config.conf) should be in this format:
 
-```yaml
+```py
 username=username
 password=yourpassword
 serveraddress=ws://server.cockatrice.us:4748
@@ -31,12 +31,19 @@ replayFolder=replays
 Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:
 
+You can add comments by starting a line with a hashtag (#) i.e:
+```py
+#this is a comment
+username=jeff
+...
+```
+
 The clientID is the client ID of the discord bot attched, use -DDISCORD=0 if you
 are not using a discord bot and set the client ID to your IP or random noise. If
 discord is set to 1, then the index page of the bot will be an invite link for
 that bot (perms are set to admin by default).
 
-```yaml
+```py
 username=not this
 username=this is used
 
@@ -102,6 +109,9 @@ struct a = {
 };
 ```
 
+### Tests
+Tests are written in mostly C but use the cppunit library as needed.
+
 ### Compiler Directives
  - All defines should be named in SCREAMING_SNAKE_CASE
  - All compiler directives should be at the top of the code if possible
@@ -117,7 +127,7 @@ struct a = {
  - Please add comments
 
 ### Constants
- - #define them please
+ - #define them please as `const` is cringe
 
 ## TODO:
 - add tricebot rate limit (wip)
