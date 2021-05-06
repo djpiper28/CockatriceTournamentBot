@@ -59,6 +59,7 @@ bot running on the same machine as the program that uses it.
 ## Compiling
 Install dependencies (ubuntu package names):
 `cmake g++ or clang++ libmbedtls-dev libprotobuf-dev protobuf-compiler libcppunit-dev`
+The tests use `cppunit` and `gcovr`.
 
 Create build directory and use cmake:
 ```sh
