@@ -36,7 +36,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "TEST")
     #setup_target_for_coverage_gcovr_html
     setup_target_for_coverage_gcovr_xml(NAME coverage
         EXECUTABLE CockatriceTournamentBotTests
-        EXCLUDE "src/mongoose.c" "src/mongoose.h" "build/pb/*" "tests/*")
+        EXCLUDE "build/*" "tests/*" "src/mongoose.c" "src/mongoose.h" "src/main.c")
 endif()
 
 # gendocs generates doc source files from html with helpToSrc.py
