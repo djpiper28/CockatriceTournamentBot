@@ -110,7 +110,9 @@ struct a = {
 ```
 
 ### Tests
-Tests are written in mostly C but use the cppunit library as needed.
+Tests are written in mostly C but use the cppunit library as needed with
+classes named in camelCase. Tests are compiled by automatically and can be
+ran with `ctest` or `./CockatriceTournamentBotTests`.
 
 ### Compiler Directives
  - All defines should be named in SCREAMING_SNAKE_CASE

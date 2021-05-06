@@ -80,6 +80,18 @@ int removePlayer(struct gameList *gl,
     return done;
 }
 
+void initGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *param,
+                                     char *gameName,
+                                     int gameNameLength,
+                                     void (*callbackFn)(struct gameCreateCallbackWaitParam *)) {
+    param->gameName = gameName;
+    param->gameNameLength = gameNameLength;
+    param->gameID = -1;
+    param->sendTime = time(NULL);
+    param->callbackFn = callbackFn;
+    param->mutex = PTHREAD_MUTEX_INITIALIZER;
+}
+
 // Resource free stuff
 void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp) {
     if (gp != NULL) {

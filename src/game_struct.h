@@ -63,6 +63,12 @@ int removePlayer(struct gameList *gl, struct game *g, int playerID);
 // Init the game list structure
 void initGameList(struct gameList *gl);
 
+// Inits the param, you probably want to strcpy gameName first.
+void initGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *param,
+                                     char *gameName,
+                                     int gameNameLength,
+                                     void (*callbackFn)(struct gameCreateCallbackWaitParam *));
+
 void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp);
 
 void freeGameListNode(struct gameList *g, struct gameListNode *gl);
