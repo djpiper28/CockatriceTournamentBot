@@ -105,16 +105,45 @@ void TestCmdQueue::testSearchOps() {
         enq(nodes[i], &queue);
     }
     
-    // Assert the queue search works for all items in the queue
+    // Assert the queue search works for all items in the queue    
+    char buff[LEN];
+    
+    // Test the case where the element is the head
     for (int i = 0; i < LEN; i++) {
-        char buff[LEN];
         GAME_NAME_MACRO
         
         struct pendingCommand *node = cmdForCMDId(i, &queue);
         CPPUNIT_ASSERT(node == nodes[i]);
         enq(node, &queue);
         
-        CPPUNIT_ASSERT(gameWithName(&queue, buff) == nodes[i]);
+        node = gameWithName(&queue, buff);
+        CPPUNIT_ASSERT(node == nodes[i]);
+        enq(node, &queue);
+    }
+    
+    // Test the case where the element is the tail
+    for (int i = LEN - 1; i > 0; i--) {
+        GAME_NAME_MACRO
+        
+        struct pendingCommand *node = cmdForCMDId(i, &queue);
+        CPPUNIT_ASSERT(node == nodes[i]);
+        enq(node, &queue);
+        
+        node = gameWithName(&queue, buff);
+        CPPUNIT_ASSERT(node == nodes[i]);
+        enq(node, &queue);
+    }
+    
+    // Test the case where the element is in the middle
+    for (int i = 1; i < LEN - 1; i++) {
+        GAME_NAME_MACRO
+        
+        struct pendingCommand *node = cmdForCMDId(i, &queue);
+        CPPUNIT_ASSERT(node == nodes[i]);
+        enq(node, &queue);
+        
+        node = gameWithName(&queue, buff);
+        CPPUNIT_ASSERT(node == nodes[i]);
     }
     
     freePendingCommandQueue(&queue);

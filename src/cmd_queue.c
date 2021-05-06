@@ -163,7 +163,7 @@ struct pendingCommand *cmdForCMDId(int CMDId,
     }
     
     struct pendingCommandQueueNode *current = queue->head,
-                                        *last = NULL;
+                                      *last = NULL;
                                         
     struct pendingCommand *output = NULL;
     
@@ -172,7 +172,7 @@ struct pendingCommand *cmdForCMDId(int CMDId,
     while (cont && current != NULL) {
         if (current->payload != NULL) {
             if (current->payload->cmdID == CMDId) {
-                output = current->payload;
+                output     = current->payload;
                 last->next = current->next;
                 
                 if (last->next == NULL) {
