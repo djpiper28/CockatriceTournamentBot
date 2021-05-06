@@ -35,7 +35,7 @@ jobs:
         
     - name: install libs
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake libcppunit-dev lcov
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake libcppunit-dev gcov gcovr
         
     - name: make release
       shell: bash
