@@ -11,8 +11,32 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # compiler flags
 set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wno-unused-parameter -DDEBUG=1 -DMEGA_DEBUG=1")
 set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+
 set(CMAKE_C_FLAGS_RELEASE "-O2 -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+
+
+# if tests flag
+set(CMAKE_C_FLAGS_TEST "-g -O0 -Wall -Wextra -Wno-unused-parameter -DDEBUG=1 -DMEGA_DEBUG=1")
+set(CMAKE_CXX_FLAGS_TEST ${CMAKE_C_FLAGS_DEBUG})
+
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
+
+if (CMAKE_BUILD_TYPE STREQUAL "TEST")
+    include(CodeCoverage)
+    
+    # Setup coverage
+    set(CMAKE_C_COMPILER gcc)
+    set(CMAKE_CXX_COMPILER g++)
+    
+    #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+    
+    append_coverage_compiler_flags()
+    setup_target_for_coverage_gcovr_html(NAME coverage
+        EXECUTABLE CockatriceTournamentBotTests
+        EXCLUDE "src/mongoose.c" "build/pb/*")
+endif()
 
 # gendocs generates doc source files from html with helpToSrc.py
 set(HELPTOSOURCE_PY "${CMAKE_SOURCE_DIR}/helpToSrc.py")
@@ -23,7 +47,7 @@ add_subdirectory(pb)
 set(PB_DIR "${CMAKE_CURRENT_BINARY_DIR}/pb")
 
 # protobuf requires c files to be treated as c++
-set(CMAKE_C_FLAGS "-xc++")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xc++")
 
 # set mbedtls libs
 set(MBEDTLS_LIBS -lcrypto -lmbedtls -lmbedcrypto -lmbedx509)
@@ -58,25 +82,27 @@ target_link_libraries(CockatriceTournamentBot
     proto mongoose ${Protobuf_LIBRARIES} ${MBEDTLS_LIBS})
 add_dependencies(CockatriceTournamentBot gendocs)
 
-# tests
-set(CMAKE_C_FLAGS_RELEASE "-g -O0 -Wall -Wextra -DDEBUG=1 -DMEGA_DEBUG=1")
-set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+if (CMAKE_BUILD_TYPE STREQUAL "TEST")
+    # tests, set the flags manually
+    set(CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_DEBUG})
+    set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_DEBUG})
 
-set (TEST_FILES
-    ${SRC_FILES}
-    tests/runner.cpp
-    tests/testTriceStructs.cpp
-    tests/testBot.cpp
-    tests/testBotConfig.cpp
-    tests/testCmdQueue.cpp
-    )
-add_executable(CockatriceTournamentBotTests ${TEST_FILES})
-target_include_directories(CockatriceTournamentBotTests PUBLIC 
-    ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})
-target_link_libraries(CockatriceTournamentBotTests
-    proto mongoose cppunit ${Protobuf_LIBRARIES} ${MBEDTLS_LIBS})
-add_dependencies(CockatriceTournamentBotTests gendocs)
-add_test(NAME CockatriceTournamentBotTests COMMAND CockatriceTournamentBotTests)
+    set (TEST_FILES
+        ${SRC_FILES}
+        tests/runner.cpp
+        tests/testTriceStructs.cpp
+        tests/testBot.cpp
+        tests/testBotConfig.cpp
+        tests/testCmdQueue.cpp
+        )
+    add_executable(CockatriceTournamentBotTests ${TEST_FILES})
+    target_include_directories(CockatriceTournamentBotTests PUBLIC 
+        ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})
+    target_link_libraries(CockatriceTournamentBotTests
+        proto mongoose cppunit ${Protobuf_LIBRARIES} ${MBEDTLS_LIBS})
+    add_dependencies(CockatriceTournamentBotTests gendocs)
+    add_test(NAME CockatriceTournamentBotTests COMMAND CockatriceTournamentBotTests)
+endif()
 
 # packaging?
 #set(CPACK_PACKAGE_CONTACT "")

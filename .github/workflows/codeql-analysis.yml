@@ -44,16 +44,16 @@ jobs:
         cd build
         cmake .. # -DCMAKE_BUILD_TYPE=Debug
         cmake --build . # --parallel x
-        ctest
 
-    - name: make debug
+    - name: make tests and coverage
       shell: bash
       run : |
         if [ ! -d "build/" ]; then mkdir build; fi
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Debug
+        cmake .. -DCMAKE_BUILD_TYPE=TEST
         cmake --build .
-        ctest
+        ./CockatriceTournamentBotTests
+        make coverage
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1

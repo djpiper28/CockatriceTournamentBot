@@ -66,8 +66,18 @@ cd build
 cmake .. # -DCMAKE_BUILD_TYPE=Debug
 cmake --build . # -j x
 ```
-Tests are compiled with this program by default, to runthese tests use the command 
-`ctest` after compiling.
+
+### Tests
+Compiling with build type TEST will create the test executable then you can run
+it with `make coverage` or gcov to get coverage if you want.
+```sh
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=TEST
+cmake --build . # -j x
+./CockatriceTournamentBotTests #runs tests
+make coverage #runs tests and gets coverage
+```
 
 ## Help it is borked
 Create an issue or look through issues for your problem, if the program crashes or 
