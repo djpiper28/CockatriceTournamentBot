@@ -35,7 +35,7 @@ jobs:
         
     - name: install libs
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake libcppunit-dev
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake libcppunit-dev lcov
         
     - name: make release
       shell: bash
@@ -53,7 +53,16 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=TEST
         cmake --build .
         ./CockatriceTournamentBotTests
-        make coverage
+        make coverage        
+    
+    - uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        files: ./coverage1.xml # optional
+        flags: unittests # optional
+        name: codecov-umbrella # optional
+        fail_ci_if_error: true # optional (default = false)
+        verbose: true # optional (default = false)
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1

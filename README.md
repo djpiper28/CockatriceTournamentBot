@@ -2,6 +2,7 @@
 
 ## Build status
 [![CodeQL - Build and Test (Ubuntu)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
+[![codecov](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graph/badge.svg?token=EFPY6BDV96)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
 
 (Linux only due to pthread and unistd dependancies)
 
@@ -16,7 +17,7 @@ Do note empty games are deleted after 30 minutes by this bot.
 ## Configuring The Bot
 The file (config.conf) should be in this format:
 
-```py
+```yaml
 username=username
 password=yourpassword
 serveraddress=ws://server.cockatrice.us:4748
@@ -32,7 +33,7 @@ Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:
 
 You can add comments by starting a line with a hashtag (#) i.e:
-```py
+```yaml
 #this is a comment
 username=jeff
 ...
@@ -43,7 +44,7 @@ are not using a discord bot and set the client ID to your IP or random noise. If
 discord is set to 1, then the index page of the bot will be an invite link for
 that bot (perms are set to admin by default).
 
-```py
+```yaml
 username=not this
 username=this is used
 

@@ -33,9 +33,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "TEST")
     #set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
     
     append_coverage_compiler_flags()
-    setup_target_for_coverage_gcovr_html(NAME coverage
+    #setup_target_for_coverage_gcovr_html
+    setup_target_for_coverage_gcovr_xml(NAME coverage
         EXECUTABLE CockatriceTournamentBotTests
-        EXCLUDE "src/mongoose.c" "build/pb/*")
+        EXCLUDE "src/mongoose.c" "src/mongoose.h" "build/pb/*" "tests/*")
 endif()
 
 # gendocs generates doc source files from html with helpToSrc.py
