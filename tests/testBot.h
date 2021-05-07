@@ -8,6 +8,8 @@ class TestBot : public CppUnit::TestCase {
         CPPUNIT_TEST(testTriceBotInitAndFree);
         CPPUNIT_TEST(testGetReplayFileName);
         CPPUNIT_TEST(testStartStop);
+        CPPUNIT_TEST(testEventFunctionsAreCalled);
+        CPPUNIT_TEST(testGameEventFunctionsAreCalled);
         CPPUNIT_TEST_SUITE_END();
     public:
         TestBot(void);
@@ -15,6 +17,7 @@ class TestBot : public CppUnit::TestCase {
         void testGetReplayFileName();
         void testStartStop();
         void testEventFunctionsAreCalled();
+        void testGameEventFunctionsAreCalled();
 };
 
 #endif

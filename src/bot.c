@@ -128,6 +128,13 @@ void initBot(struct triceBot *b,
     b->cmdID = 0;
     b->lastSend = 0;
     b->lastGameWaitCheck = 0;
+    b->running = 0;
+    
+    b->gameList.gamesHead = NULL;
+    b->sendQueue.head = NULL;
+    b->sendQueue.tail = NULL;
+    b->callbackQueue.head = NULL;
+    b->callbackQueue.tail = NULL;
 }
 
 /**
@@ -732,8 +739,7 @@ void handleGameEvent(struct triceBot *b,
             //Free game. Call after event functions to stop seg fault
             if (event.HasExtension(Event_GameClosed::ext)) {
                 //Free game
-                removeGame(&b->gameList, currentGame);
-                return; //Return to stop any potential seg faults                
+                removeGame(&b->gameList, currentGame);            
             }
         }
     }
@@ -776,7 +782,7 @@ static void handleGameCreate(struct triceBot *b,
                 if (fork() == 0) {
                     callbackFn(game);
                     freeGameCreateCallbackWaitParam(game);
-                    exit(0);
+                    _exit(0);
                 }
             }
         }
@@ -869,7 +875,6 @@ sendCreateGameCommand(struct triceBot *b,
  */
 void handleSessionEvent(struct triceBot *b,
                         ServerMessage *newServerMessage) {
-    //Call session event function in new fork
     const SessionEvent event = newServerMessage->session_event();
     
     if (event.HasExtension(Event_ServerIdentification::ext)) {
@@ -1104,15 +1109,22 @@ static void botEventHandler(struct mg_connection *c,
 static void *botThread(void *in) {
     struct triceBot *b = (struct triceBot *) in;
     
-    //Reconnect while running
-    pthread_mutex_lock(&b->mutex);
-    b->running = 1;
-    pthread_mutex_unlock(&b->mutex);
-    
     //Init data
     struct mg_mgr mgr;
     
     pthread_mutex_lock(&b->mutex);
+    
+    // Assert that the memory was freed and that the user is not being a fool.
+    if (b->gameList.gamesHead != NULL) {
+        freeGameList(&b->gameList);
+    }
+    if (b->sendQueue.head != NULL || b->sendQueue.tail != NULL) {
+        freePendingCommandQueue(&b->sendQueue);
+    }
+    if (b->callbackQueue.head != NULL || b->callbackQueue.tail != NULL) {
+        freePendingCommandQueue(&b->callbackQueue);
+    }
+    
     initPendingCommandQueue(&b->callbackQueue);
     initPendingCommandQueue(&b->sendQueue);
     initGameList(&b->gameList);
@@ -1146,14 +1158,17 @@ static void *botThread(void *in) {
         }
     }
     
+    MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
+    
     //Free data
+    pthread_mutex_lock(&b->mutex);
     freeGameList(&b->gameList);
     freePendingCommandQueue(&b->sendQueue);
     freePendingCommandQueue(&b->callbackQueue);
+    pthread_mutex_unlock(&b->mutex);
     
     mg_mgr_free(&mgr);
     
-    MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
     pthread_exit(NULL);
 }
 
@@ -1183,12 +1198,11 @@ void freeBot(struct triceBot *b) {
     pthread_mutex_lock(&b->mutex);
     
     if (b->running) {
+        pthread_mutex_unlock(&b->mutex);
         stopBot(b);
-    }
-    
-    freeGameList(&b->gameList);
-    freePendingCommandQueue(&b->sendQueue);
-    freePendingCommandQueue(&b->callbackQueue);
+        pthread_mutex_lock(&b->mutex);
+    } 
+    // The data always is freed on stopBot() by the bot's thread see line 1149
     
     pthread_mutex_unlock(&b->mutex);
     pthread_mutex_destroy(&b->mutex);
@@ -1199,7 +1213,11 @@ void freeBot(struct triceBot *b) {
  * returns 1 if it succeeded
  * returns 0 if it had an error
  */
-int startBot(struct triceBot *b) {
+int startBot(struct triceBot *b) {    
+    pthread_mutex_lock(&b->mutex);
+    b->running = 1;
+    pthread_mutex_unlock(&b->mutex);
+    
     return pthread_create(&b->pollingThreadBOT, NULL, botThread, (void *) b);
 }
 

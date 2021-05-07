@@ -222,5 +222,7 @@ void TestTriceStructs::testTriceBotEventFunctionSetters() {
     TEST_EVENT_FN_SETTER(onBotConnectionError)
     TEST_EVENT_FN_SETTER(onBotLogin)
     TEST_EVENT_FN_SETTER(onReplayDownload)
+    
+    freeBot(&b);
 }
 

@@ -106,9 +106,19 @@ void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp) {
 
 //Not thread safe version
 static void freeGameListNodeNTS(struct gameListNode *gl) {
-    free(gl->currentGame->playerArr->playerName);
-    free(gl->currentGame->playerArr);
-    free(gl->currentGame);
+    if (gl->currentGame != NULL) {
+        if (gl->currentGame->playerArr != NULL && gl->currentGame->playerCount > 0) {
+            for (int i = 0; i < gl->currentGame->playerCount; i++) {
+                if (gl->currentGame->playerArr[i].playerName != NULL) {
+                    free(gl->currentGame->playerArr[i].playerName);
+                }
+            }
+            
+            free(gl->currentGame->playerArr);
+        }
+        
+        free(gl->currentGame);
+    }
     free(gl);
 }
 
@@ -123,7 +133,7 @@ void freeGameList(struct gameList *g) {
     
     struct gameListNode *current = g->gamesHead;
     
-    if (current != NULL)
+    if (current != NULL) {
         while (current->nextGame != NULL) {
             struct gameListNode *tmp = current;
             
@@ -131,6 +141,7 @@ void freeGameList(struct gameList *g) {
             
             freeGameListNodeNTS(tmp);
         }
+    }
         
     pthread_mutex_unlock(&g->mutex);
     pthread_mutex_destroy(&g->mutex);
@@ -153,7 +164,7 @@ int getPlayerIDForGameIDAndName(struct gameList *g, int gameID, char *playerName
         
         /**
          * Iterate until a player with matching name is found or there are no
-         * palyers left to check.
+         * players left to check.
          */
         for (int i = 0; i < g->playerCount && playerID == -1; i++) {
             //Check if it a player
@@ -178,6 +189,9 @@ struct game *createGame(int gameID, int playerCount) {
     g->creationTime = time(NULL);
     g->playerCount = playerCount;
     g->playerArr = (struct player *) malloc(sizeof(struct player) * playerCount);
+    for (int i = 0; i < playerCount; i++) {
+        g->playerArr[i].playerName = NULL;
+    }
     
     return g;
 }
@@ -188,8 +202,12 @@ struct game *getGameWithID(struct gameList *g, int gameID) {
     struct gameListNode *current = g->gamesHead;
     struct game * out = NULL;
     
-    while (current != NULL && current->currentGame->gameID != gameID) {
+    while (current->currentGame->gameID != gameID) {
         current = current->nextGame;
+        
+        if (current == NULL) {
+            break;
+        }
     }
     
     if (current != NULL) {
@@ -223,10 +241,8 @@ void addGame(struct gameList *g, struct game *gamePointer) {
         
         struct gameListNode *next = (struct gameListNode *) malloc(sizeof(struct gameListNode));
         
-        next->currentGame = gamePointer;
-        
-        next->nextGame = NULL;
-        
+        next->currentGame = gamePointer;        
+        next->nextGame = NULL;        
         current->nextGame = next;
     }
     
@@ -238,25 +254,27 @@ void removeGame(struct gameList *g, struct game *gamePointer) {
     
     if (g != NULL) {
         struct gameListNode *current = g->gamesHead;
-        
-        if (current->currentGame == gamePointer) {
-            struct gameListNode *next = current->nextGame;
-            freeGameListNodeNTS(current);
-            
-            g->gamesHead = next;
-        } else {
-            int found = 0;
-            
-            while (current->nextGame != NULL && !found) {
-                if (current->nextGame->currentGame == gamePointer) {
-                    //Remove
-                    struct gameListNode *next = current->nextGame;
-                    
-                    current->nextGame = next->nextGame;
-                    freeGameListNodeNTS(next);
-                    found = 1;
-                } else {
-                    current = current->nextGame;
+        if (current != NULL) {
+            // Edge case - game is the head of the list
+            if (current->currentGame == gamePointer) {
+                struct gameListNode *next = current->nextGame;
+                freeGameListNodeNTS(current);
+                
+                g->gamesHead = next;
+            } else {
+                int found = 0;
+                
+                while (current->nextGame != NULL && !found) {
+                    if (current->nextGame->currentGame == gamePointer && gamePointer != NULL) {
+                        // Remove the target. Set the current pointer to next's next.
+                        struct gameListNode *target = current->nextGame;
+                        
+                        current->nextGame = current->nextGame->nextGame;
+                        freeGameListNodeNTS(target);
+                        found = 1;
+                    } else {
+                        current = current->nextGame;
+                    }
                 }
             }
         }

@@ -45,7 +45,7 @@ void freePendingCommand(struct pendingCommand *cmd) {
                     }
                     
                     freeGameCreateCallbackWaitParam(p);
-                    exit(0);
+                    _exit(0);
                 }
             }
         }
@@ -66,9 +66,7 @@ int hasNext(struct pendingCommandQueue *queue) {
 }
 
 static struct pendingCommand *deqNTS(struct pendingCommandQueue *queue) {
-    if (!hasNextNTS(queue)) {
-        return NULL;
-    } else {
+    if (queue->head != NULL) {
         struct pendingCommandQueueNode *last = queue->head;
         queue->head = last->next;
         
@@ -80,6 +78,8 @@ static struct pendingCommand *deqNTS(struct pendingCommandQueue *queue) {
         }
         
         return returnValue;
+    } else {
+        return NULL;
     }
 }
 
@@ -109,40 +109,42 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue *queue,
                                     const char *gameName) {
     pthread_mutex_lock(&queue->mutex);
     
-    if (isGameEq(gameName, queue->head->payload)) {
-        pthread_mutex_unlock(&queue->mutex);
-        return deqNTS(queue);
-    }
-    
-    struct pendingCommandQueueNode *current = queue->head,
-                                        *last = NULL;
-                                        
     struct pendingCommand *output = NULL;
-    
-    int cont = current != NULL;
-    
-    while (cont) {
-        if (current->payload != NULL) {
-            if (isGameEq(gameName, current->payload)) {
-                output = current->payload;
-                last->next = current->next;
-                
-                if (last->next == NULL) {
-                    queue->tail = last;
-                }
-                
-                free(current);
-                
-                cont = 0;
-            }
+    if (queue->head != NULL) {
+        if (isGameEq(gameName, queue->head->payload)) {
+            pthread_mutex_unlock(&queue->mutex);
+            return deqNTS(queue);
         }
         
-        if (cont) {
-            if (current->next == NULL) {
-                cont = 0;
-            } else {
-                last = current;
-                current = current->next;
+        struct pendingCommandQueueNode *current = queue->head,
+                                       *last = NULL;
+                                            
+        
+        int cont = current != NULL;
+        
+        while (cont) {
+            if (current->payload != NULL) {
+                if (isGameEq(gameName, current->payload)) {
+                    output = current->payload;
+                    last->next = current->next;
+                    
+                    if (last->next == NULL) {
+                        queue->tail = last;
+                    }
+                    
+                    free(current);
+                    
+                    cont = 0;
+                }
+            }
+            
+            if (cont) {
+                if (current->next == NULL) {
+                    cont = 0;
+                } else {
+                    last = current;
+                    current = current->next;
+                }
             }
         }
     }
@@ -300,6 +302,9 @@ void freePendingCommandQueue(struct pendingCommandQueue *queue) {
     while (hasNextNTS(queue)) {
         freePendingCommand(deqNTS(queue));
     }
+    
+    queue->head = NULL;
+    queue->tail = NULL;
     
     pthread_mutex_unlock(&queue->mutex);
     pthread_mutex_destroy(&queue->mutex);
