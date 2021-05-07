@@ -14,6 +14,7 @@ class TestBot : public CppUnit::TestCase {
         void testTriceBotInitAndFree();
         void testGetReplayFileName();
         void testStartStop();
+        void testEventFunctionsAreCalled();
 };
 
 #endif

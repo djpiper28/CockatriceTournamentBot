@@ -159,7 +159,7 @@ void TestTriceStructs::testTriceBotEventFunctionSetters() {
     INIT_TRICE_BOT
     
     // Test each setter
-    ///Server events
+    //Server events
     TEST_EVENT_FN_SETTER(onEventServerIdentifictaion)
     TEST_EVENT_FN_SETTER(onEventServerCompleteList)
     TEST_EVENT_FN_SETTER(onEventServerMessage)

@@ -111,3 +111,206 @@ void TestBot::testStartStop() {
     CPPUNIT_ASSERT(!b.running);
 }
 
+/**
+ *  =========================================================================
+ *   Tests for all of the event functions being called at the correct time.
+ *  =========================================================================
+ */
+
+// Function generator macros
+#define TEST_EVENT_FN(fn, type)\
+int fn##called = 0;\
+static void TEST##fn (struct triceBot *b, type event) {\
+    fn##called = 1;\
+}
+
+//Server events
+TEST_EVENT_FN(onEventServerIdentifictaion,
+              Event_ServerIdentification)
+TEST_EVENT_FN(onEventServerCompleteList,
+              Event_ServerCompleteList)
+TEST_EVENT_FN(onEventServerMessage,
+              Event_ServerMessage)
+TEST_EVENT_FN(onEventServerShutdown,
+              Event_ServerShutdown)
+TEST_EVENT_FN(onEventConnectionClosed,
+              Event_ConnectionClosed)
+TEST_EVENT_FN(onEventUserMessage,
+              Event_UserMessage)
+TEST_EVENT_FN(onEventListRooms,
+              Event_ListRooms)
+TEST_EVENT_FN(onEventAddToList,
+              Event_AddToList)
+TEST_EVENT_FN(onEventRemoveFromList,
+              Event_RemoveFromList)
+TEST_EVENT_FN(onEventUserJoined,
+              Event_UserJoined)
+TEST_EVENT_FN(onEventUserLeft,
+              Event_UserLeft)
+TEST_EVENT_FN(onEventGameJoined,
+              Event_GameJoined)
+TEST_EVENT_FN(onEventNotifyUser,
+              Event_NotifyUser)
+TEST_EVENT_FN(onEventReplayAdded,
+              Event_ReplayAdded)
+
+// Test setter macros
+#define TEST_EVENT_FN_SETTER(fn)\
+set_##fn (TEST##fn, &b);\
+CPPUNIT_ASSERT(b.fn == TEST##fn);
+
+#define TEST_EVENT_FN_CALLED(fn, type) \
+ServerMessage serverMessage##fn;\
+SessionEvent r##fn;\
+r##fn.MutableExtension(type::ext);\
+\
+serverMessage##fn.set_allocated_session_event(&r##fn);\
+handleSessionEvent(&b, &serverMessage##fn);\
+CPPUNIT_ASSERT(fn##called == 1);
+
+void TestBot::testEventFunctionsAreCalled() {
+    INIT_TRICE_BOT
+    
+    TEST_EVENT_FN_SETTER(onEventServerIdentifictaion)
+    TEST_EVENT_FN_SETTER(onEventServerCompleteList)
+    TEST_EVENT_FN_SETTER(onEventServerMessage)
+    TEST_EVENT_FN_SETTER(onEventServerShutdown)
+    TEST_EVENT_FN_SETTER(onEventConnectionClosed)
+    TEST_EVENT_FN_SETTER(onEventUserMessage)
+    TEST_EVENT_FN_SETTER(onEventListRooms)
+    TEST_EVENT_FN_SETTER(onEventAddToList)
+    TEST_EVENT_FN_SETTER(onEventRemoveFromList)
+    TEST_EVENT_FN_SETTER(onEventUserJoined)
+    TEST_EVENT_FN_SETTER(onEventUserLeft)
+    TEST_EVENT_FN_SETTER(onEventGameJoined)
+    TEST_EVENT_FN_SETTER(onEventNotifyUser)
+    TEST_EVENT_FN_SETTER(onEventReplayAdded)
+    
+    TEST_EVENT_FN_CALLED(onEventServerIdentifictaion,
+                         Event_ServerIdentification)
+    TEST_EVENT_FN_CALLED(onEventServerCompleteList,
+                         Event_ServerCompleteList)
+    TEST_EVENT_FN_CALLED(onEventServerMessage,
+                         Event_ServerMessage)
+    TEST_EVENT_FN_CALLED(onEventServerShutdown,
+                         Event_ServerShutdown)
+    TEST_EVENT_FN_CALLED(onEventConnectionClosed,
+                         Event_ConnectionClosed)
+    TEST_EVENT_FN_CALLED(onEventUserMessage,
+                         Event_UserMessage)
+    TEST_EVENT_FN_CALLED(onEventListRooms,
+                         Event_ListRooms)
+    TEST_EVENT_FN_CALLED(onEventAddToList,
+                         Event_AddToList)
+    TEST_EVENT_FN_CALLED(onEventRemoveFromList,
+                         Event_RemoveFromList)
+    TEST_EVENT_FN_CALLED(onEventUserJoined,
+                         Event_UserJoined)
+    TEST_EVENT_FN_CALLED(onEventUserLeft,
+                         Event_UserLeft)
+    TEST_EVENT_FN_CALLED(onEventGameJoined,
+                         Event_GameJoined)
+    TEST_EVENT_FN_CALLED(onEventNotifyUser,
+                         Event_NotifyUser)
+    TEST_EVENT_FN_CALLED(onEventReplayAdded,
+                         Event_ReplayAdded)
+}
+
+#define TEST_GAME_EVENT_FN(fn,type)\
+int fn##called = 0;\
+static void TEST##fn (struct triceBot *b, struct game, type event) {\
+    fn##called = 1;\
+}
+
+#define TEST_STATE_CHANGE_FN(fn)\
+int fn##called = 0;\
+static void TEST##fn (struct triceBot *b) {\
+    fn##called = 1;\
+}
+
+#define TEST_GAME_STATE_CHANGE_FN(fn)\
+int fn##called = 0;\
+static void TEST##fn (struct triceBot *, struct game) {\
+    fn##called = 1;\
+}
+
+//Game events
+TEST_GAME_EVENT_FN(onGameEventJoin,
+                   Event_Join)
+TEST_GAME_EVENT_FN(onGameEventLeave,
+                   Event_Leave)
+TEST_GAME_EVENT_FN(onGameEventGameClosed,
+                   Event_GameClosed)
+TEST_GAME_EVENT_FN(onGameEventHostChanged,
+                   Event_GameHostChanged)
+TEST_GAME_EVENT_FN(onGameEventPlayerKicked,
+                   Event_Kicked)
+TEST_GAME_EVENT_FN(onGameEventStateChanged,
+                   Event_GameStateChanged)
+TEST_GAME_EVENT_FN(onGameEventPlayerPropertyChanged,
+                   Event_PlayerPropertiesChanged)
+TEST_GAME_EVENT_FN(onGameEventGameSay,
+                   Event_GameSay)
+TEST_GAME_EVENT_FN(onGameEventCreateArrow,
+                   Event_CreateArrow)
+TEST_GAME_EVENT_FN(onGameEventDeleteArrow,
+                   Event_DeleteArrow)
+TEST_GAME_EVENT_FN(onGameEventCreateCounter,
+                   Event_CreateCounter)
+TEST_GAME_EVENT_FN(onGameEventSetCounter,
+                   Event_SetCounter)
+TEST_GAME_EVENT_FN(onGameEventDelCounter,
+                   Event_DelCounter)
+TEST_GAME_EVENT_FN(onGameEventDrawCards,
+                   Event_DrawCards)
+TEST_GAME_EVENT_FN(onGameEventRevealCards,
+                   Event_RevealCards)
+TEST_GAME_EVENT_FN(onGameEventShuffle,
+                   Event_Shuffle)
+TEST_GAME_EVENT_FN(onGameEventRollDie,
+                   Event_RollDie)
+TEST_GAME_EVENT_FN(onGameEventMoveCard,
+                   Event_MoveCard)
+TEST_GAME_EVENT_FN(onGameEventFlipCard,
+                   Event_FlipCard)
+TEST_GAME_EVENT_FN(onGameEventDestroyCard,
+                   Event_DestroyCard)
+TEST_GAME_EVENT_FN(onGameEventAttachCard,
+                   Event_AttachCard)
+TEST_GAME_EVENT_FN(onGameEventCreateToken,
+                   Event_CreateToken)
+TEST_GAME_EVENT_FN(onGameEventSetCardAttr,
+                   Event_SetCardAttr)
+TEST_GAME_EVENT_FN(onGameEventSetCardCounter,
+                   Event_SetCardCounter)
+TEST_GAME_EVENT_FN(onGameEventSetActivePlayer,
+                   Event_SetActivePlayer)
+TEST_GAME_EVENT_FN(onGameEventSetActivePhase,
+                   Event_SetActivePhase)
+TEST_GAME_EVENT_FN(onGameEventDumpZone,
+                   Event_DumpZone)
+TEST_GAME_EVENT_FN(onGameEventStopDumpZone,
+                   Event_StopDumpZone)
+TEST_GAME_EVENT_FN(onGameEventChangeZoneProperties,
+                   Event_ChangeZoneProperties)
+TEST_GAME_EVENT_FN(onGameEventReverseTurn,
+                   Event_ReverseTurn)
+
+//Game state changes
+TEST_GAME_STATE_CHANGE_FN(onGameStart)
+TEST_GAME_STATE_CHANGE_FN(onGameEnd)
+
+//Room events
+TEST_EVENT_FN(onEventJoinRoom,
+              Event_JoinRoom)
+TEST_EVENT_FN(onEventLeaveRoom,
+              Event_LeaveRoom)
+TEST_EVENT_FN(onEventRoomSay,
+              Event_RoomSay)
+
+//State changes
+TEST_STATE_CHANGE_FN(onBotDisconnect)
+TEST_STATE_CHANGE_FN(onBotConnect)
+TEST_STATE_CHANGE_FN(onBotConnectionError)
+TEST_STATE_CHANGE_FN(onBotLogin)
+TEST_STATE_CHANGE_FN(onReplayDownload)

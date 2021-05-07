@@ -133,7 +133,7 @@ void initBot(struct triceBot *b,
 /**
  * Check to see if the server should be pinged
  */
-static int needsPing(long lastPingTime) {
+int needsPing(long lastPingTime) {
     return time(NULL) - lastPingTime >= PING_FREQUENCY;
 }
 
@@ -158,9 +158,9 @@ void sendPing(struct triceBot *b) {
  * is logged in. If it is not logged in it will call the onBotLogin state change
  * event in the same thread after requesting the room list
  */
-static void loginResponse(struct triceBot *b,
-                          const Response *response,
-                          void *param) {
+void loginResponse(struct triceBot *b,
+                   const Response *response,
+                   void *param) {
     pthread_mutex_lock(&b->mutex);
     
     if (response != NULL) {
@@ -195,7 +195,7 @@ static void loginResponse(struct triceBot *b,
 }
 
 //Login, login details are stored in b->config
-static void sendLogin(struct triceBot *b) {
+void sendLogin(struct triceBot *b) {
     pthread_mutex_lock(&b->mutex);
     
     Command_Login cmdLogin;
@@ -230,9 +230,9 @@ static void sendLogin(struct triceBot *b) {
 /**
  * Executes the callback of the command
  */
-static void executeCallback(struct triceBot *b,
-                            struct pendingCommand *cmd,
-                            const Response *response) {
+void executeCallback(struct triceBot *b,
+                     struct pendingCommand *cmd,
+                     const Response *response) {
     if (cmd->callbackFunction != NULL) {
         cmd->callbackFunction(b, response, cmd->param);
     }
@@ -424,8 +424,8 @@ char *getReplayFileName(int gameID,
  * -> Fails silently
  * Is subject to cockaspagheti
  */
-static void replayResponseDownload(struct triceBot *b,
-                                   const Response_ReplayDownload replay) {
+void replayResponseDownload(struct triceBot *b,
+                            const Response_ReplayDownload replay) {
     const char *replayData = replay.replay_data().c_str();
     int len = replay.replay_data().length();
     
@@ -481,8 +481,8 @@ static void replayResponseDownload(struct triceBot *b,
  * Handles a server message
  * make it call a user defined function of OnServerMSG
  */
-static void handleResponse(struct triceBot *b,
-                           ServerMessage *newServerMessage) {
+void handleResponse(struct triceBot *b,
+                    ServerMessage *newServerMessage) {
     //Response
     if (hasNext(&b->callbackQueue)) {
         const Response response = newServerMessage->response();
@@ -549,8 +549,8 @@ static void roomsListed(struct triceBot *b,
 }
 
 //Join the room in config
-static void handleRoomEvent(struct triceBot *b,
-                            ServerMessage *newServerMessage) {
+void handleRoomEvent(struct triceBot *b,
+                     ServerMessage *newServerMessage) {
     const RoomEvent event = newServerMessage->room_event();
     
     if (event.HasExtension(Event_JoinRoom::ext)) {
@@ -597,8 +597,8 @@ static void replayReady(struct triceBot *b,
 /**
  * Called when a game event occurs
  */
-static void handleGameEvent(struct triceBot *b,
-                            ServerMessage *newServerMessage) {
+void handleGameEvent(struct triceBot *b,
+                     ServerMessage *newServerMessage) {
     GameEventContainer gameEventContainer = newServerMessage->game_event_container();
     
     int id = gameEventContainer.game_id();
@@ -867,8 +867,8 @@ sendCreateGameCommand(struct triceBot *b,
  * All of these CFLAGS default to 1
  * The macros that are specific to this function are above ^^
  */
-static void handleSessionEvent(struct triceBot *b,
-                               ServerMessage *newServerMessage) {
+void handleSessionEvent(struct triceBot *b,
+                        ServerMessage *newServerMessage) {
     //Call session event function in new fork
     const SessionEvent event = newServerMessage->session_event();
     
