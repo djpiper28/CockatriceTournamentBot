@@ -77,13 +77,19 @@ void TestGameStruct::testPlayerArray() {
             PLAYER_NAME
             CPPUNIT_ASSERT(getPlayerIDForGameIDAndName(&gl, i, buff) == j);
         }
+        
+        for (int j = 0; j < PLAYERS; j++) {
+            removePlayer(&gl, getGameWithID(&gl, i), j);
+            PLAYER_NAME
+            CPPUNIT_ASSERT(getPlayerIDForGameIDAndName(&gl, i, buff) == -1);
+        }
     }
     
     freeGameList(&gl);
 }
 
 void TestGameStruct::testSearchList() {
-    struct gameList gl;    
+    struct gameList gl;
     initGameList(&gl);
     char buff[10];
     
@@ -117,3 +123,25 @@ void TestGameStruct::testSearchList() {
     
     freeGameList(&gl);
 }
+
+void TestGameStruct::testMisc() {
+    removeGame(NULL, NULL);
+    addGame(NULL, NULL);
+    
+    struct gameList gl;
+    initGameList(&gl);
+
+    struct gameListNode *gln = (struct gameListNode *) malloc(sizeof(struct gameListNode));
+    gln->currentGame = NULL;
+    gln->nextGame = NULL;
+    freeGameListNode(&gl, gln);
+    
+    // Do again to assert that the mutex is not locked
+    gln = (struct gameListNode *) malloc(sizeof(struct gameListNode));
+    gln->currentGame = NULL;
+    gln->nextGame = NULL;
+    freeGameListNode(&gl, gln);
+    
+    freeGameList(&gl);
+}
+

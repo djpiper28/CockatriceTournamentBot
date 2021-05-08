@@ -9,6 +9,7 @@ class TestGameStruct : public CppUnit::TestCase {
         CPPUNIT_TEST(testAddAndRemove);
         CPPUNIT_TEST(testPlayerArray);
         CPPUNIT_TEST(testSearchList);
+        CPPUNIT_TEST(testMisc);
         CPPUNIT_TEST_SUITE_END();
     public:
         TestGameStruct(void);
@@ -16,6 +17,7 @@ class TestGameStruct : public CppUnit::TestCase {
         void testAddAndRemove();
         void testPlayerArray();
         void testSearchList();
+        void testMisc();
 };
 
 #endif
