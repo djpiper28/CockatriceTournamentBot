@@ -344,23 +344,65 @@ char *getReplayFileName(int gameID,
         tempFolderBaseLength += strnlen(baseDIR, BUFFER_LENGTH);
     }
     
-    char *tempFolderName = (char *) malloc(sizeof(char) * (tempFolderBaseLength + length + 1));
+    char *tempFolderName = (char *) malloc(sizeof(char) 
+                         * (tempFolderBaseLength + length + 1));
     
     int lastSlash = -1;
+
+    if (makeDIR && baseDIR != NULL) {
+        DIR* dir = opendir(baseDIR);                
+        if (dir) {
+            // Directory exists so close it
+            closedir(dir);
+        } else if (ENOENT == errno) {
+            // Directory does not exist so make directory
+            int code = mkdir(baseDIR, 0700);
+            
+            if (code == -1) {
+                printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
+                    baseDIR);
+                
+                switch (errno) {
+                    case EACCES :
+                        printf("-> The parent directory does not allow write.\n");
+                        break;
+                        
+                    case EEXIST:
+                        printf("-> Pathname already exists.\n");
+                        break;
+                        
+                    case ENAMETOOLONG:
+                        printf("-> Pathname is too long.\n");
+                        break;
+                        
+                    default:
+                        perror("-> Mkdir failed.\n");
+                        break;
+                }
+            } else {
+                printf("[INFO]: Made dir %s for replays.\n",
+                       baseDIR);
+            }
+        } else {
+            // Error message
+            printf("[ERROR]: Failed to create replay directory.\n");
+        }
+    } else {
+        printf("[ERROR]: baseDIR is NULL, unabled to create replay folder.\n");
+    }
     
     for (int i = 0; i < length; i++) {
         if (gameNameCP[i] == '/') {
             lastSlash = i;
             
+            free(tempFolderName);
+            tempFolderName = (char *) malloc(sizeof(char) * (i + 1));
+            snprintf(tempFolderName, tempFolderBaseLength + i + 1, 
+                     "%s/%s", 
+                     baseDIR, 
+                     gameNameCP);
             if (makeDIR) {
-                free(tempFolderName);
-                tempFolderName = (char *) malloc(sizeof(char) * (i + 1));
-                snprintf(tempFolderName, tempFolderBaseLength + i + 1, 
-                         "%s/%s", 
-                         baseDIR, 
-                         gameNameCP);
-                
-                DIR* dir = opendir(tempFolderName);
+                DIR *dir = opendir(tempFolderName);
                 
                 if (dir) {
                     // Directory exists so close it
@@ -370,9 +412,10 @@ char *getReplayFileName(int gameID,
                     int code = mkdir(tempFolderName, 0700);
                     
                     if (code == -1) {
-                        printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
-                               tempFolderName);
-                               
+                        printf("[ERROR]: Failed to created the folder %s while "
+                        "getting replay name ready.\n",
+                        tempFolderName);
+                        
                         switch (errno) {
                             case EACCES :
                                 printf("-> The parent directory does not allow write.\n");
@@ -396,11 +439,12 @@ char *getReplayFileName(int gameID,
                     }
                 } else {
                     // Error message
-                    printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
-                           tempFolderName);
-                }
+                    printf("[ERROR]: Failed to created the folder %s while "
+                    "getting replay name ready.\n",
+                    tempFolderName);
+                }                
             }
-        }
+        }        
     }
     
     free(tempFolderName);
