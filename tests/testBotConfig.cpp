@@ -70,6 +70,19 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "replayFolder=test\n"\
 "#Another test comment"
 
+#define TEST_FIVE_CONTENT \
+"username=test\n"\
+"password=test\n"\
+"=test\n"\
+"serveraddress=test\n"\
+"roomName=test\n"\
+"authtoken=test\n"\
+"certfile=test\n"\
+"certkeyfile=test\n"\
+"bindAddr=test\n"\
+"clientID=test\n"\
+"replayFolder=test"
+
 static void writeConfigFile(char *filename, char *data) {
     FILE *f = fopen(filename, "w+");
     fprintf(f, "%s", data);
@@ -128,6 +141,22 @@ void TestBotConfig::testReadConf() {
     
     // Test that comments are not read and do not break the config reader
     readConfFromBuffer(&config, TEST_FOUR_CONTENT, strlen(TEST_FOUR_CONTENT));
+    // Assert all fields are set to test
+    CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.roomName, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatriceServer, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.clientID, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.replayFolder, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    freeConf(&config);
+    
+    
+    // Test five is a file with an empty property tag
+    readConfFromBuffer(&config, TEST_FIVE_CONTENT, strlen(TEST_FIVE_CONTENT));
     // Assert all fields are set to test
     CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
