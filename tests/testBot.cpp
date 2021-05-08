@@ -465,9 +465,9 @@ void TestBot::testExecuteCallback() {
     
     executeCallback(&b, cmd, &response);    
     CPPUNIT_ASSERT(callbackOneCalled);
-    CPPUNIT_ASSERT(callbackTwoCalled);
+    CPPUNIT_ASSERT(!callbackTwoCalled);
         
-    free(&b);
+    freeBot(&b);
 }
 
 #define PAGE_SIZE 4096
