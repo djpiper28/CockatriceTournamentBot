@@ -47,13 +47,21 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "username=test\n"\
 "password=\n"\
 "password=test\n"\
+"serveraddress=abc\n"\
 "serveraddress=test\n"\
+"roomName=abc\n"\
 "roomName=test\n"\
+"authtoken=abc\n"\
 "authtoken=test\n"\
+"certfile=abc\n"\
 "certfile=test\n"\
+"certkeyfile=abc\n"\
 "certkeyfile=test\n"\
+"bindAddr=abc\n"\
 "bindAddr=test\n"\
+"clientID=abc\n"\
 "clientID=test\n"\
+"replayFolder=abc\n"\
 "replayFolder=test"
 
 #define TEST_FOUR_CONTENT \
@@ -74,6 +82,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "username=test\n"\
 "password=test\n"\
 "=test\n"\
+"test=\n"\
 "serveraddress=test\n"\
 "roomName=test\n"\
 "authtoken=test\n"\
@@ -82,6 +91,32 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "replayFolder=test"
+
+#define TEST_SIX_CONTENT \
+"username=test\n"\
+"password=test\n"\
+"=test\n"\
+"test=\n"\
+"serveraddress=test\n"\
+"roomName=test\n"\
+"authtoken=test\n"\
+"certfile=test\n"\
+"certkeyfile=test\n"\
+"bindAddr=test\n"\
+"clientID=test\n"\
+"replayFolder=/tmp/test"
+
+#define TEST_SEVEN_CONTENT \
+"username=test\n"\
+"password=test\n"\
+"serveraddress=test\n"\
+"roomName=test\n"\
+"authtoken=test\n"\
+"certfile=test\n"\
+"certkeyfile=test\n"\
+"bindAddr=test\n"\
+"clientID=test\n"\
+"replayFolder=test///////"
 
 static void writeConfigFile(char *filename, char *data) {
     FILE *f = fopen(filename, "w+");
@@ -157,6 +192,36 @@ void TestBotConfig::testReadConf() {
     
     // Test five is a file with an empty property tag
     readConfFromBuffer(&config, TEST_FIVE_CONTENT, strlen(TEST_FIVE_CONTENT));
+    // Assert all fields are set to test
+    CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.roomName, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatriceServer, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.clientID, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.replayFolder, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    freeConf(&config);
+    
+    // Test six is to make sure that absolute paths are accepted
+    readConfFromBuffer(&config, TEST_SIX_CONTENT, strlen(TEST_SIX_CONTENT));
+    // Assert all fields are set correctly
+    CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.roomName, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatriceServer, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.clientID, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.replayFolder, "/tmp/test") == 0);
+    CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    freeConf(&config);
+    
+    // Test seven is to make sure that trailing slashes in the replay folder name are removed
+    readConfFromBuffer(&config, TEST_SEVEN_CONTENT, strlen(TEST_SEVEN_CONTENT));
     // Assert all fields are set to test
     CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
