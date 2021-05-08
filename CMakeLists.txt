@@ -15,11 +15,6 @@ set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 set(CMAKE_C_FLAGS_RELEASE "-O2 -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 
-
-# if tests flag
-set(CMAKE_C_FLAGS_TEST "-g -O0 -Wall -Wextra -Wno-unused-parameter -DDEBUG=1 -DMEGA_DEBUG=1")
-set(CMAKE_CXX_FLAGS_TEST ${CMAKE_C_FLAGS_DEBUG})
-
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
 if (CMAKE_BUILD_TYPE STREQUAL "TEST")
@@ -29,8 +24,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "TEST")
     set(CMAKE_C_COMPILER gcc)
     set(CMAKE_CXX_COMPILER g++)
     
-    #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
-    #set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
     
     append_coverage_compiler_flags()
     #setup_target_for_coverage_gcovr_html

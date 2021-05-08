@@ -202,16 +202,18 @@ struct game *getGameWithID(struct gameList *g, int gameID) {
     struct gameListNode *current = g->gamesHead;
     struct game * out = NULL;
     
-    while (current->currentGame->gameID != gameID) {
-        current = current->nextGame;
-        
-        if (current == NULL) {
-            break;
+    if (current != NULL) {        
+        while (current->currentGame->gameID != gameID) {
+            current = current->nextGame;
+            
+            if (current == NULL) {
+                break;
+            }
         }
-    }
-    
-    if (current != NULL) {
-        out = current->currentGame;
+        
+        if (current != NULL) { 
+            out = current->currentGame;
+        }
     }
     
     pthread_mutex_unlock(&g->mutex);

@@ -1,3 +1,4 @@
+#include <string>
 #include "testBot.h"
 #include "../src/trice_structs.h"
 #include "../src/bot.h"
@@ -9,7 +10,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TestBot);
 TestBot::TestBot () : CppUnit::TestCase("bot.h tests") {
     
 }
-int whatthefuck = 0;
 
 #define INIT_TRICE_BOT \
 struct Config testConfig = {\
@@ -266,6 +266,8 @@ CPPUNIT_ASSERT(b.fn == TEST##fn);
 se->MutableExtension(type::ext);\
 printf("Testing: %s\n", #fn);\
 handleSessionEvent(&b, &serverMessage);\
+TEST_EVENT_FN_SETTER(fn)\
+handleSessionEvent(&b, &serverMessage);\
 se->ClearExtension(type::ext);\
 CPPUNIT_ASSERT(fn##called == 1);
 
@@ -275,21 +277,6 @@ void TestBot::testEventFunctionsAreCalled() {
     ServerMessage serverMessage;
     SessionEvent *se = new SessionEvent();
     serverMessage.set_allocated_session_event(se);
-    
-    TEST_EVENT_FN_SETTER(onEventServerIdentifictaion)
-    TEST_EVENT_FN_SETTER(onEventServerCompleteList)
-    TEST_EVENT_FN_SETTER(onEventServerMessage)
-    TEST_EVENT_FN_SETTER(onEventServerShutdown)
-    TEST_EVENT_FN_SETTER(onEventConnectionClosed)
-    TEST_EVENT_FN_SETTER(onEventUserMessage)
-    TEST_EVENT_FN_SETTER(onEventListRooms)
-    TEST_EVENT_FN_SETTER(onEventAddToList)
-    TEST_EVENT_FN_SETTER(onEventRemoveFromList)
-    TEST_EVENT_FN_SETTER(onEventUserJoined)
-    TEST_EVENT_FN_SETTER(onEventUserLeft)
-    TEST_EVENT_FN_SETTER(onEventGameJoined)
-    TEST_EVENT_FN_SETTER(onEventNotifyUser)
-    TEST_EVENT_FN_SETTER(onEventReplayAdded)
         
     TEST_EVENT_FN_CALLED(onEventServerIdentifictaion,
                          Event_ServerIdentification)
@@ -336,48 +323,15 @@ for (int i = 0; i < GAME_EVENTS_PER_CONTAINER; i++) {\
 \
 fn##called = 0;\
 handleGameEvent(&b, &serverMessage);\
+TEST_EVENT_FN_SETTER(fn)\
+handleGameEvent(&b, &serverMessage);\
 gc->clear_event_list();\
 printf("Testing: %s (%d)\n", #fn, fn##called);\
-if (!fn##called == GAME_EVENTS_PER_CONTAINER) printf("FAILED\n");\
+if (fn##called != GAME_EVENTS_PER_CONTAINER) printf("FAILED\n");\
 CPPUNIT_ASSERT(fn##called == GAME_EVENTS_PER_CONTAINER);
 
-void TestBot::testGameEventFunctionsAreCalled() {
-    if(whatthefuck) { 
-        printf("\n\n\nWHAT THE FUCK!!!!!!\n\n\n");
-    }
-    whatthefuck = 1;    
+void TestBot::testGameEventFunctionsAreCalled() { 
     INIT_TRICE_BOT
-    
-    TEST_EVENT_FN_SETTER(onGameEventJoin)
-    TEST_EVENT_FN_SETTER(onGameEventLeave)
-    TEST_EVENT_FN_SETTER(onGameEventHostChanged)
-    TEST_EVENT_FN_SETTER(onGameEventPlayerKicked)
-    TEST_EVENT_FN_SETTER(onGameEventStateChanged)
-    TEST_EVENT_FN_SETTER(onGameEventPlayerPropertyChanged)
-    TEST_EVENT_FN_SETTER(onGameEventGameSay)
-    TEST_EVENT_FN_SETTER(onGameEventCreateArrow)
-    TEST_EVENT_FN_SETTER(onGameEventDeleteArrow)
-    TEST_EVENT_FN_SETTER(onGameEventCreateCounter)
-    TEST_EVENT_FN_SETTER(onGameEventSetCounter)
-    TEST_EVENT_FN_SETTER(onGameEventDelCounter)
-    TEST_EVENT_FN_SETTER(onGameEventDrawCards)
-    TEST_EVENT_FN_SETTER(onGameEventRevealCards)
-    TEST_EVENT_FN_SETTER(onGameEventShuffle)
-    TEST_EVENT_FN_SETTER(onGameEventRollDie)
-    TEST_EVENT_FN_SETTER(onGameEventMoveCard)
-    TEST_EVENT_FN_SETTER(onGameEventFlipCard)
-    TEST_EVENT_FN_SETTER(onGameEventDestroyCard)
-    TEST_EVENT_FN_SETTER(onGameEventAttachCard)
-    TEST_EVENT_FN_SETTER(onGameEventCreateToken)
-    TEST_EVENT_FN_SETTER(onGameEventSetCardAttr)
-    TEST_EVENT_FN_SETTER(onGameEventSetCardCounter)
-    TEST_EVENT_FN_SETTER(onGameEventSetActivePlayer)
-    TEST_EVENT_FN_SETTER(onGameEventSetActivePhase)
-    TEST_EVENT_FN_SETTER(onGameEventDumpZone)
-    TEST_EVENT_FN_SETTER(onGameEventStopDumpZone)
-    TEST_EVENT_FN_SETTER(onGameEventChangeZoneProperties)
-    TEST_EVENT_FN_SETTER(onGameEventReverseTurn)
-    TEST_EVENT_FN_SETTER(onGameEventGameClosed)
     
     ServerMessage serverMessage;
     GameEventContainer *gc = new GameEventContainer();
@@ -445,8 +399,137 @@ void TestBot::testGameEventFunctionsAreCalled() {
                               Event_ChangeZoneProperties)
     TEST_GAME_EVENT_FN_CALLED(onGameEventReverseTurn,
                               Event_ReverseTurn)
-    TEST_GAME_EVENT_FN_CALLED(onGameEventGameClosed,
-                              Event_GameClosed)
+    //TEST_GAME_EVENT_FN_CALLED(onGameEventGameClosed,
+    //                          Event_GameClosed)    
+        
+    for (int i = 0; i < GAME_EVENTS_PER_CONTAINER; i++) {
+        ge = gc->add_event_list();
+        ge->MutableExtension(Event_GameClosed::ext);
+    }
+    
+    onGameEventGameClosedcalled = 0;
+    handleGameEvent(&b, &serverMessage);
+    TEST_EVENT_FN_SETTER(onGameEventGameClosed)
+    handleGameEvent(&b, &serverMessage);
+    gc->clear_event_list();
+    printf("Testing: %s (%d)\n", "onGameEventGameClosed", onGameEventGameClosedcalled);\
+    if (onGameEventGameClosedcalled != 0) printf("FAILED\n");
+    CPPUNIT_ASSERT(onGameEventGameClosedcalled == 0);
     
     freeBot(&b);
 }
+
+int callbackSuccess = 0;
+static void testCallback(struct triceBot *b, const Response *, void *param) {
+    int *ptr = &callbackSuccess;
+    callbackSuccess = (int *) param == ptr;
+}
+
+int callbackOneCalled = 0;
+int callbackTwoCalled = 0;
+struct gameCreateCallbackWaitParam *p;
+
+static void testCallbackGameCreateParam(struct triceBot *b, const Response *, void *param) {
+    callbackOneCalled = 1;
+}
+
+static void testGameCreateCallback(struct gameCreateCallbackWaitParam *g) {
+    callbackTwoCalled = g == p;
+}
+
+void TestBot::testExecuteCallback() {
+    INIT_TRICE_BOT
+    CommandContainer cont;
+    struct pendingCommand *cmd = prepCmd(&b, cont, -1, -1);
+    
+    Response response;
+    executeCallback(&b, cmd, &response);
+    
+    cmd = prepCmd(&b, cont, -1, -1);
+    cmd->callbackFunction = &testCallback;
+    cmd->param = (void *) &callbackSuccess;
+    
+    executeCallback(&b, cmd, &response);    
+    CPPUNIT_ASSERT(callbackSuccess);
+    
+    cmd = prepCmd(&b, cont, -1, -1);
+    char *test = (char *) malloc(sizeof(char) * 5);
+    strcpy(test, "test");
+    
+    p = (struct gameCreateCallbackWaitParam *)
+        malloc(sizeof(struct gameCreateCallbackWaitParam));
+    initGameCreateCallbackWaitParam(p, test, strlen(test), &testGameCreateCallback);
+    cmd->callbackFunction = &testCallbackGameCreateParam;
+    cmd->param = (void *) p;
+    cmd->isGame = 1;
+    
+    executeCallback(&b, cmd, &response);    
+    CPPUNIT_ASSERT(callbackOneCalled);
+    CPPUNIT_ASSERT(callbackTwoCalled);
+        
+    free(&b);
+}
+
+#define PAGE_SIZE 4096
+void TestBot::testReplayDownload() {
+    INIT_TRICE_BOT
+    
+    FILE *f = fopen("../Match 4-84.cor", "r");
+    int len = 0,
+        bufLen = PAGE_SIZE;
+        
+    if (f == NULL) {
+        printf("FAILED ../Match 4-84.cor does not exist.\n");
+        CPPUNIT_ASSERT(f != NULL);
+        return;
+    }
+        
+    char *data = (char *) malloc(sizeof(char) * bufLen);
+    int tmp;
+    
+    for (len = 0; (tmp = fgetc(f)) != -1 ; len++) {
+        if (len < bufLen) {
+            data[len] = tmp;
+        } else {
+            bufLen += PAGE_SIZE;
+            char *temp = (char *) malloc(sizeof(char) * bufLen);
+            for (int i = 0; i < len; i++) {
+                temp[i] = data[i];
+            }
+            
+            free(data);
+            data = temp;
+            data[len] = tmp;
+        }
+    }
+    
+    fclose(f);    
+    rmdir("replay folder/");
+    
+    GameReplay gameReplay;
+    gameReplay.ParseFromArray(data, len);
+    saveReplay(&b, gameReplay);
+    
+    f = fopen("replay folder/e/Match 4-84.cor", "r");
+    
+    CPPUNIT_ASSERT(f != NULL);
+    if (f != NULL) {
+        for (int i = 0; i < len; i++) {
+            int a = fgetc(f);
+            if (a == -1) break;
+            
+            char b = a & 0xFF;
+            if (b != data[i]) {
+                printf("FAILED %x %x %d\n", b, data[i], i);
+            }
+            
+            CPPUNIT_ASSERT(b == data[i]);
+        }
+        
+        fclose(f);    
+    }
+    
+    free(data);
+    freeBot(&b);
+}
+

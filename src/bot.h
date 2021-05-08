@@ -1,6 +1,7 @@
 #ifndef BOT_H_
 #define BOT_H_
 
+#include "game_replay.pb.h"
 #include "trice_structs.h"
 #include "commands.pb.h"
 #include "response.pb.h"
@@ -37,6 +38,14 @@ char *getReplayFileName(int gameID,
  */
 void replayResponseDownload(struct triceBot *b,
                             const Response_ReplayDownload replay);
+
+/**
+ * Downloads a replay to ./replays/ use getReplayFileName to get the URI
+ * -> Fails silently
+ * Is subject to cockaspagheti
+ */
+void saveReplay(struct triceBot *b,
+                const GameReplay gameReplay);
 
 /**
  * struct triceBot *b -> pointer to the bot to init

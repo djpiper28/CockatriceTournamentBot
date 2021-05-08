@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include "bot_conf.h"
@@ -317,7 +318,7 @@ char *getReplayFileName(int gameID,
             }
         } else if (gameNameCP[i] == '/' && i + 1 < length) {
             gameNameCP[i + 1] = (gameNameCP[i + 1] == '/') * '_'
-                                + (gameNameCP[i + 1] != '/') * gameNameCP[i + 1];
+                              + (gameNameCP[i + 1] != '/') * gameNameCP[i + 1];
         }
     }
     
@@ -433,19 +434,28 @@ char *getReplayFileName(int gameID,
  */
 void replayResponseDownload(struct triceBot *b,
                             const Response_ReplayDownload replay) {
+    int len = replay.replay_data().length();    
     const char *replayData = replay.replay_data().c_str();
-    int len = replay.replay_data().length();
     
-    //start spaghetti
     GameReplay gameReplay;
-    gameReplay.ParseFromArray(replayData,
-                              replay.replay_data().length());
-    //end spaghetti
+    gameReplay.ParseFromArray(replayData, replay.replay_data().length());
+    saveReplay(b, gameReplay);
+}
+
+/**
+ * Downloads a replay to ./replays/ use getReplayFileName to get the URI
+ * -> Fails silently
+ * Is subject to cockaspagheti
+ */
+void saveReplay(struct triceBot *b,
+                const GameReplay gameReplay) {
+    long len = gameReplay.ByteSizeLong();
+    char *replayData = (char*) malloc(sizeof(char) * len);
     char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH * 2);
-    const char *gameName = gameReplay.game_info().description().c_str();
+    gameReplay.SerializeToArray(replayData, len);
     
     char *replayName = getReplayFileName(gameReplay.game_info().game_id(),
-                                         gameName,
+                                         gameReplay.game_info().description().c_str(),
                                          gameReplay.game_info().description().length(),
                                          b->config.replayFolder);
                                          
@@ -462,7 +472,7 @@ void replayResponseDownload(struct triceBot *b,
     }
     
     if (access(fileName, F_OK) == 0) {
-        printf("[INFO]: Replay %s exists already, it was not overriden.\n", fileName);
+        printf("[INFO]: Replay %s exists already, it was not overwritten.\n", fileName);
     } else {
         FILE *replayFile = fopen(fileName, "wb+");
         
