@@ -222,6 +222,8 @@ struct game *getGameWithID(struct gameList *g, int gameID) {
 }
 
 void addGame(struct gameList *g, struct game *gamePointer) {
+    if (getGameWithID(g, gamePointer->gameID) != NULL) return;
+    
     if (g == NULL) {
         return;
     }

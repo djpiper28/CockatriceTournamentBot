@@ -14,6 +14,7 @@
 #include "testBot.h"
 #include "testBotConfig.h"
 #include "testCmdQueue.h"
+#include "testGameStruct.h"
 
 #define XMLOUT
 
@@ -21,6 +22,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestTriceStructs, "test trice_structs.h");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBot, "test bot.h");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBotConfig, "test bot_config.h");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestCmdQueue, "test cmd_queue.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestGameStruct, "test game_struct.h");
 
 // register test suite
 CppUnit::Test *suite() {

@@ -90,6 +90,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "TEST")
         tests/testBot.cpp
         tests/testBotConfig.cpp
         tests/testCmdQueue.cpp
+        tests/testGameStruct.cpp
         )
     add_executable(CockatriceTournamentBotTests ${TEST_FILES})
     target_include_directories(CockatriceTournamentBotTests PUBLIC 
