@@ -26,7 +26,7 @@ struct Config testConfig = {\
 struct triceBot b;\
 initBot(&b, testConfig);
 
-TestCmdQueue::TestCmdQueue () : CppUnit::TestCase("cm_queue.h tests") {
+TestCmdQueue::TestCmdQueue () : CppUnit::TestCase("cmd_queue.h tests") {
     
 }
 

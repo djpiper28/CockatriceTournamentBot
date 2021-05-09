@@ -386,6 +386,10 @@ static void ErrorCallback(struct gameCreateCallbackWaitParam *param) {
     printf("[ERROR]: Game create callback error - api client disconnected.\n");
 }
 
+static int min(int a, int b) {
+    return a > b ? b : a;
+}
+
 #define MAX_MSG_LENGTH_BYTES 4096
 static void eventHandler(struct mg_connection *c,
                          int event,
@@ -536,8 +540,8 @@ static void eventHandler(struct mg_connection *c,
                     gameID = atoi(gameIDCp);
                     free(gameIDCp); // Free the tmp var
                     
-                    struct game *g = getGameWithID(&api->triceBot->gameList, gameID);
-                    int gameFinished = g == NULL;
+                    struct game g = getGameWithIDNotRef(&api->triceBot->gameList, gameID);
+                    int gameFinished = g.gameID == -1 || g.playerArr == NULL;
                     
                     if (gameFinished) {
                         struct mg_http_serve_opts opts = {
@@ -549,12 +553,42 @@ static void eventHandler(struct mg_connection *c,
                                           hm,
                                           &opts);
                     } else {
+                        //<li></li>
+                        #define BASE_LEN 9
+                        int buffLen = 0;
+                        for (int i = 0; i < g.playerCount; i++) {
+                            buffLen += BASE_LEN 
+                                    + strnlen(g.playerArr[i].playerName,
+                                              256);
+                        }
+                        
+                        char *buff = (char *) malloc(sizeof(char) * buffLen);
+                        int ptr = 0;                        
+                        for (int i = 0; i < g.playerCount; i++) {
+                            #define BUFF_LEN 266
+                            char buffTmp[BUFF_LEN];
+                            snprintf(buffTmp,
+                                     BUFF_LEN,
+                                     "<li>%s</li>",
+                                     g.playerArr[i].playerName);
+                            snprintf(buff + ptr,
+                                     min(buffLen - ptr, BUFF_LEN),
+                                     "%s",
+                                     buffTmp);
+                        }
+                        
                         mg_http_reply(c,
-                                      301,
+                                      200,
                                       "",
-                                      "Game %d is in progress on %s.",
+                                      "<title>Game %d</title>\n"
+                                      "<h3>Game %d is in progress on server %s.</h3>\n"
+                                      "<h4>Current players are:</h4>\n<ol>\n%s\n</ol>",
                                       gameID,
-                                      api->config.cockatriceServer);
+                                      gameID,
+                                      api->config.cockatriceServer,
+                                      buff);
+                        
+                        free(buff);
                     }
                 } else {
                     send404(c);
