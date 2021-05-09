@@ -663,11 +663,14 @@ void handleGameEvent(struct triceBot *b,
     GameEventContainer gameEventContainer = newServerMessage->game_event_container();
     
     int id = gameEventContainer.game_id();
-    struct game *currentGame = getGameWithID(&b->gameList, id);
     
-    if (currentGame != NULL) {
-        struct game g = *currentGame;
-        
+    // These must be done in the same lock otherwise a race condition could occur
+    pthread_mutex_lock(&b->gameList.mutex);
+    struct game g = getGameWithIDNotRefNTS(&b->gameList, id);
+    struct game *currentGame = getGameWithIDNTS(&b->gameList, id);
+    pthread_mutex_unlock(&b->gameList.mutex);
+    
+    if (g.gameID != -1 && currentGame != NULL) {        
         //Track state
         int size = gameEventContainer.event_list_size();
         
@@ -797,6 +800,8 @@ void handleGameEvent(struct triceBot *b,
             }
         }
     }
+    
+    freeGameCopy(g);
 }
 
 /**

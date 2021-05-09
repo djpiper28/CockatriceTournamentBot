@@ -147,7 +147,7 @@ void freeGameList(struct gameList *g) {
     pthread_mutex_destroy(&g->mutex);
 }
 
-static struct game *getGameWithIDNTS(struct gameList *g, int gameID) {
+struct game *getGameWithIDNTS(struct gameList *g, int gameID) {
     struct gameListNode *current = g->gamesHead;
     struct game *out = NULL;
     
@@ -170,9 +170,61 @@ static struct game *getGameWithIDNTS(struct gameList *g, int gameID) {
 
 struct game *getGameWithID(struct gameList *g, int gameID) {
     pthread_mutex_lock(&g->mutex);    
-    struct game *out = getGameWithIDNTS(g, gameID);    
+    struct game *out = getGameWithIDNTS(g, gameID);
     pthread_mutex_unlock(&g->mutex);
     return out;
+}
+
+void freeGameCopy(struct game g) {    
+    if (g.playerArr == NULL) {
+        return;
+    }
+    
+    for (int i = 0; i < g.playerCount; i++) {
+        if (g.playerArr[i].playerName != NULL) {
+            free(g.playerArr[i].playerName);
+        }
+    }
+    free(g.playerArr);
+}
+
+struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
+    struct game *ga = getGameWithIDNTS(g, gameID);
+    struct game out;
+    if (ga == NULL) {
+        out.gameID = -1;
+        out.playerArr = NULL;
+    } else if (ga->gameID != -1) {
+        out = *ga;
+        
+        // Copy player array
+        struct player *playerArr = (struct player *) 
+            malloc(sizeof(struct player) * out.playerCount);
+        
+        for (int i = 0; i < out.playerCount; i++) {
+            playerArr[i].playerID = out.playerArr[i].playerID;
+            if (out.playerArr[i].playerName != NULL) {
+                int len = strnlen(out.playerArr[i].playerName, 256);
+                playerArr[i].playerName = (char *) malloc(sizeof(char) * len);
+                strncpy(playerArr[i].playerName, out.playerArr[i].playerName, len);
+            } else {
+                playerArr[i].playerName = NULL;
+            }
+        }
+        
+        out.playerArr = playerArr;
+    } else {
+        out.gameID = -1; 
+        out.playerArr = NULL;
+    }
+    return out;
+}
+
+struct game getGameWithIDNotRef(struct gameList *g, int gameID) {
+    pthread_mutex_lock(&g->mutex);
+    struct game ga = getGameWithIDNotRefNTS(g, gameID);   
+    pthread_mutex_unlock(&g->mutex);
+    return ga;
 }
 
 // Returns -1 if the player is not found

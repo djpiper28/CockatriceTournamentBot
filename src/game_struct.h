@@ -78,7 +78,16 @@ void freeGameList(struct gameList *g);
 // Returns -1 if the player is not found
 int getPlayerIDForGameIDAndName(struct gameList *g, int gameID, char *playerName);
 
+// Returns NULL if not found
+struct game *getGameWithIDNTS(struct gameList *g, int gameID);
 struct game *getGameWithID(struct gameList *g, int gameID);
+
+// gameID is -1 i the game is not found, returns a copy
+struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID);
+struct game getGameWithIDNotRef(struct gameList *g, int gameID);
+
+// Frees a game copy from getGameWithIDNotRef
+void freeGameCopy(struct game g);
 
 void addGame(struct gameList *g, struct game *gamePointer);
 
