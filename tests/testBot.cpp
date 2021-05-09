@@ -605,6 +605,25 @@ void TestBot::testHandleGameCreate() {
     }
     CPPUNIT_ASSERT(success_ && success2);
     
+    success2 = 0;
+    success_ = 0;
+    
+    sendCreateGameCommand(&b, NAME, "password", 1, 1, 1, 1, 1, 1, 1, 1, testFn2);
+    enq(deq(&b.sendQueue), &b.callbackQueue);
+    handleGameCreate(&b, game);
+    
+    start = time(NULL);
+    while (!success_ && (time(NULL) - start < 2)) {
+        pthread_mutex_lock(&mutex2);
+        success_ = success2;
+        pthread_mutex_unlock(&mutex2);
+    }
+    
+    if (!(success_ && success2)) {
+        printf("timeout FAILURE\n");
+    }
+    CPPUNIT_ASSERT(success_ && success2);
+    
     freePendingCommandQueue(&b.callbackQueue);    
     freePendingCommandQueue(&b.sendQueue);
     freeGameList(&b.gameList);
