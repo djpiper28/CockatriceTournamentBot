@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "testCmdQueue.h"
 #include "../src/cmd_queue.h"
@@ -71,6 +72,7 @@ void TestCmdQueue::testQueueOps() {
     }    
     
     for (int i = 0; i < LEN; i++) {
+        CPPUNIT_ASSERT(hasNext(&queue));
         CPPUNIT_ASSERT(nodes[i] == peek(&queue));
         CPPUNIT_ASSERT(nodes[i] == deq(&queue));
     }
@@ -87,7 +89,7 @@ void TestCmdQueue::testSearchOps() {
     struct pendingCommand *nodes[LEN];
     for (int i = 0; i < LEN; i++) {
         nodes[i] = (struct pendingCommand *)
-        malloc(sizeof(struct pendingCommand));
+            malloc(sizeof(struct pendingCommand));
         nodes[i]->message = (char *) malloc(sizeof(char) * 69);
         nodes[i]->cmdID = i;
         
@@ -246,3 +248,53 @@ void TestCmdQueue::testPrepEmptyCMD() {
     
     freePendingCommand(c);
 }
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int success = 1;
+
+void testFn(struct gameCreateCallbackWaitParam *) {
+    pthread_mutex_lock(&mutex);
+    success = 0;
+    pthread_mutex_unlock(&mutex);
+}
+
+void TestCmdQueue::testGameCreateCallbackFree() {
+    struct pendingCommand *node = (struct pendingCommand *)
+        malloc(sizeof(struct pendingCommand));
+    node = (struct pendingCommand *)
+        malloc(sizeof(struct pendingCommand));
+        
+    node->message = (char *) malloc(sizeof(char) * 69);
+    node->cmdID = 1;    
+    node->isGame = 1;
+    
+    node->param = malloc(sizeof(struct gameCreateCallbackWaitParam));
+    struct gameCreateCallbackWaitParam *param = 
+        (struct gameCreateCallbackWaitParam *) node->param;    
+    
+    char *buff = (char *) malloc(sizeof(char) * LEN);
+    snprintf(buff, LEN, "game-%d", 1);
+    initGameCreateCallbackWaitParam(param, buff, LEN, &testFn);
+    
+    CPPUNIT_ASSERT(isGameEq(buff, node));
+    
+    freePendingCommand(node);
+    
+    pthread_mutex_lock(&param->mutex);
+    param->callbackFn = NULL;
+    pthread_mutex_unlock(&param->mutex);
+    
+    long start = time(NULL);
+    int success_ = 0;
+    while (!success_ && (time(NULL) - start < 2)) {
+        pthread_mutex_lock(&mutex);
+        success_ = success;
+        pthread_mutex_unlock(&mutex);
+    }
+    
+    if (!(success_ && success)) {
+        printf("timeout FAILURE\n");
+    }
+    CPPUNIT_ASSERT(success_ && success);
+}
+

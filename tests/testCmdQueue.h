@@ -10,6 +10,7 @@ class TestCmdQueue : public CppUnit::TestCase {
     CPPUNIT_TEST(testSearchOps);
     CPPUNIT_TEST(testPrepCMD);
     CPPUNIT_TEST(testPrepEmptyCMD);
+    CPPUNIT_TEST(testGameCreateCallbackFree);
     CPPUNIT_TEST_SUITE_END();
 public:
     TestCmdQueue(void);
@@ -18,6 +19,7 @@ public:
     void testSearchOps();
     void testPrepCMD();
     void testPrepEmptyCMD();
+    void testGameCreateCallbackFree();
 };
 
 #endif

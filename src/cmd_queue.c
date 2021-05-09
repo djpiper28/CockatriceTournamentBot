@@ -20,6 +20,29 @@ void initPendingCommandQueue(struct pendingCommandQueue *q) {
     q->tail = NULL;
 }
 
+static void *freeCmdForGameCreate(void *param) {
+    if (param != NULL) {        
+        struct gameCreateCallbackWaitParam *p = (struct gameCreateCallbackWaitParam *)
+            param;
+            
+        //Wait for timeout of the game callback in another thread
+        int waiting = 1;                    
+        while (waiting) {                        
+            pthread_mutex_lock(&p->mutex);
+            waiting = p->callbackFn == NULL;
+            pthread_mutex_unlock(&p->mutex);
+            
+            if (waiting) {                            
+                usleep(25);
+            }
+        }
+        
+        freeGameCreateCallbackWaitParam(p);
+    }
+    
+    pthread_exit(NULL);
+}
+
 //Queue methods
 void freePendingCommand(struct pendingCommand *cmd) {
     if (cmd != NULL) {
@@ -32,20 +55,24 @@ void freePendingCommand(struct pendingCommand *cmd) {
                                                     cmd->param;
                                                     
             if (p != NULL) {
-                if (fork() == 0) {
-                    //Wait for timeout of the game callback in another thread
-                    int waiting = 1;
+                pthread_t t;
+                if (pthread_create(&t, NULL, freeCmdForGameCreate, (void *) p) != 0) {
+                    printf("[INFO]: Error creating poll thread for free cmd game "
+                           "create, running polling thread on current thread.\n");
                     
-                    while (waiting) {
-                        usleep(25);
-                        
+                    //Wait for timeout of the game callback in another thread
+                    int waiting = 1;                    
+                    while (waiting) {                        
                         pthread_mutex_lock(&p->mutex);
                         waiting = p->callbackFn == NULL;
                         pthread_mutex_unlock(&p->mutex);
+                        
+                        if (waiting) {                            
+                            usleep(25);
+                        }
                     }
                     
                     freeGameCreateCallbackWaitParam(p);
-                    _exit(0);
                 }
             }
         }
