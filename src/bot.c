@@ -386,7 +386,7 @@ char *getReplayFileName(int gameID,
             printf("[ERROR]: Failed to create replay directory.\n");
         }
     } else {
-        printf("[ERROR]: baseDIR is NULL, unabled to create replay folder.\n");
+        printf("[ERROR]: baseDIR is NULL, unable to create replay folder.\n");
     }
     
     for (int i = 0; i < length; i++) {
@@ -395,7 +395,8 @@ char *getReplayFileName(int gameID,
             
             free(tempFolderName);
             tempFolderName = (char *) malloc(sizeof(char) * (i + 1));
-            snprintf(tempFolderName, tempFolderBaseLength + i + 1, 
+            snprintf(tempFolderName, 
+                     tempFolderBaseLength + i + 1, 
                      "%s/%s", 
                      baseDIR, 
                      gameNameCP);
