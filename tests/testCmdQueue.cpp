@@ -102,7 +102,7 @@ void TestCmdQueue::testSearchOps() {
         GAME_NAME_MACRO
         initGameCreateCallbackWaitParam(param, buff, LEN, NULL);
         
-        CPPUNIT_ASSERT(isGameEq(buff, nodes[i]));        
+        CPPUNIT_ASSERT(isGameEq(buff, nodes[i]));
         
         enq(nodes[i], &queue);
     }
@@ -270,7 +270,7 @@ void TestCmdQueue::testGameCreateCallbackFree() {
     
     node->param = malloc(sizeof(struct gameCreateCallbackWaitParam));
     struct gameCreateCallbackWaitParam *param = 
-        (struct gameCreateCallbackWaitParam *) node->param;    
+        (struct gameCreateCallbackWaitParam *) node->param;
     
     char *buff = (char *) malloc(sizeof(char) * LEN);
     snprintf(buff, LEN, "game-%d", 1);
@@ -279,10 +279,12 @@ void TestCmdQueue::testGameCreateCallbackFree() {
     CPPUNIT_ASSERT(isGameEq(buff, node));
     
     freePendingCommand(node);
+    sleep(1);
     
     pthread_mutex_lock(&param->mutex);
     param->callbackFn = NULL;
     pthread_mutex_unlock(&param->mutex);
+    sleep(1);
     
     long start = time(NULL);
     int success_ = 0;

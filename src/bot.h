@@ -18,6 +18,13 @@
  * you may wish to consider starting a new thread for long operations.
  */
 
+
+/**
+ * Called when a game is created
+ */
+void handleGameCreate(struct triceBot *b,
+                      const Event_GameJoined gameCreate);
+
 /**
  * Free the char* manually.
  * Names with slashes i.e: Test Tournament/Finals/Match 6 will be saved as as

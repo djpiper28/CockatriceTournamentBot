@@ -1,4 +1,6 @@
 #include <string>
+
+#include "serverinfo_game.pb.h"
 #include "testBot.h"
 #include "../src/trice_structs.h"
 #include "../src/bot.h"
@@ -530,6 +532,67 @@ void TestBot::testReplayDownload() {
     }
     
     free(data);
+    freeBot(&b);
+}
+
+pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+int success2 = 0;
+
+#define ID 24
+void testFn2(struct gameCreateCallbackWaitParam *p) {
+    pthread_mutex_lock(&mutex2);
+    success2 = p->gameID == ID;
+    pthread_mutex_unlock(&mutex2);
+}
+
+#define NAME "test-1"
+#define LEN strlen(NAME) + 1
+#define MAX_PLAYERS 4
+void TestBot::testHandleGameCreate() {
+    INIT_TRICE_BOT
+    
+    CommandContainer cont;
+    struct pendingCommand *node = (struct pendingCommand *)
+        malloc(sizeof(struct pendingCommand));
+    node = (struct pendingCommand *)
+        malloc(sizeof(struct pendingCommand));
+    
+    node->message = (char *) malloc(sizeof(char) * 69);
+    node->cmdID = 1;    
+    node->isGame = 1;
+    
+    node->param = malloc(sizeof(struct gameCreateCallbackWaitParam));
+    struct gameCreateCallbackWaitParam *param = 
+        (struct gameCreateCallbackWaitParam *) node->param;    
+    
+    char *buff = (char *) malloc(sizeof(char) * LEN);
+    snprintf(buff, LEN, "%s", NAME);
+    initGameCreateCallbackWaitParam(param, buff, LEN, &testFn2);
+    
+    enq(node, &b.callbackQueue);
+    
+    Event_GameJoined game;
+    ServerInfo_Game *s = game.mutable_game_info();
+    s->set_description(NAME);
+    s->set_game_id(ID);
+    s->set_max_players(MAX_PLAYERS);
+    game.set_judge(0);
+    
+    handleGameCreate(&b, game);
+    
+    long start = time(NULL);
+    int success_ = 0;
+    while (!success_ && (time(NULL) - start < 2)) {
+        pthread_mutex_lock(&mutex2);
+        success_ = success2;
+        pthread_mutex_unlock(&mutex2);
+    }
+    
+    if (!(success_ && success2)) {
+        printf("timeout FAILURE\n");
+    }
+    CPPUNIT_ASSERT(success_ && success2);
+    
     freeBot(&b);
 }
 

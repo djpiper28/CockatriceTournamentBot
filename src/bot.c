@@ -322,8 +322,6 @@ char *getReplayFileName(int gameID,
         }
     }
     
-    
-    
     /**
      * Security check - do not use abs path!!!
      * Stop writing to an absolute path
@@ -804,19 +802,36 @@ void handleGameEvent(struct triceBot *b,
     freeGameCopy(g);
 }
 
+static void *freeCmdForGameCreate(void *param) {
+    if (param != NULL) {        
+        struct gameCreateCallbackWaitParam *p = (struct gameCreateCallbackWaitParam *)
+        param;
+        
+        pthread_mutex_lock(&p->mutex);
+        void (*callbackFn)(struct gameCreateCallbackWaitParam *) =
+            p->callbackFn;
+        pthread_mutex_unlock(&p->mutex);
+        
+        callbackFn(p);
+        freeGameCreateCallbackWaitParam(p);
+    }
+    
+    pthread_exit(NULL);
+}
+
 /**
  * Called when a game is created
  */
-static void handleGameCreate(struct triceBot *b,
-                             const Event_GameJoined listGames) {
-    const char *gameName = listGames.game_info().description().c_str();
+void handleGameCreate(struct triceBot *b,
+                      const Event_GameJoined gameCreate) {
+    const char *gameName = gameCreate.game_info().description().c_str();
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
-                                 gameName);
+                                              gameName);
                                  
     if (cmd != NULL) {
         //Create and add game item to the list
-        addGame(&b->gameList, createGame(listGames.game_info().game_id(),
-                                         listGames.game_info().max_players()));
+        addGame(&b->gameList, createGame(gameCreate.game_info().game_id(),
+                                         gameCreate.game_info().max_players()));
                                          
         //Game create callbackQueue
         struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *)
@@ -826,7 +841,7 @@ static void handleGameCreate(struct triceBot *b,
         if (game != NULL) {
             //Set the game ID (used in callbackFn both cases)
             pthread_mutex_lock(&game->mutex);
-            game->gameID = listGames.game_info().game_id();
+            game->gameID = gameCreate.game_info().game_id();
             void (*callbackFn)(struct gameCreateCallbackWaitParam *) =
                 game->callbackFn;
             pthread_mutex_unlock(&game->mutex);
@@ -836,12 +851,21 @@ static void handleGameCreate(struct triceBot *b,
                  * WARNING THE USER IS ASSUMED TO HAVE A POLLING THREAD
                  * OTHERWISE AND WILL LEAK MEMORY IF THE USER DOES NOT FREE
                  * IT.
-                 */
+                 */                
+                pthread_t t;                
                 
-                if (fork() == 0) {
+                if (pthread_create(&t, NULL, freeCmdForGameCreate, (void *) game) != 0) {
+                    printf("[INFO]: Error creating poll thread for game "
+                           "create callback, running polling thread on current thread.\n");
+                    
+                    //Wait for timeout of the game callback in another thread
+                    pthread_mutex_lock(&game->mutex);
+                    void (*callbackFn)(struct gameCreateCallbackWaitParam *) =
+                        game->callbackFn;
+                    pthread_mutex_unlock(&game->mutex);
+                    
                     callbackFn(game);
                     freeGameCreateCallbackWaitParam(game);
-                    _exit(0);
                 }
             }
         }
@@ -1288,3 +1312,4 @@ void killProtoufLib() {
 }
 
 #endif
+

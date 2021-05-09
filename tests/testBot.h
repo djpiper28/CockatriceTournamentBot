@@ -12,6 +12,7 @@ class TestBot : public CppUnit::TestCase {
         CPPUNIT_TEST(testGetReplayFileName);
         CPPUNIT_TEST(testReplayDownload);
         CPPUNIT_TEST(testExecuteCallback);
+        CPPUNIT_TEST(testHandleGameCreate);
         CPPUNIT_TEST_SUITE_END();
     public:
         TestBot(void);
@@ -22,6 +23,7 @@ class TestBot : public CppUnit::TestCase {
         void testGetReplayFileName();
         void testReplayDownload();
         void testExecuteCallback();
+        void testHandleGameCreate();
 };
 
 #endif
