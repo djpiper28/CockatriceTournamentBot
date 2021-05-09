@@ -542,6 +542,9 @@ int success2 = 0;
 void testFn2(struct gameCreateCallbackWaitParam *p) {
     pthread_mutex_lock(&mutex2);
     success2 = p->gameID == ID;
+    if (!success2) {
+        printf("[ERROR]: game id was not set!\n");
+    }
     pthread_mutex_unlock(&mutex2);
 }
 
@@ -550,6 +553,15 @@ void testFn2(struct gameCreateCallbackWaitParam *p) {
 #define MAX_PLAYERS 4
 void TestBot::testHandleGameCreate() {
     INIT_TRICE_BOT
+    
+    initPendingCommandQueue(&b.callbackQueue);    
+    initPendingCommandQueue(&b.sendQueue);
+    initGameList(&b.gameList);    
+    
+    b.loggedIn = 0;
+    b.magicRoomID = -1;
+    b.roomRequested = 0;
+    b.cmdID = 0;
     
     CommandContainer cont;
     struct pendingCommand *node = (struct pendingCommand *)
@@ -592,6 +604,10 @@ void TestBot::testHandleGameCreate() {
         printf("timeout FAILURE\n");
     }
     CPPUNIT_ASSERT(success_ && success2);
+    
+    freePendingCommandQueue(&b.callbackQueue);    
+    freePendingCommandQueue(&b.sendQueue);
+    freeGameList(&b.gameList);
     
     freeBot(&b);
 }

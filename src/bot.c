@@ -381,8 +381,7 @@ char *getReplayFileName(int gameID,
                 printf("[INFO]: Made dir %s for replays.\n",
                        baseDIR);
             }
-        } else {
-            // Error message
+        } else if (makeDIR) {
             printf("[ERROR]: Failed to create replay directory.\n");
         }
     } else {
