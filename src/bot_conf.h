@@ -14,7 +14,7 @@ struct Config {
 #if JOIN_ROOM_AUTOMATICALLY
     char *roomName;
 #endif
-    
+    int maxMessagesPerSecond;
     char *cockatriceServer,
          *clientID,
          *replayFolder,

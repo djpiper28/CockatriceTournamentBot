@@ -8,7 +8,7 @@
 CPPUNIT_TEST_SUITE_REGISTRATION(TestBotConfig);
 
 TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
-    
+
 }
 
 /**
@@ -28,6 +28,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
+"ratelimit=69\n"\
 "replayFolder=test"
 
 #define TEST_TWO_CONTENT \
@@ -40,6 +41,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
+"ratelimit=5\n"\
 "replayFolder=test\n"
 
 #define TEST_THREE_CONTENT \
@@ -62,6 +64,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "clientID=abc\n"\
 "clientID=test\n"\
 "replayFolder=abc\n"\
+"ratelimit=5\n"\
 "replayFolder=test"
 
 #define TEST_FOUR_CONTENT \
@@ -76,6 +79,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "replayFolder=test\n"\
+"ratelimit=5\n"\
 "#Another test comment"
 
 #define TEST_FIVE_CONTENT \
@@ -90,6 +94,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
+"ratelimit=5\n"\
 "replayFolder=test"
 
 #define TEST_SIX_CONTENT \
@@ -104,6 +109,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
+"ratelimit=5\n"\
 "replayFolder=/tmp/test"
 
 #define TEST_SEVEN_CONTENT \
@@ -116,6 +122,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
+"ratelimit=5\n"\
 "replayFolder=test///////"
 
 static void writeConfigFile(char *filename, char *data) {
@@ -127,9 +134,9 @@ static void writeConfigFile(char *filename, char *data) {
 void TestBotConfig::testReadConf() {
     struct Config config;
     writeConfigFile(TEST_ONE_FILENAME, TEST_ONE_CONTENT);
-    
+
     // Test one is a read from file test with a perfectly fomatted config
-    readConf(&config, TEST_ONE_FILENAME);    
+    readConf(&config, TEST_ONE_FILENAME);
     // Assert all fields are set to test
     CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
@@ -140,9 +147,10 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
     freeConf(&config);
-    
+
     // Test two is a file with an empty line at the end
     readConfFromBuffer(&config, TEST_TWO_CONTENT, strlen(TEST_TWO_CONTENT));
     // Assert all fields are set to test
@@ -155,9 +163,10 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
     freeConf(&config);
-    
+
     // Test three is a test with a duplicate username tag and an empty password
     // tag followed by a good one
     readConfFromBuffer(&config, TEST_THREE_CONTENT, strlen(TEST_THREE_CONTENT));
@@ -171,9 +180,10 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
     freeConf(&config);
-    
+
     // Test that comments are not read and do not break the config reader
     readConfFromBuffer(&config, TEST_FOUR_CONTENT, strlen(TEST_FOUR_CONTENT));
     // Assert all fields are set to test
@@ -186,10 +196,11 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
     freeConf(&config);
-    
-    
+
+
     // Test five is a file with an empty property tag
     readConfFromBuffer(&config, TEST_FIVE_CONTENT, strlen(TEST_FIVE_CONTENT));
     // Assert all fields are set to test
@@ -202,9 +213,10 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
     freeConf(&config);
-    
+
     // Test six is to make sure that absolute paths are accepted
     readConfFromBuffer(&config, TEST_SIX_CONTENT, strlen(TEST_SIX_CONTENT));
     // Assert all fields are set correctly
@@ -217,9 +229,10 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
     freeConf(&config);
-    
+
     // Test seven is to make sure that trailing slashes in the replay folder name are removed
     readConfFromBuffer(&config, TEST_SEVEN_CONTENT, strlen(TEST_SEVEN_CONTENT));
     // Assert all fields are set to test
@@ -232,18 +245,19 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);    
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
     freeConf(&config);
 }
 
 #define TEST_NEW_FILE "/tmp/test_file.conf"
 void TestBotConfig::testMakeNewConfFile() {
     makeNewFile(TEST_NEW_FILE);
-    
+
     struct Config config;
     // Test one is a read from file test with a perfectly fomatted config
-    readConf(&config, TEST_ONE_FILENAME);   
-    
+    readConf(&config, TEST_ONE_FILENAME);
+
     // Assert all fields are set
     CPPUNIT_ASSERT(config.cockatriceUsername != NULL);
     CPPUNIT_ASSERT(config.cockatricePassword != NULL);
@@ -255,7 +269,8 @@ void TestBotConfig::testMakeNewConfFile() {
     CPPUNIT_ASSERT(config.certkey != NULL);
     CPPUNIT_ASSERT(config.authToken != NULL);
     CPPUNIT_ASSERT(config.bindAddr != NULL);
-    
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 69);
+
     freeConf(&config);
 }
 

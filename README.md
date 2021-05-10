@@ -18,16 +18,28 @@ Do note empty games are deleted after 30 minutes by this bot.
 The file (config.conf) should be in this format:
 
 ```yaml
+#Cockatrice username
 username=username
+#Cockatrice password
 password=yourpassword
+#Cockatrice server address you must include the port
 serveraddress=ws://server.cockatrice.us:4748
+#Auth token for the bot
 authtoken=nGpzR/KspN6ry7jG8CU4bonN2aujzfJa
+#SSL certificate
 certfile=fullchain.pem
+#SSL certificate key
 certkeyfile=privkey.pem
+#IP address to bind the API server to, you must include the port
 bindAddr=https://127.0.0.1:8000
+#Client ID for the bot, set to your discord bot ID if -DDISCORD=1
 clientID=id
+#Room to join
 roomName=Magic
+#Folder to save replays to, also effects the URL that replays are servered on
 replayFolder=replays
+#Rate limit in max messages per second
+ratelimit=5
 ```
 Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:
@@ -47,7 +59,7 @@ that bot (perms are set to admin by default).
 ```yaml
 username=not this
 username=this is used
-
+...
 ```
 
 ### certfile and certkeyfile

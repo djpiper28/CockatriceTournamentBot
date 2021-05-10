@@ -78,6 +78,13 @@ static void readProperty(char *line, int length, struct Config *config) {
     } else if (strncmp("authtoken", propertyStr, length) == 0) {
         if (config->authToken != NULL) free(config->authToken);
         config->authToken = valueStr;
+    } else if (strncmp("ratelimit", propertyStr, length) == 0) {
+        config->maxMessagesPerSecond = atoi(valueStr);
+        if (config->maxMessagesPerSecond == 0) {
+            printf("[ERROR]: Rate limit is not set, defaulting to 5\n");
+            config->maxMessagesPerSecond = 5;
+        }
+        free(valueStr);
     } else if (strncmp("replayFolder", propertyStr, length) == 0) {
         if (config->replayFolder != NULL) free(config->replayFolder);
         config->replayFolder = valueStr;
@@ -175,6 +182,7 @@ void makeNewFile(char *filename) {
         fprintf(configFile, "bindAddr=https://0.0.0.0:8000\n");
         fprintf(configFile, "clientID=changeme\n");
         fprintf(configFile, "replayFolder=changeme\n");
+        fprintf(configFile, "ratelimit=5\n");
         
         free(generatedAuthToken);
         fclose(configFile);     //close file like a good boy

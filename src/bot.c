@@ -1139,23 +1139,35 @@ static void botEventHandler(struct mg_connection *c,
         b->lastGameWaitCheck = currentTime;
         
         //Send commands
-        struct timeval val;
-        gettimeofday(&val, NULL);
+        int rateLimited;
+        if (currentTime == b->lastSend) {
+            rateLimited = b->messagesSentThisSecond >= b->config.maxMessagesPerSecond;
+        } else {
+            rateLimited = 0;
+            b->config.maxMessagesPerSecond = 0;
+        }
         
-        struct pendingCommand *cmd = deq(&b->sendQueue);
-        
-        if (cmd != NULL) {
-            mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);
+        if (!rateLimited) {
+            struct pendingCommand *cmd = deq(&b->sendQueue);
             
-            enq(cmd, &b->callbackQueue);
+            if (cmd != NULL) {
+                mg_ws_send(c, cmd->message, cmd->size, WEBSOCKET_OP_BINARY);
+                
+                enq(cmd, &b->callbackQueue);
+                
+                pthread_mutex_lock(&b->mutex);
+                b->lastSend = currentTime;
+                b->config.maxMessagesPerSecond++;
+                pthread_mutex_unlock(&b->mutex);
             
 #if MEGA_DEBUG
-            printf("[MEGA_DEBUG]: MSG of length %d sent\n", cmd->size);
+                printf("[MEGA_DEBUG]: MSG of length %d sent\n", cmd->size);
 #endif
+            }
         }
         
         //Check for callback that has timed out
-        cmd = deq(&b->callbackQueue);
+        struct pendingCommand *cmd = deq(&b->callbackQueue);
         
         if (cmd != NULL) {
             if (time(NULL) - cmd->timeSent >= TIMEOUT) {

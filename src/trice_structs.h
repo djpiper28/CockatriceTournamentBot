@@ -103,13 +103,14 @@ struct triceBot {
     struct pendingCommandQueue sendQueue, callbackQueue;
     struct gameList gameList;
     int loggedIn,
-    magicRoomID,
-    roomRequested,
-    cmdID,
-    running;
+        magicRoomID,
+        roomRequested,
+        cmdID,
+        running,
+        messagesSentThisSecond; // TODO: think of a shorter name
     long lastGameWaitCheck,
-    lastPingTime,
-    lastSend;
+         lastPingTime,
+         lastSend;
     
     //Event Function Pointers for session events
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,

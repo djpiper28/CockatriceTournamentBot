@@ -560,46 +560,72 @@ static void eventHandler(struct mg_connection *c,
                         int buffLen = 0;
                         int players = 0;
                         for (int i = 0; i < g.playerCount; i++) {
-                            buffLen += BASE_LEN 
-                                    + strnlen(g.playerArr[i].playerName,
-                                              256);
-                            players++;
+                            if (g.playerArr[i].playerName != NULL) {
+                                buffLen += BASE_LEN 
+                                        + strnlen(g.playerArr[i].playerName,
+                                                  256);
+                                players++;
+                            }
                         }
                         
                         char *buff = (char *) malloc(sizeof(char) * (buffLen + 1));
+                        buff[buffLen] = 0;
+                        
                         int ptr = 0;                        
                         for (int i = 0; i < g.playerCount; i++) {
-                            #define BUFF_LEN 266
-                            char buffTmp[BUFF_LEN];
-                            snprintf(buffTmp,
-                                     BUFF_LEN,
-                                     "<li>%s</li>",
-                                     g.playerArr[i].playerName);
-                            snprintf(buff + ptr,
-                                     min(buffLen - ptr, BUFF_LEN),
-                                     "%s",
-                                     buffTmp);
+                            if (g.playerArr[i].playerName != NULL) {
+                                #define BUFF_LEN 266
+                                char buffTmp[BUFF_LEN];
+                                snprintf(buffTmp,
+                                        BUFF_LEN,
+                                        "<li>%s</li>",
+                                        g.playerArr[i].playerName);
+                                snprintf(buff + ptr,
+                                        min(buffLen - ptr, BUFF_LEN),
+                                        "%s",
+                                        buffTmp);
+                            }
                         }
                         
-                        mg_http_reply(c,
-                                      200,
-                                      "",
-                                      "<title>Game %d (%d/%d)</title>\n"
-                                      "<h1>%s</h1>"
-                                      "<h3>Game %d is in progress on server '%s'.</h3>\n"
-                                      "<h4>Current players are:</h4>\n"
-                                      "<ol>\n%s\n</ol>\n"
-                                      "<a href=\"%s\">Github Repo</a> | Version v%d.%d",
-                                      gameID,
-                                      players,
-                                      g.playerCount,
-                                      PROG_NAME,
-                                      gameID,
-                                      api->config.cockatriceServer,
-                                      buff,
-                                      GITHUB_REPO,
-                                      VERSION_MAJOR,
-                                      VERSION_MINOR);
+                        if (players == 0) {                            
+                            mg_http_reply(c,
+                                          200,
+                                          "",
+                                          "<title>Game %d (%d/%d)</title>\n"
+                                          "<h1>%s</h1>"
+                                          "<h3>Game %d is in progress on server '%s'.</h3>\n"
+                                          "<h4>The game is currently empty</h4>\n"
+                                          "<a href=\"%s\">Github Repo</a> | Version v%d.%d",
+                                          gameID,
+                                          players,
+                                          g.playerCount,
+                                          PROG_NAME,
+                                          gameID,
+                                          api->config.cockatriceServer,
+                                          GITHUB_REPO,
+                                          VERSION_MAJOR,
+                                          VERSION_MINOR);   
+                        } else {                        
+                            mg_http_reply(c,
+                                        200,
+                                        "",
+                                        "<title>Game %d (%d/%d)</title>\n"
+                                        "<h1>%s</h1>"
+                                        "<h3>Game %d is in progress on server '%s'.</h3>\n"
+                                        "<h4>Current players are:</h4>\n"
+                                        "<ol>\n%s\n</ol>\n"
+                                        "<a href=\"%s\">Github Repo</a> | Version v%d.%d",
+                                        gameID,
+                                        players,
+                                        g.playerCount,
+                                        PROG_NAME,
+                                        gameID,
+                                        api->config.cockatriceServer,
+                                        buff,
+                                        GITHUB_REPO,
+                                        VERSION_MAJOR,
+                                        VERSION_MINOR);                        
+                        }
                         
                         free(buff);
                     }
