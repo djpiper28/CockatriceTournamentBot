@@ -454,7 +454,9 @@ static void eventHandler(struct mg_connection *c,
             } else if (mg_http_match_uri(hm, "/api/")
                        || mg_http_match_uri(hm, "/api")) {
                 mg_http_reply(c, 200, "", "%s", HELP_STR);
-            } else if (mg_http_match_uri(hm, "/replay*")) {
+            } else if (mg_http_match_uri(hm,
+                                            api->replayFolerWildcard)) {
+                int gameFinished = 0;
                 int gameID = -1;
                 // Parse gameId from URI in form ../(<FOLDER>/)*<NAME>-id.cor
                 /** FST
@@ -476,7 +478,16 @@ static void eventHandler(struct mg_connection *c,
                             state = 1;
                             break;
                             
-                        case '0' - '9':
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
                             if (state == 1) {
                                 state = 2;
                                 gameIdStartPtr = i;
@@ -541,18 +552,9 @@ static void eventHandler(struct mg_connection *c,
                     free(gameIDCp); // Free the tmp var
                     
                     struct game g = getGameWithIDNotRef(&api->triceBot->gameList, gameID);
-                    int gameFinished = g.gameID == -1 || g.playerArr == NULL;
+                    gameFinished = g.gameID == -1 || g.playerArr == NULL;
                     
-                    if (gameFinished) {
-                        struct mg_http_serve_opts opts = {
-                            .root_dir = api->config.replayFolder,
-                            .extra_headers = DOWNLOAD_HEADER
-                        };
-                        
-                        mg_http_serve_dir(c,
-                                          hm,
-                                          &opts);
-                    } else {
+                    if (!gameFinished) {
                         //<li></li>
                         #define BASE_LEN 9
                         int buffLen = 0;
@@ -584,9 +586,10 @@ static void eventHandler(struct mg_connection *c,
                                       "",
                                       "<title>Game %d (%d/%d)</title>\n"
                                       "<h1>%s</h1>"
-                                      "<h3>Game %d is in progress on server %s.</h3>\n"
-                                      "<h4>Current players are:</h4>\n<ol>\n%s\n</ol>"
-                                      "<a href=\"%s\">Github</a>",
+                                      "<h3>Game %d is in progress on server '%s'.</h3>\n"
+                                      "<h4>Current players are:</h4>\n"
+                                      "<ol>\n%s\n</ol>\n"
+                                      "<a href=\"%s\">Github Repo</a> | Version v%d.%d",
                                       gameID,
                                       players,
                                       g.playerCount,
@@ -594,24 +597,26 @@ static void eventHandler(struct mg_connection *c,
                                       gameID,
                                       api->config.cockatriceServer,
                                       buff,
-                                      GITHUB_REPO);
+                                      GITHUB_REPO,
+                                      VERSION_MAJOR,
+                                      VERSION_MINOR);
                         
                         free(buff);
                     }
                     
                     freeGameCopy(g);
                 } else {
-                    send404(c);
+                    gameFinished = 1;
                 }
-            } else if (mg_http_match_uri(hm,
-                                         api->replayFolerWildcard)) {
-                                         
-                struct mg_http_serve_opts opts = {
-                    .root_dir = ".",
-                    .extra_headers = DOWNLOAD_HEADER
-                };
                 
-                mg_http_serve_dir(c, hm, &opts);
+                if (gameFinished) {
+                    struct mg_http_serve_opts opts = {
+                        .root_dir = ".",
+                        .extra_headers = DOWNLOAD_HEADER
+                    };
+                    
+                    mg_http_serve_dir(c, hm, &opts);
+                }
             } else {
                 send404(c);
             }

@@ -564,7 +564,7 @@ void handleResponse(struct triceBot *b,
             loginResponse(b, &response, NULL);
         }
         
-        else if (response.HasExtension(Response_ReplayDownload::ext)) {
+        if (response.HasExtension(Response_ReplayDownload::ext)) {
 #if DOWNLOAD_REPLAYS
             replayResponseDownload(b,
                                    response.GetExtension(Response_ReplayDownload::ext));
@@ -648,6 +648,8 @@ static void replayReady(struct triceBot *b,
         
         Command_ReplayDownload replayDownload;
         replayDownload.set_replay_id(replay.replay_id());
+        printf("[INFO]: Requested replay %d.\n",
+               replay.replay_id());
         
         CommandContainer cont;
         SessionCommand *c = cont.add_session_command();
