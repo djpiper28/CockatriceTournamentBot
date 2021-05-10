@@ -556,13 +556,15 @@ static void eventHandler(struct mg_connection *c,
                         //<li></li>
                         #define BASE_LEN 9
                         int buffLen = 0;
+                        int players = 0;
                         for (int i = 0; i < g.playerCount; i++) {
                             buffLen += BASE_LEN 
                                     + strnlen(g.playerArr[i].playerName,
                                               256);
+                            players++;
                         }
                         
-                        char *buff = (char *) malloc(sizeof(char) * buffLen);
+                        char *buff = (char *) malloc(sizeof(char) * (buffLen + 1));
                         int ptr = 0;                        
                         for (int i = 0; i < g.playerCount; i++) {
                             #define BUFF_LEN 266
@@ -580,16 +582,24 @@ static void eventHandler(struct mg_connection *c,
                         mg_http_reply(c,
                                       200,
                                       "",
-                                      "<title>Game %d</title>\n"
+                                      "<title>Game %d (%d/%d)</title>\n"
+                                      "<h1>%s</h1>"
                                       "<h3>Game %d is in progress on server %s.</h3>\n"
-                                      "<h4>Current players are:</h4>\n<ol>\n%s\n</ol>",
+                                      "<h4>Current players are:</h4>\n<ol>\n%s\n</ol>"
+                                      "<a href=\"%s\">Github</a>",
                                       gameID,
+                                      players,
+                                      g.playerCount,
+                                      PROG_NAME,
                                       gameID,
                                       api->config.cockatriceServer,
-                                      buff);
+                                      buff,
+                                      GITHUB_REPO);
                         
                         free(buff);
                     }
+                    
+                    freeGameCopy(g);
                 } else {
                     send404(c);
                 }
