@@ -14,6 +14,7 @@ struct Config testConfig = {\
     "username",\
     "password",\
     "room name",\
+    5,\
     "server.com",\
     "client id",\
     "replay folder",\
