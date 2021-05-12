@@ -24,6 +24,7 @@
 #include "room_event.pb.h"
 #include "session_event.pb.h"
 #include "server_message.pb.h"
+#include "event_player_properties_changed.pb.h"
 #include "event_add_to_list.pb.h"
 #include "event_remove_from_list.pb.h"
 #include "event_connection_closed.pb.h"
@@ -726,16 +727,49 @@ void handleGameEvent(struct triceBot *b,
                         addPlayer(&b->gameList,
                                   currentGame,
                                   pp.user_info().name().c_str(),
-                                  pp.player_id());
+                                  pp.player_id(),
+                                  pp.ping_seconds());
                     }
                 }
             }
             
             //Remove player from list
             if (event.HasExtension(Event_Leave::ext)) {
-                removePlayer(&b->gameList,
-                             currentGame,
-                             event.player_id());
+                int disconnected = 0;
+                
+                pthread_mutex_lock(&b->gameList.mutex);
+                for (int i = 0; !disconnected && i < currentGame->playerCount; i++) {
+                    if (currentGame->playerArr[i].playerID == event.player_id()) {
+                        disconnected = 1;
+                    }
+                }
+                pthread_mutex_unlock(&b->gameList.mutex);    
+                
+                //Track non-spectator, non-judge players.
+                if (!disconnected) {
+                    removePlayer(&b->gameList,
+                                 currentGame,
+                                 event.player_id());
+                }
+            }
+            
+            //Change player ping
+            if (event.HasExtension(Event_PlayerPropertiesChanged::ext)) {
+                Event_PlayerPropertiesChanged ppcEvent = event.GetExtension(Event_PlayerPropertiesChanged::ext);
+                
+                if (ppcEvent.has_player_properties()) {
+                    ServerInfo_PlayerProperties pp = ppcEvent.player_properties();
+                    int found = 0;
+                    
+                    pthread_mutex_lock(&b->gameList.mutex);
+                    for (int i = 0; !found && i < currentGame->playerCount; i++) {
+                        if (currentGame->playerArr[i].playerID == pp.player_id()) {
+                            found = 1;
+                            currentGame->playerArr[i].ping = pp.ping_seconds();
+                        }
+                    }
+                    pthread_mutex_unlock(&b->gameList.mutex); 
+                }
             }
             
             //Game event call

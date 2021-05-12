@@ -556,7 +556,8 @@ static void eventHandler(struct mg_connection *c,
                     
                     if (!gameFinished) {
                         //<li></li>
-                        #define BASE_LEN 9
+                        //and ' (ping )' + max int length
+                        #define BASE_LEN 24
                         int buffLen = 0;
                         int players = 0;
                         for (int i = 0; i < g.playerCount; i++) {
@@ -578,8 +579,9 @@ static void eventHandler(struct mg_connection *c,
                                 char buffTmp[BUFF_LEN];
                                 snprintf(buffTmp,
                                         BUFF_LEN,
-                                        "<li>%s</li>",
-                                        g.playerArr[i].playerName);
+                                        "<li>%s (ping %d)</li>",
+                                        g.playerArr[i].playerName,
+                                        g.playerArr[i].ping);
                                 snprintf(buff + ptr,
                                         min(buffLen - ptr, BUFF_LEN),
                                         "%s",

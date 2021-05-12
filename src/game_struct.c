@@ -25,7 +25,8 @@ void initGameList(struct gameList *gl) {
 int addPlayer(struct gameList *gl,
               struct game *g,
               const char *playerName,
-              int playerID) {
+              int playerID,
+              int ping) {
     pthread_mutex_lock(&gl->mutex);
     int done = 0;
     
@@ -35,7 +36,7 @@ int addPlayer(struct gameList *gl,
             char *playerNameCP = (char *) malloc(sizeof(char) * nameLength);
             strncpy(playerNameCP, playerName, nameLength);
             
-            struct player p = {playerID, playerNameCP};
+            struct player p = {playerID, ping, playerNameCP};
             g->playerArr[i] = p;
             done = 1;
             
