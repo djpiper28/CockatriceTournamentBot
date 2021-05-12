@@ -1139,11 +1139,13 @@ static void botEventHandler(struct mg_connection *c,
         b->lastGameWaitCheck = currentTime;
         
         //Send commands
+        pthread_mutex_lock(&b->mutex);
         int rateLimited;
         if (currentTime == b->lastSend) {
             rateLimited = b->messagesSentThisSecond >= b->config.maxMessagesPerSecond;
         } else {
             rateLimited = 0;
+            b->lastSend = currentTime;
             b->config.maxMessagesPerSecond = 0;
         }
         
@@ -1155,16 +1157,14 @@ static void botEventHandler(struct mg_connection *c,
                 
                 enq(cmd, &b->callbackQueue);
                 
-                pthread_mutex_lock(&b->mutex);
-                b->lastSend = currentTime;
                 b->config.maxMessagesPerSecond++;
-                pthread_mutex_unlock(&b->mutex);
             
 #if MEGA_DEBUG
                 printf("[MEGA_DEBUG]: MSG of length %d sent\n", cmd->size);
 #endif
             }
         }
+        pthread_mutex_unlock(&b->mutex);
         
         //Check for callback that has timed out
         struct pendingCommand *cmd = deq(&b->callbackQueue);
