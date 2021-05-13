@@ -31,8 +31,6 @@ void TestApiServer::testInitAndFree() {
     initServer(&server, &b, config);
     CPPUNIT_ASSERT(server.running == 0);
     CPPUNIT_ASSERT(server.triceBot == &b);
-    CPPUNIT_ASSERT(server.opts.cert == config.cert);
-    CPPUNIT_ASSERT(server.opts.certkey == config.certkey);
     CPPUNIT_ASSERT(server.opts.ca == NULL);
     freeServer(&server);
     
