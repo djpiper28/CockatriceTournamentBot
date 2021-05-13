@@ -28,7 +28,7 @@ void TestGameStruct::testAddAndRemove() {
         CPPUNIT_ASSERT(getGameWithID(&gl, i) != NULL);
         for (int j = 0; j < PLAYERS; j++) {
             PLAYER_NAME
-            addPlayer(&gl, getGameWithID(&gl, i), buff, j);
+            addPlayer(&gl, getGameWithID(&gl, i), buff, j, 1);
         }
     }
     
@@ -69,7 +69,7 @@ void TestGameStruct::testPlayerArray() {
         
         for (int j = 0; j < PLAYERS; j++) {
             PLAYER_NAME
-            addPlayer(&gl, getGameWithID(&gl, i), buff, j);
+            addPlayer(&gl, getGameWithID(&gl, i), buff, j, 1);
             CPPUNIT_ASSERT(getPlayerIDForGameIDAndName(&gl, i, buff) == j);
         }
         
@@ -99,7 +99,7 @@ void TestGameStruct::testSearchList() {
         CPPUNIT_ASSERT(getGameWithID(&gl, i) != NULL);
         for (int j = 0; j < PLAYERS; j++) {
             PLAYER_NAME
-            addPlayer(&gl, getGameWithID(&gl, i), buff, j);
+            addPlayer(&gl, getGameWithID(&gl, i), buff, j, 1);
         }
     }
     

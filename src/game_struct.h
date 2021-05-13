@@ -51,7 +51,11 @@ struct game *createGame(int gameID, int playerCount);
  * Returns 1 if addition was successful
  * Returns 0 if the array is full or NULL
  */
-int addPlayer(struct gameList *gl, struct game *g, const char *playerName, int playerID, int ping);
+int addPlayer(struct gameList *gl, 
+              struct game *g, 
+              const char *playerName, 
+              int playerID, 
+              int ping);
 
 /**
  * Removes a player from a game

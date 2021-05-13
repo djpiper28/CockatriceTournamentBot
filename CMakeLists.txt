@@ -9,10 +9,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # compiler flags
-set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wno-unused-parameter -DDEBUG=1 -DMEGA_DEBUG=1")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wno-unused-parameter -Wno-writable-strings -DDEBUG=1 -DMEGA_DEBUG=1")
 set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 
-set(CMAKE_C_FLAGS_RELEASE "-O2 -Wno-unused-parameter")
+set(CMAKE_C_FLAGS_RELEASE "-O2 -Wno-unused-parameter -Wno-writable-strings")
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
@@ -91,6 +91,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "TEST")
         tests/testBotConfig.cpp
         tests/testCmdQueue.cpp
         tests/testGameStruct.cpp
+        tests/testApiServer.cpp
         )
     add_executable(CockatriceTournamentBotTests ${TEST_FILES})
     target_include_directories(CockatriceTournamentBotTests PUBLIC 
