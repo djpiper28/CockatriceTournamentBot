@@ -755,20 +755,33 @@ void handleGameEvent(struct triceBot *b,
             
             //Change player ping
             if (event.HasExtension(Event_PlayerPropertiesChanged::ext)) {
-                Event_PlayerPropertiesChanged ppcEvent = event.GetExtension(Event_PlayerPropertiesChanged::ext);
+                Event_PlayerPropertiesChanged ppcEvent = event.GetExtension(
+                    Event_PlayerPropertiesChanged::ext);
                 
                 if (ppcEvent.has_player_properties()) {
                     ServerInfo_PlayerProperties pp = ppcEvent.player_properties();
-                    int found = 0;
                     
-                    pthread_mutex_lock(&b->gameList.mutex);
-                    for (int i = 0; !found && i < currentGame->playerCount; i++) {
-                        if (currentGame->playerArr[i].playerID == pp.player_id()) {
-                            found = 1;
-                            currentGame->playerArr[i].ping = pp.ping_seconds();
+                    //Track non-spectator, non-judge players.
+                    if (!pp.spectator() && !pp.judge()) {
+                        int found = 0;
+                    
+                        pthread_mutex_lock(&b->gameList.mutex);
+                        for (int i = 0; !found && i < currentGame->playerCount; i++) {
+                            if (currentGame->playerArr[i].playerID == pp.player_id()) {
+                                found = 1;
+                                currentGame->playerArr[i].ping = pp.ping_seconds();
+                            }
+                        }
+                        pthread_mutex_unlock(&b->gameList.mutex);
+                        
+                        if (!found) {
+                            addPlayer(&b->gameList,
+                                      currentGame,
+                                      pp.user_info().name().c_str(),
+                                      pp.player_id(),
+                                      pp.ping_seconds());
                         }
                     }
-                    pthread_mutex_unlock(&b->gameList.mutex); 
                 }
             }
             
