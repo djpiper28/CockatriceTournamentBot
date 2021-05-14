@@ -5,7 +5,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TestApiServer);
 #define AUTH_TOKEN "auth_token"
 
 TestApiServer::TestApiServer () : CppUnit::TestCase("api_server.h tests") {
-    config = {\
+    config = {
         "username",
         "password",
         "room name",
@@ -16,7 +16,7 @@ TestApiServer::TestApiServer () : CppUnit::TestCase("api_server.h tests") {
         "cert",
         "certkey",
         AUTH_TOKEN,
-        "0.0.0.0:8000"
+        "https://0.0.0.0:8000"
     };
     initBot(&b, config);
 }
@@ -32,6 +32,16 @@ void TestApiServer::testInitAndFree() {
     CPPUNIT_ASSERT(server.running == 0);
     CPPUNIT_ASSERT(server.triceBot == &b);
     CPPUNIT_ASSERT(server.opts.ca == NULL);
+    CPPUNIT_ASSERT(mg_url_is_ssl(config.bindAddr)); // Assert that the config URL is https
+    CPPUNIT_ASSERT(server.opts.cert == config.cert);
+    CPPUNIT_ASSERT(server.opts.certkey == config.certkey);
+    
+    char replayFolerWildcard[BUFFER_LENGTH];
+    snprintf(replayFolerWildcard,
+             BUFFER_LENGTH,
+             "/%s/**/*", config.replayFolder);
+    CPPUNIT_ASSERT(strncmp(server.replayFolerWildcard, replayFolerWildcard, BUFFER_LENGTH) == 0);
+    
     freeServer(&server);
     
     // re-init server for the rest of the tests
