@@ -728,7 +728,7 @@ void handleGameEvent(struct triceBot *b,
                                   currentGame,
                                   pp.user_info().name().c_str(),
                                   pp.player_id(),
-                                  pp.ping_seconds());
+                                  pp.has_ping_seconds() ? pp.ping_seconds() : -2);
                     }
                 }
             }
@@ -769,7 +769,9 @@ void handleGameEvent(struct triceBot *b,
                         for (int i = 0; !found && i < currentGame->playerCount; i++) {
                             if (currentGame->playerArr[i].playerID == pp.player_id()) {
                                 found = 1;
-                                currentGame->playerArr[i].ping = pp.ping_seconds();
+                                if (pp.has_ping_seconds()) {
+                                    currentGame->playerArr[i].ping = pp.ping_seconds();
+                                }
                             }
                         }
                         pthread_mutex_unlock(&b->gameList.mutex);
@@ -779,7 +781,7 @@ void handleGameEvent(struct triceBot *b,
                                       currentGame,
                                       pp.user_info().name().c_str(),
                                       pp.player_id(),
-                                      pp.ping_seconds());
+                                      pp.has_ping_seconds() ? pp.ping_seconds() : -2);
                         }
                     }
                 }
