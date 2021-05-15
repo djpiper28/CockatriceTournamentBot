@@ -35,10 +35,10 @@ struct ServerConnection {
 static void initServerConnection(struct ServerConnection *s,
                                  struct apiServer *api) {
     s->startTime = time(NULL);
-    s->isGameCreate = 0;
     s->param = NULL;
-    s->api = api;
+    s->isGameCreate = 0;
     s->closing = 0;
+    s->api = api;
 }
 
 void initServer(struct apiServer *server,
@@ -232,8 +232,8 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                                     struct mg_connection *c,
                                     struct mg_http_message *hm) {
     char *authToken = NULL,
-          *gameName = NULL,
-           *password = NULL;
+         *gameName = NULL,
+         *password = NULL;
     int playerCount = -1,
         spectatorsAllowed = -1,
         spectatorsNeedPassword = -1,

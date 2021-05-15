@@ -146,19 +146,26 @@ int needsPing(long lastPingTime) {
     return time(NULL) - lastPingTime >= PING_FREQUENCY;
 }
 
+static void pingCallback(struct triceBot *b,
+                         const Response *resp,
+                         void *param) {
+    pthread_mutex_lock(&b->mutex);
+    b->lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received
+    pthread_mutex_unlock(&b->mutex);
+}
+
 /**
  * Queues a ping command
  */
 void sendPing(struct triceBot *b) {
-    pthread_mutex_lock(&b->mutex);
-    
+    pthread_mutex_lock(&b->mutex);    
     CommandContainer cont;
     SessionCommand *c = cont.add_session_command();
     c->MutableExtension(Command_Ping::ext);
     
     struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);
+    cmd->callbackFunction = &pingCallback;
     enq(cmd, &b->sendQueue);
-    
     pthread_mutex_unlock(&b->mutex);
 }
 
@@ -481,12 +488,12 @@ void replayResponseDownload(struct triceBot *b,
     const char *replayData = replay.replay_data().c_str();
     
     GameReplay gameReplay;
-    gameReplay.ParseFromArray(replayData, replay.replay_data().length());
-    
-    // Save the replay in another process
-    if (fork() == 0) {
-        saveReplay(b, gameReplay);
-        _exit(0);
+    if (gameReplay.ParseFromArray(replayData, replay.replay_data().length())) {    
+        // Save the replay in another process
+        if (fork() == 0) {
+            saveReplay(b, gameReplay);
+            _exit(0);
+        }
     }
 }
 
@@ -556,8 +563,15 @@ void handleResponse(struct triceBot *b,
         if (response.cmd_id() != (long unsigned int) -1) {
             cmd = cmdForCMDId(response.cmd_id(), &b->callbackQueue);
             
+            // IF IT IS A GAME CREATE THEN IT FREES ITSELF ON THE SESSION EVENT 
+            // OR ON TIMEOUT
+            // THIS IS IS ALL CAPS AS IT TOOK TOO LONG TO DEBUG BECAUSE I AM STUPID
             if (cmd != NULL) {
-                executeCallback(b, cmd, &response);
+                if (cmd->isGame) {
+                    enq(cmd, &b->callbackQueue);
+                } else {
+                    executeCallback(b, cmd, &response);
+                }
             }
         }
         
@@ -883,11 +897,12 @@ void handleGameCreate(struct triceBot *b,
     const char *gameName = gameCreate.game_info().description().c_str();
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
                                               gameName);
-                                 
+    
+    //Create and add game item to the list
+    addGame(&b->gameList, createGame(gameCreate.game_info().game_id(),
+                                     gameCreate.game_info().max_players()));
+    
     if (cmd != NULL) {
-        //Create and add game item to the list
-        addGame(&b->gameList, createGame(gameCreate.game_info().game_id(),
-                                         gameCreate.game_info().max_players()));
                                          
         //Game create callbackQueue
         struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *)
@@ -962,7 +977,7 @@ sendCreateGameCommand(struct triceBot *b,
     int gameNameLength = strnlen(gameName, BUFFER_LENGTH);
     
     char *gameNameCopy = (char *) malloc(sizeof(char) * gameNameLength + 1);
-    strncpy(gameNameCopy, gameName, gameNameLength);
+    strncpy(gameNameCopy, gameName, gameNameLength + 1);
     cleanUpStringInput(gameNameCopy, gameNameLength + 1);
     
     createGame.set_description(gameNameCopy);
@@ -1101,29 +1116,28 @@ static void botEventHandler(struct mg_connection *c,
         struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
         
         ServerMessage newServerMessage;
-        newServerMessage.ParseFromArray(wm->data.ptr, wm->data.len);
-        int messageType = newServerMessage.message_type();
+        if (newServerMessage.ParseFromArray(wm->data.ptr, wm->data.len)) {
+            int messageType = newServerMessage.message_type();
         
 #if MEGA_DEBUG
-        printf("[MEGA_DEBUG]: %s\n", newServerMessage.DebugString().c_str());
+            printf("[MEGA_DEBUG]: %s\n", newServerMessage.DebugString().c_str());
 #endif
-        
-        /**
-         * Call handler is blocked by user code
-         */
-        if (messageType == RESPONSE) {
-            handleResponse(b, &newServerMessage);
-        } else if (messageType == SESSION_EVENT) {
-            handleSessionEvent(b, &newServerMessage);
-        } else if (messageType == GAME_EVENT_CONTAINER) {
-            handleGameEvent(b, &newServerMessage);
-        } else if (messageType == ROOM_EVENT) {
-            handleRoomEvent(b, &newServerMessage);
+            
+            /**
+            * Call handler is blocked by user code
+            */
+            if (messageType == RESPONSE) {
+                handleResponse(b, &newServerMessage);
+            } else if (messageType == SESSION_EVENT) {
+                handleSessionEvent(b, &newServerMessage);
+            } else if (messageType == GAME_EVENT_CONTAINER) {
+                handleGameEvent(b, &newServerMessage);
+            } else if (messageType == ROOM_EVENT) {
+                handleRoomEvent(b, &newServerMessage);
+            }
+        } else {
+            printf("[ERROR]: Unreadable message received.\n");
         }
-        
-        pthread_mutex_lock(&b->mutex);
-        b->lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received
-        pthread_mutex_unlock(&b->mutex);
     }
     
     if (ev == MG_EV_POLL) {

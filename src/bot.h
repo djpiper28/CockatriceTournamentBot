@@ -9,8 +9,8 @@
 #include "response_replay_download.pb.h"
 
 //Type defs moved to trice_structs.h due to circlular references
-#define PING_FREQUENCY 5
-#define TIMEOUT PING_FREQUENCY
+#define PING_FREQUENCY 4
+#define TIMEOUT 10
 
 /**
  * All bot operations are thread safe allowing for it to be controlled by

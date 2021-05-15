@@ -232,7 +232,12 @@ struct pendingCommand *cmdForCMDId(int CMDId,
 struct pendingCommand *prepCmdNTS(struct triceBot *b,
                                   CommandContainer cont,
                                   int gameID,
-                                  int roomID) {
+                                  int roomID) {    
+    struct pendingCommand *pending = (struct pendingCommand *)
+        malloc(sizeof(struct pendingCommand));        
+    pending->cmdID = b->cmdID;
+    cont.set_cmd_id(pending->cmdID);
+    
     if (gameID != -1) {
         cont.set_game_id(gameID);
     }
@@ -245,15 +250,12 @@ struct pendingCommand *prepCmdNTS(struct triceBot *b,
     
     char *data = (char*) malloc(sizeof(char) * msgLength);
     cont.SerializeToArray(data, msgLength);
-    
-    struct pendingCommand *pending = (struct pendingCommand *)
-    malloc(sizeof(struct pendingCommand));
+
     
     //init pending command
     //returned command is edited by the user before queue addition
     pending->message  = data;
     pending->size     = msgLength;
-    pending->cmdID    = b->cmdID;
     pending->timeSent = time(NULL);
     pending->isGame   = 0;
     pending->callbackFunction = NULL;

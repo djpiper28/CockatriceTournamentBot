@@ -159,6 +159,7 @@ void TestCmdQueue::testPrepCMD() {
     int id = b.cmdID;
     
     CommandContainer cont;
+    cont.set_cmd_id(id);
     
     // Assert that the CMD has the correct initial data
     struct pendingCommand *c = prepCmd(&b, cont, -1, -1);
@@ -227,6 +228,7 @@ void TestCmdQueue::testPrepEmptyCMD() {
     struct pendingCommand *c = prepEmptyCmd(&b);
     
     CommandContainer cont;
+    cont.set_cmd_id(id);
     
     // Assert that the CMD ID has been increased
     CPPUNIT_ASSERT(id + 1 == b.cmdID);
