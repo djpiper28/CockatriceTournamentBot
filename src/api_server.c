@@ -25,7 +25,7 @@
 
 //Internal connection struct
 struct ServerConnection {
-    struct apiServer *api;
+    struct tb_apiServer *api;
     struct gameCreateCallbackWaitParam *param;
     int isGameCreate;
     int closing;
@@ -33,7 +33,7 @@ struct ServerConnection {
 };
 
 static void initServerConnection(struct ServerConnection *s,
-                                 struct apiServer *api) {
+                                 struct tb_apiServer *api) {
     s->startTime = time(NULL);
     s->param = NULL;
     s->isGameCreate = 0;
@@ -41,7 +41,7 @@ static void initServerConnection(struct ServerConnection *s,
     s->api = api;
 }
 
-void initServer(struct apiServer *server,
+void tb_initServer(struct tb_apiServer *server,
                 struct triceBot *triceBot,
                 struct Config config) {
     server->bottleneck = PTHREAD_MUTEX_INITIALIZER;
@@ -61,7 +61,7 @@ void initServer(struct apiServer *server,
              "/%s/**/*", server->config.replayFolder);
 }
 
-void freeServer(struct apiServer *api) {
+void tb_freeServer(struct tb_apiServer *api) {
     pthread_mutex_destroy(&api->bottleneck);
     free(api->replayFolerWildcard);
 }
@@ -74,23 +74,18 @@ static void send404(struct mg_connection *c) {
     mg_http_reply(c, 404, "", "error 404");
 }
 
-static void readNumberIfPropertiesMatch(int number,
-                                        int *dest,
-                                        const char *property,
-                                        char *readProperty) {
+void tb_readNumberIfPropertiesMatch(int number,
+                                 int *dest,
+                                 const char *property,
+                                 char *readProperty) {
     if (strncmp(property, readProperty, BUFFER_LENGTH) == 0) {
         *dest = number;
     }
 }
 
-struct str {
-    const char *ptr;
-    size_t len;
-};
-
-static struct str readNextLine(const char *buffer,
-                               size_t *ptr,
-                               size_t len) {
+struct tb_apiServerStr tb_readNextLine(const char *buffer,
+                        size_t *ptr,
+                        size_t len) {
     size_t i = 0;
     size_t tmp = *ptr;
     
@@ -101,7 +96,7 @@ static struct str readNextLine(const char *buffer,
     
     *ptr += 1;
     
-    struct str string = {buffer + tmp, i};
+    struct tb_apiServerStr string = {buffer + tmp, i};
     return string;
 }
 
@@ -115,7 +110,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
     size_t ptr = 0;
     
     while (ptr < hm->body.len - 1) {
-        struct str line = readNextLine(hm->body.ptr, &ptr, hm->body.len);
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr, &ptr, hm->body.len);
         
         size_t eqPtr = 0;
         
@@ -166,7 +161,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
                         number = atoi(tmp);
                         
                     if (isNum) {
-                        readNumberIfPropertiesMatch(number,
+                        tb_readNumberIfPropertiesMatch(number,
                                                     &gameID,
                                                     "gameid",
                                                     prop);
@@ -245,7 +240,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     size_t ptr = 0;
     
     while (ptr < hm->body.len - 1) {
-        struct str line = readNextLine(hm->body.ptr, &ptr, hm->body.len);
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr, &ptr, hm->body.len);
         
         size_t eqPtr = 0;
         
@@ -298,27 +293,27 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                         number = atoi(tmp);
                         
                     if (isNum) {
-                        readNumberIfPropertiesMatch(number,
+                        tb_readNumberIfPropertiesMatch(number,
                                                     &playerCount,
                                                     "playerCount",
                                                     prop);
-                        readNumberIfPropertiesMatch(number,
+                        tb_readNumberIfPropertiesMatch(number,
                                                     &spectatorsAllowed,
                                                     "spectatorsAllowed",
                                                     prop);
-                        readNumberIfPropertiesMatch(number,
+                        tb_readNumberIfPropertiesMatch(number,
                                                     &spectatorsNeedPassword,
                                                     "spectatorsNeedPassword",
                                                     prop);
-                        readNumberIfPropertiesMatch(number,
+                        tb_readNumberIfPropertiesMatch(number,
                                                     &spectatorsCanChat,
                                                     "spectatorsCanChat",
                                                     prop);
-                        readNumberIfPropertiesMatch(number,
+                        tb_readNumberIfPropertiesMatch(number,
                                                     &spectatorsCanSeeHands,
                                                     "spectatorsCanSeeHands",
                                                     prop);
-                        readNumberIfPropertiesMatch(number,
+                        tb_readNumberIfPropertiesMatch(number,
                                                     &onlyRegistered,
                                                     "onlyRegistered",
                                                     prop);
@@ -395,7 +390,7 @@ static void eventHandler(struct mg_connection *c,
                          int event,
                          void *ev_data,
                          void *fn_data) {
-    struct apiServer *api = (struct apiServer *) c->fn_data;
+    struct tb_apiServer *api = (struct tb_apiServer *) c->fn_data;
     
     if (event == MG_EV_ACCEPT) {
         //Init connection struct
@@ -730,7 +725,7 @@ static void eventHandler(struct mg_connection *c,
 static void *pollingThread(void *apiIn) {
     struct mg_mgr mgr;
     struct mg_connection *c;
-    struct apiServer *api = (struct apiServer *) apiIn;
+    struct tb_apiServer *api = (struct tb_apiServer *) apiIn;
     
     mg_mgr_init(&mgr);
     
@@ -761,7 +756,7 @@ static void *pollingThread(void *apiIn) {
     pthread_exit(NULL);
 }
 
-int startServer(struct apiServer *api) {
+int tb_startServer(struct tb_apiServer *api) {
     //WARNING: -probably bad
     signal(SIGPIPE, SIG_IGN);
     
@@ -791,7 +786,7 @@ int startServer(struct apiServer *api) {
     }
 }
 
-void stopServer(struct apiServer *api) {
+void tb_stopServer(struct tb_apiServer *api) {
     pthread_mutex_lock(&api->bottleneck);
     api->running = 0;
     pthread_mutex_unlock(&api->bottleneck);

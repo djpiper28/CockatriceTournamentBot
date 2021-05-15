@@ -4,12 +4,12 @@
 #include "trice_structs.h"
 #include "bot_conf.h"
 
-struct response {
-    char *data;
-    int len;
+struct tb_apiServerStr {
+    const char *ptr;
+    size_t len;
 };
 
-struct apiServer {
+struct tb_apiServer {
     pthread_t pollingThreadT;
     pthread_mutex_t bottleneck;
     struct mg_tls_opts opts;
@@ -19,14 +19,23 @@ struct apiServer {
     char * replayFolerWildcard;
 };
 
-void initServer(struct apiServer *server,
-                struct triceBot *triceBot,
-                struct Config config);
+struct tb_apiServerStr tb_readNextLine(const char *buffer,
+                                       size_t *ptr,
+                                       size_t len);
 
-void freeServer(struct apiServer *api);
+void tb_readNumberIfPropertiesMatch(int number,
+                                    int *dest,
+                                    const char *property,
+                                    char *readProperty);
 
-int startServer(struct apiServer *api);
+void tb_initServer(struct tb_apiServer *server,
+                   struct triceBot *triceBot,
+                   struct Config config);
 
-void stopServer(struct apiServer *api);
+void tb_freeServer(struct tb_apiServer *api);
+
+int tb_startServer(struct tb_apiServer *api);
+
+void tb_stopServer(struct tb_apiServer *api);
 
 #endif

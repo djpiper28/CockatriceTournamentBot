@@ -23,16 +23,18 @@ TestApiServer::TestApiServer () : CppUnit::TestCase("api_server.h tests") {
 
 TestApiServer::~TestApiServer() {
     freeBot(&b);
-    freeServer(&server);
+    tb_freeServer(&server);
 }
 
 
 void TestApiServer::testInitAndFree() {
-    initServer(&server, &b, config);
+    tb_initServer(&server, &b, config);
     CPPUNIT_ASSERT(server.running == 0);
     CPPUNIT_ASSERT(server.triceBot == &b);
     CPPUNIT_ASSERT(server.opts.ca == NULL);
-    CPPUNIT_ASSERT(mg_url_is_ssl(config.bindAddr)); // Assert that the config URL is https
+    
+    // Assert that the config URL is https
+    CPPUNIT_ASSERT(mg_url_is_ssl(config.bindAddr)); 
     CPPUNIT_ASSERT(server.opts.cert == config.cert);
     CPPUNIT_ASSERT(server.opts.certkey == config.certkey);
     
@@ -42,10 +44,10 @@ void TestApiServer::testInitAndFree() {
              "/%s/**/*", config.replayFolder);
     CPPUNIT_ASSERT(strncmp(server.replayFolerWildcard, replayFolerWildcard, BUFFER_LENGTH) == 0);
     
-    freeServer(&server);
+    tb_freeServer(&server);
     
     // re-init server for the rest of the tests
-    initServer(&server, &b, config);
+    tb_initServer(&server, &b, config);
 }
 
 void TestApiServer::testCreateGame() {
@@ -67,3 +69,53 @@ void TestApiServer::testHelpPageEndPoint() {
 void TestApiServer::testVersionEndPoint() {
     
 }
+
+void TestApiServer::testUtilFunctions() {
+    // Test read is properties match
+    int input = 5;
+    int destination = -1;
+    char *property = "test";
+    char *readProperty = "abcdef";
+    
+    tb_readNumberIfPropertiesMatch(input,
+                                   &destination,
+                                   property,
+                                   readProperty);
+    CPPUNIT_ASSERT(input != destination);
+    
+    input = 5;
+    destination = -1;
+    property = "test";
+    readProperty = "";
+    
+    tb_readNumberIfPropertiesMatch(input,
+                                   &destination,
+                                   property,
+                                   readProperty);
+    CPPUNIT_ASSERT(input != destination);
+    
+    input = 5;
+    destination = -1;
+    property = "test";
+    readProperty = "test";
+    
+    tb_readNumberIfPropertiesMatch(input,
+                                   &destination,
+                                   property,
+                                   readProperty);
+    CPPUNIT_ASSERT(input == destination);
+    
+    char *data = "12\n45\n78";
+    size_t len = strlen(data);
+    size_t ptr = 0;
+    struct tb_apiServerStr lineTwo = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineTwo.ptr == data);
+    CPPUNIT_ASSERT(lineTwo.len == 2);
+    CPPUNIT_ASSERT(ptr == 3);
+        
+    struct tb_apiServerStr lineThree = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineThree.ptr == data + 3);    
+    CPPUNIT_ASSERT(lineThree.len == 2);
+    CPPUNIT_ASSERT(ptr == 6);
+}
+

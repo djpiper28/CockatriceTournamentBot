@@ -15,7 +15,7 @@
 struct tournamentBot {
     struct Config config;
     struct triceBot b;
-    struct apiServer server;
+    struct tb_apiServer server;
     int running;
 };
 
@@ -23,10 +23,10 @@ void stopAll(struct tournamentBot *bot) {
     printf("[INFO]: Stopping bot\n");
     
     bot->running = 0;
-    stopServer(&bot->server);
+    tb_stopServer(&bot->server);
     stopBot(&bot->b);
     
-    freeServer(&bot->server);
+    tb_freeServer(&bot->server);
     freeBot(&bot->b);
 }
 
@@ -414,7 +414,7 @@ int main(int argc, char * args[]) {
         if (valid) {
             printf("[INFO]: Config read successfully.\n");
             initBot(&bot.b, bot.config);
-            initServer(&bot.server, &bot.b, bot.config);
+            tb_initServer(&bot.server, &bot.b, bot.config);
             
 #if DEBUG
             addDebugFunctions(&bot.b);
@@ -423,7 +423,7 @@ int main(int argc, char * args[]) {
             set_onGameEnd(&onGameEnd, &bot.b);
             set_onBotDisconnect(&onBotDisconnect, &bot.b);
             
-            startServer(&bot.server);
+            tb_startServer(&bot.server);
             startBot(&bot.b);
             
             startConsoleListener(&bot);

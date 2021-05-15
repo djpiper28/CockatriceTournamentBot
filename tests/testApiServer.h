@@ -14,6 +14,7 @@ class TestApiServer : public CppUnit::TestCase {
         CPPUNIT_TEST(testCheckApiKey);
         CPPUNIT_TEST(testHelpPageEndPoint);
         CPPUNIT_TEST(testVersionEndPoint);
+        CPPUNIT_TEST(testUtilFunctions);
         CPPUNIT_TEST_SUITE_END();
     public:
         TestApiServer(void);
@@ -24,10 +25,11 @@ class TestApiServer : public CppUnit::TestCase {
         void testCheckApiKey();
         void testHelpPageEndPoint();
         void testVersionEndPoint();
+        void testUtilFunctions();
     private:
         struct Config config;
         struct triceBot b;
-        struct apiServer server;
+        struct tb_apiServer server;
 };
 
 #endif
