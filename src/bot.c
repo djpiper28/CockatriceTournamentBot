@@ -1195,6 +1195,7 @@ static void botEventHandler(struct mg_connection *c,
                 //Check for game start timeout
                 if (!current->currentGame->started
                         && currentTime - current->currentGame->creationTime > MAX_GAME_WAIT) {
+                    pthread_mutex_lock(&b->mutex);
                     Command_LeaveGame leaveGame;
                     CommandContainer cont;
                     GameCommand *gc = cont.add_game_command();
@@ -1212,7 +1213,6 @@ static void botEventHandler(struct mg_connection *c,
                            
                     pthread_mutex_unlock(&b->mutex);
                     enq(cmd, &b->sendQueue);
-                    pthread_mutex_lock(&b->mutex);
                 }
                 
                 current = current->nextGame;
