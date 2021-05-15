@@ -488,7 +488,7 @@ void replayResponseDownload(struct triceBot *b,
     const char *replayData = replay.replay_data().c_str();
     
     GameReplay gameReplay;
-    if (gameReplay.ParseFromArray(replayData, replay.replay_data().length())) {    
+    if (gameReplay.ParseFromArray(replayData, len)) {    
         // Save the replay in another process
         if (fork() == 0) {
             saveReplay(b, gameReplay);
