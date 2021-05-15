@@ -737,12 +737,34 @@ void handleGameEvent(struct triceBot *b,
                     ServerInfo_PlayerProperties pp = jEvent.player_properties();
                     
                     //Track non-spectator, non-judge players.
-                    if (!pp.spectator() && !pp.judge()) {
-                        addPlayer(&b->gameList,
-                                  currentGame,
-                                  pp.user_info().name().c_str(),
-                                  pp.player_id(),
-                                  pp.has_ping_seconds() ? pp.ping_seconds() : -2);
+                    if (!pp.spectator() && !pp.judge()) {                        
+                        int found = 0;
+                        
+                        pthread_mutex_lock(&b->gameList.mutex);
+                        for (int i = 0; !found && i < currentGame->playerCount; i++) {
+                            if (currentGame->playerArr[i].playerID == pp.player_id()) {
+                                found = 1;
+                                if (pp.has_ping_seconds()) {
+                                    const char *name = pp.user_info().name().c_str();
+                                    int len = pp.user_info().name().length() + 1;
+                                    
+                                    char *nameCopy = (char *) malloc(sizeof(char) * len);
+                                    strncpy(nameCopy, name, len);
+                                    
+                                    free(currentGame->playerArr[i].playerName);
+                                    currentGame->playerArr[i].playerName = nameCopy;
+                                }
+                            }
+                        }
+                        pthread_mutex_unlock(&b->gameList.mutex);
+                        
+                        if (!found) {
+                            addPlayer(&b->gameList,
+                                    currentGame,
+                                    pp.user_info().name().c_str(),
+                                    pp.player_id(),
+                                    pp.has_ping_seconds() ? pp.ping_seconds() : -2);
+                        }
                     }
                 }
             }
@@ -793,7 +815,7 @@ void handleGameEvent(struct triceBot *b,
                         if (!found) {
                             addPlayer(&b->gameList,
                                       currentGame,
-                                      pp.user_info().name().c_str(),
+                                      pp.user_info().has_name() ? pp.user_info().name().c_str() : "this is a bug, ignore me",
                                       pp.player_id(),
                                       pp.has_ping_seconds() ? pp.ping_seconds() : -2);
                         }
