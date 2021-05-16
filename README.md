@@ -156,5 +156,5 @@ ran with `ctest` or `./CockatriceTournamentBotTests`.
  - #define them please as `const` is cringe
 
 ## TODO:
-- add tricebot rate limit (wip)
 - allow multi-room gaming
+- player and deck verification
