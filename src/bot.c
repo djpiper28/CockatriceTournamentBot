@@ -737,7 +737,7 @@ void handleGameEvent(struct triceBot *b,
                     ServerInfo_PlayerProperties pp = jEvent.player_properties();
                     
                     //Track non-spectator, non-judge players.
-                    if (!pp.spectator() && !pp.judge()) {                        
+                    if (!(pp.spectator() || pp.judge())) {
                         int found = 0;
                         
                         pthread_mutex_lock(&b->gameList.mutex);
@@ -760,10 +760,10 @@ void handleGameEvent(struct triceBot *b,
                         
                         if (!found) {
                             addPlayer(&b->gameList,
-                                    currentGame,
-                                    pp.user_info().name().c_str(),
-                                    pp.player_id(),
-                                    pp.has_ping_seconds() ? pp.ping_seconds() : -2);
+                                      currentGame,
+                                      pp.user_info().name().c_str(),
+                                      pp.player_id(),
+                                      pp.has_ping_seconds() ? pp.ping_seconds() : -2);
                         }
                     }
                 }
@@ -798,7 +798,7 @@ void handleGameEvent(struct triceBot *b,
                     ServerInfo_PlayerProperties pp = ppcEvent.player_properties();
                     
                     //Track non-spectator, non-judge players.
-                    if (!pp.spectator() && !pp.judge()) {
+                    if (!(pp.spectator() || pp.judge())) {
                         int found = 0;
                     
                         pthread_mutex_lock(&b->gameList.mutex);
