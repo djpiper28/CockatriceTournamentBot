@@ -106,21 +106,22 @@ void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp) {
 
 //Not thread safe version
 static void freeGameListNodeNTS(struct gameListNode *gl) {
-    if (gl->currentGame != NULL) {
-        if (gl->currentGame->playerArr != NULL && gl->currentGame->playerCount > 0) {
-            for (int i = 0; i < gl->currentGame->playerCount; i++) {
-                if (gl->currentGame->playerArr[i].playerName != NULL) {
-                    free(gl->currentGame->playerArr[i].playerName);
+    if (gl != NULL) {
+        if (gl->currentGame != NULL) {
+            if (gl->currentGame->playerArr != NULL && gl->currentGame->playerCount > 0) {
+                for (int i = 0; i < gl->currentGame->playerCount; i++) {
+                    if (gl->currentGame->playerArr[i].playerName != NULL) {
+                        free(gl->currentGame->playerArr[i].playerName);
+                    }
                 }
+                
+                free(gl->currentGame->playerArr);
             }
             
-            free(gl->currentGame->playerArr);
-        }
-        
-        free(gl->currentGame);
+            free(gl->currentGame);
+        }        
+        free(gl);
     }
-    
-    free(gl);
 }
 
 void freeGameListNode(struct gameList *g, struct gameListNode *gl) {
@@ -134,14 +135,11 @@ void freeGameList(struct gameList *g) {
     
     struct gameListNode *current = g->gamesHead;
     
-    if (current != NULL) {
-        while (current->nextGame != NULL) {
-            struct gameListNode *tmp = current;
+    while (current != NULL) {
+        struct gameListNode *tmp = current;            
+        current = current->nextGame;
             
-            current = current->nextGame;
-            
-            freeGameListNodeNTS(tmp);
-        }
+        freeGameListNodeNTS(tmp);
     }
         
     pthread_mutex_unlock(&g->mutex);

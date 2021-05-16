@@ -300,6 +300,34 @@ void addDebugFunctions(struct triceBot *b) {
 
 #endif
 
+void gameEndCallback(struct triceBot *b,
+                     const Response *r,
+                     void *param) {
+    int id = *(int *) param;
+    if (r->has_response_code()) {
+        if (r->response_code() == Response::RespOk) {;
+            pthread_mutex_lock(&b->gameList.mutex);
+                        
+            struct game *g = NULL;
+            struct gameListNode *current = b->gameList.gamesHead;
+            while (current != NULL && g == NULL) {
+                if (current->currentGame != NULL) {
+                    if (current->currentGame->gameID == id) {
+                        g = current->currentGame;
+                    }
+                }
+            }
+            
+            pthread_mutex_unlock(&b->gameList.mutex);
+                        
+            if (g != NULL) {
+                removeGame(&b->gameList, g);
+            }
+        }
+    }
+    free(param);
+}
+
 void onGameEnd(struct triceBot *b,
                struct game g) {
     pthread_mutex_lock(&b->mutex);
@@ -313,6 +341,10 @@ void onGameEnd(struct triceBot *b,
     
     //IDs are set in prepCMD
     struct pendingCommand *cmd = prepCmd(b, cont, g.gameID, ID);
+    cmd->callbackFunction = &gameEndCallback;
+    cmd->param = malloc(sizeof(int));
+    int *id = (int *) cmd->param;
+    *id = g.gameID;
     
     enq(cmd, &b->sendQueue);
 }

@@ -798,26 +798,30 @@ void handleGameEvent(struct triceBot *b,
                     ServerInfo_PlayerProperties pp = ppcEvent.player_properties();
                     
                     //Track non-spectator, non-judge players.
-                    if (!(pp.spectator() || pp.judge())) {
-                        int found = 0;
-                    
-                        pthread_mutex_lock(&b->gameList.mutex);
-                        for (int i = 0; !found && i < currentGame->playerCount; i++) {
-                            if (currentGame->playerArr[i].playerID == pp.player_id()) {
-                                found = 1;
-                                if (pp.has_ping_seconds()) {
-                                    currentGame->playerArr[i].ping = pp.ping_seconds();
+                    if (pp.has_spectator() && pp.has_judge()) {
+                        if (!(pp.spectator() || pp.judge())) {
+                            int found = 0;
+                        
+                            pthread_mutex_lock(&b->gameList.mutex);
+                            for (int i = 0; !found && i < currentGame->playerCount; i++) {
+                                if (currentGame->playerArr[i].playerID == pp.player_id()) {
+                                    found = 1;
+                                    if (pp.has_ping_seconds()) {
+                                        currentGame->playerArr[i].ping = pp.ping_seconds();
+                                    }
                                 }
                             }
-                        }
-                        pthread_mutex_unlock(&b->gameList.mutex);
-                        
-                        if (!found) {
-                            addPlayer(&b->gameList,
-                                      currentGame,
-                                      pp.user_info().has_name() ? pp.user_info().name().c_str() : "this is a bug, ignore me",
-                                      pp.player_id(),
-                                      pp.has_ping_seconds() ? pp.ping_seconds() : -2);
+                            pthread_mutex_unlock(&b->gameList.mutex);
+                            
+                            if (!found) {
+                                addPlayer(&b->gameList,
+                                        currentGame,
+                                        pp.user_info().has_name() ? 
+                                            "Uknown player.\0" : 
+                                            pp.user_info().name().c_str(),
+                                        pp.player_id(),
+                                        pp.has_ping_seconds() ? pp.ping_seconds() : -2);
+                            }
                         }
                     }
                 }
@@ -1245,7 +1249,7 @@ static void botEventHandler(struct mg_connection *c,
                 b->config.maxMessagesPerSecond++;
             
 #if MEGA_DEBUG
-                printf("[MEGA_DEBUG]: MSG of length %d sent\n", cmd->size);
+                printf("[MEGA_DEBUG]: MSG of length %d and id %d sent\n", cmd->size, cmd->cmdID);
 #endif
             }
         }
