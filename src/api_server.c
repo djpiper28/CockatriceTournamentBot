@@ -572,13 +572,14 @@ static void eventHandler(struct mg_connection *c,
                                 #define BUFF_LEN 266
                                 char buffTmp[BUFF_LEN];
                                 snprintf(buffTmp,
-                                        BUFF_LEN,
-                                        "<li>%s</li>",
-                                        g.playerArr[i].playerName);
+                                         BUFF_LEN,
+                                         "<li>%s</li>",
+                                         g.playerArr[i].playerName);
                                 snprintf(buff + ptr,
                                         min(buffLen - ptr, BUFF_LEN),
                                         "%s",
                                         buffTmp);
+                                ptr += strnlen(buffTmp, BUFF_LEN);
                             }
                         }
                         
