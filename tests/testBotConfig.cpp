@@ -28,7 +28,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
-"ratelimit=5\n"\
+"ratelimit=10\n"\
 "replayFolder=test"
 
 #define TEST_TWO_CONTENT \
@@ -41,7 +41,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
-"ratelimit=5\n"\
+"ratelimit=10\n"\
 "replayFolder=test\n"
 
 #define TEST_THREE_CONTENT \
@@ -65,7 +65,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "clientID=test\n"\
 "replayFolder=abc\n"\
 "ratelimit=69\n"\
-"ratelimit=5\n"\
+"ratelimit=10\n"\
 "replayFolder=test"
 
 #define TEST_FOUR_CONTENT \
@@ -80,7 +80,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "replayFolder=test\n"\
-"ratelimit=5\n"\
+"ratelimit=10\n"\
 "#Another test comment"
 
 #define TEST_FIVE_CONTENT \
@@ -95,7 +95,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
-"ratelimit=5\n"\
+"ratelimit=10\n"\
 "replayFolder=test"
 
 #define TEST_SIX_CONTENT \
@@ -110,7 +110,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
-"ratelimit=5\n"\
+"ratelimit=10\n"\
 "replayFolder=/tmp/test"
 
 #define TEST_SEVEN_CONTENT \
@@ -123,8 +123,35 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "certkeyfile=test\n"\
 "bindAddr=test\n"\
 "clientID=test\n"\
-"ratelimit=5\n"\
+"ratelimit=10\n"\
 "replayFolder=test///////"
+
+#define TEST_EIGHT_CONTENT \
+"username=test\n"\
+"password=test\n"\
+"serveraddress=test\n"\
+"roomName=test\n"\
+"authtoken=test\n"\
+"certfile=test\n"\
+"certkeyfile=test\n"\
+"bindAddr=test\n"\
+"clientID=test\n"\
+"replayFolder=test\n"\
+"ratelimit=test"
+
+#define TEST_NINE_CONTENT \
+"username=test\n"\
+"password=test\n"\
+"serveraddress=test\n"\
+"roomName=test\n"\
+"authtoken=test\n"\
+"certfile=test\n"\
+"certkeyfile=test\n"\
+"bindAddr=test\n"\
+"clientID=test\n"\
+"ratelimit=10\n"\
+"replayFolder=test\n"\
+"test="
 
 static void writeConfigFile(char *filename, char *data) {
     FILE *f = fopen(filename, "w+");
@@ -149,7 +176,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
     // Test two is a file with an empty line at the end
@@ -165,7 +192,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
     // Test three is a test with a duplicate username tag and an empty password
@@ -182,7 +209,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
     // Test that comments are not read and do not break the config reader
@@ -198,7 +225,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
 
@@ -215,7 +242,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
     // Test six is to make sure that absolute paths are accepted
@@ -231,7 +258,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
     // Test seven is to make sure that trailing slashes in the replay folder name are removed
@@ -247,7 +274,39 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
+    freeConf(&config);
+    
+    // Test eight is to make sure that the rate limit defaults to 5
+    readConfFromBuffer(&config, TEST_EIGHT_CONTENT, strlen(TEST_EIGHT_CONTENT));
+    // Assert all fields are set to test
+    CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.roomName, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatriceServer, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.clientID, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.replayFolder, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    freeConf(&config);
+    
+    // Test nine maks sure that when the value is empty it doesnt cause errors
+    readConfFromBuffer(&config, TEST_NINE_CONTENT, strlen(TEST_NINE_CONTENT));
+    // Assert all fields are set to test
+    CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.roomName, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cockatriceServer, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.clientID, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.replayFolder, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 }
 
@@ -270,7 +329,7 @@ void TestBotConfig::testMakeNewConfFile() {
     CPPUNIT_ASSERT(config.certkey != NULL);
     CPPUNIT_ASSERT(config.authToken != NULL);
     CPPUNIT_ASSERT(config.bindAddr != NULL);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
+    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
 
     freeConf(&config);
 }
