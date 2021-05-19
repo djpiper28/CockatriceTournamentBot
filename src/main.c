@@ -421,8 +421,7 @@ int main(int argc, char * args[]) {
             } else {
                 if (access(bot.config.cert, R_OK) != 0) {
                     valid = 0;
-                    printf("[ERROR]: SSL certificate file defined in config.conf cannot be read.\n");
-                    
+                    printf("[ERROR]: SSL certificate file defined in config.conf cannot be read.\n");                    
                 }
             }
         }
@@ -438,7 +437,6 @@ int main(int argc, char * args[]) {
                 if (access(bot.config.certkey, R_OK) != 0) {
                     valid = 0;
                     printf("[ERROR]: SSL certificate key file defined in config.conf cannot be read.\n");
-                    
                 }
             }
         }
