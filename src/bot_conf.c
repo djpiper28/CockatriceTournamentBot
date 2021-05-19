@@ -202,7 +202,8 @@ config->replayFolder = NULL;\
 config->cert = NULL;\
 config->certkey = NULL;\
 config->authToken = NULL;\
-config->bindAddr = NULL;
+config->bindAddr = NULL;\
+config->maxMessagesPerSecond = -1;
 
 // Reads the configuration from a buffer: char *data, of length: int length
 void readConfFromBuffer(struct Config *config, char *data, int length) {

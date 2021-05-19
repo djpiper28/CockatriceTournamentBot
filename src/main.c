@@ -443,6 +443,11 @@ int main(int argc, char * args[]) {
             }
         }
         
+        if (bot.config.maxMessagesPerSecond == -1) {
+            valid = 0;
+            printf("[ERROR]: Rate limit is not defined in config.conf.\n");
+        }
+        
         if (valid) {
             printf("[INFO]: Config read successfully.\n");
             initBot(&bot.b, bot.config);
