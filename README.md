@@ -43,6 +43,11 @@ ratelimit=5
 ```
 Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:
+```yaml
+username=not this
+username=this is used
+...
+```
 
 You can add comments by starting a line with a hashtag (#) i.e:
 ```yaml
@@ -51,16 +56,15 @@ username=jeff
 ...
 ```
 
+If the bot starts and any of the values are not set in the configuration file it
+will print an error message, if the values are invalid then the program may crash,
+I will work on a fix to that issue at some point soon. If there any issues with
+configuring the bot then do feel free to ask but dont share you password :).
+
 The clientID is the client ID of the discord bot attched, use -DDISCORD=0 if you
 are not using a discord bot and set the client ID to your IP or random noise. If
 discord is set to 1, then the index page of the bot will be an invite link for
 that bot (perms are set to admin by default).
-
-```yaml
-username=not this
-username=this is used
-...
-```
 
 ### certfile and certkeyfile
 Generate some ssl keys and slap them in the folder with the executable and then
