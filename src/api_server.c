@@ -27,6 +27,40 @@
 "<head>"\
 "<meta charset=\"UTF-8\">"\
 "<style>"\
+".grid-container {"\
+"    display: grid;"\
+"    grid-template-columns: 1fr 1fr 1fr 1fr;"\
+"    grid-template-rows: 1fr 1fr 1fr;"\
+"    gap: 0px 0px;"\
+"    grid-template-areas:"\
+"    \"content content content content\""\
+"    \"content content content content\""\
+"    \". . . .\";"\
+"}"\
+".index {"\
+"    grid-area: index;"\
+"    color: white;"\
+"    font-family: verdana;"\
+"    padding: 32px;"\
+"}"\
+".index-inner {"\
+"    padding: 10px;"\
+"    position: -webkit-sticky;"\
+"    position: sticky;"\
+"    top: 0;"\
+"}"\
+"@Media (min-width: 500px) and (orientation: landscape) {"\
+"    .grid-container {"\
+"        display: grid;"\
+"        grid-template-columns: 1fr 1fr 1fr 1fr;"\
+"        grid-template-rows: 1fr 1fr 1fr;"\
+"        gap: 0px 0px;"\
+"        grid-template-areas:"\
+"        \". content content .\""\
+"        \". content content .\""\
+"        \". content content .\";"\
+"    }"\
+"}"\
 ".content {"\
 "    grid-area: content;"\
 "    background-color: rgb(30, 30, 30);"\
@@ -628,9 +662,9 @@ static void eventHandler(struct mg_connection *c,
                                           200,
                                           "",
                                           "%s\n"
-                                          "<body>"
-                                          "<div class=\"index\">"
-                                          "<div class=\"index-inner\">"
+                                          "<body class=\"bg\">"
+                                          "<div class=\"content\">"
+                                          "<div class=\"content-inner\">"
                                           "<title>Game %d (%d/%d)</title>\n"
                                           "<h1>%s</h1>\n"
                                           "<h3>Game %d is in progress on server '%s'.</h3>\n"
@@ -652,9 +686,9 @@ static void eventHandler(struct mg_connection *c,
                                         200,
                                         "",
                                         "%s\n"
-                                        "<body>"
-                                        "<div class=\"index\">"
-                                        "<div class=\"index-inner\">"
+                                        "<body class=\"bg\">"
+                                        "<div class=\"content\">"
+                                        "<div class=\"content-inner\">"
                                         "<title>Game %d (%d/%d)</title>\n"
                                         "<h1>%s</h1>\n"
                                         "<h3>Game %d is in progress on server '%s'.</h3>\n"
