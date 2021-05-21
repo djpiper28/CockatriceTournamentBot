@@ -22,6 +22,46 @@
 #include "response.pb.h"
 
 #define DOWNLOAD_HEADER "Content-Disposition: attachment\r\n"
+#define PAGE_CSS "<!DOCTYPE html>"\
+"<html>"\
+"<head>"\
+"<meta charset=\"UTF-8\">"\
+".content {"\
+"    grid-area: content;"\
+"    background-color: rgb(30, 30, 30);"\
+"    color: white;"\
+"    font-family: verdana;"\
+"    padding: 32px;"\
+"}"\
+".content-inner {"\
+"    margin-bottom: 32px;"\
+"    margin-left: 32px;"\
+"    margin-right: 32px;"\
+"    margin-top: 32px;"\
+"}"\
+".bg {"\
+"    margin-bottom: 0px;"\
+"    margin-left: 0px;"\
+"    margin-right: 0px;"\
+"    margin-top: 0px;"\
+"    background-color: rgb(10, 100, 100);"\
+"}"\
+"blockquote {"\
+"    padding-left: 10px;"\
+"    background-color: rgb(35, 35, 35);"\
+"    color: rgb(240, 240, 240);"\
+"    font-family: mono;"\
+"}"\
+"a {"\
+"    color: rgb(221, 216, 0);"\
+"    font-family: mono;"\
+"}"\
+"h1, h2, h3 {"\
+"    color: white;"\
+"    font-family: sans;"\
+"}"\
+"</style>"\
+"</head>"
 
 //Internal connection struct
 struct ServerConnection {
@@ -587,11 +627,17 @@ static void eventHandler(struct mg_connection *c,
                             mg_http_reply(c,
                                           200,
                                           "",
+                                          "%s\n"
+                                          "<body class=\"bg\">"
+                                          "<div class=\"index\">"
+                                          "<div class=\"index-inner\">"
                                           "<title>Game %d (%d/%d)</title>\n"
-                                          "<h1>%s</h1>"
+                                          "<h1>%s</h1>\n"
                                           "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
-                                          "<a href=\"%s\">Github Repo</a> | Version v%d.%d",
+                                          "<a href=\"%s\">Github Repo</a> | Version v%d.%d\n"
+                                          "</div>\n</div>\n</body>\n</html>",
+                                          PAGE_CSS,
                                           gameID,
                                           players,
                                           g.playerCount,
@@ -605,12 +651,18 @@ static void eventHandler(struct mg_connection *c,
                             mg_http_reply(c,
                                         200,
                                         "",
+                                        "%s\n"
+                                        "<body class=\"bg\">"
+                                        "<div class=\"index\">"
+                                        "<div class=\"index-inner\">"
                                         "<title>Game %d (%d/%d)</title>\n"
-                                        "<h1>%s</h1>"
+                                        "<h1>%s</h1>\n"
                                         "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                         "<h4>Current players are:</h4>\n"
                                         "<ol>\n%s\n</ol>\n"
-                                        "<a href=\"%s\">Github Repo</a> | Version v%d.%d",
+                                        "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
+                                        "</div>\n</div>\n</body>\n</html>",
+                                        PAGE_CSS,
                                         gameID,
                                         players,
                                         g.playerCount,
