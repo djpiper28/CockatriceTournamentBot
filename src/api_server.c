@@ -26,6 +26,7 @@
 "<html>"\
 "<head>"\
 "<meta charset=\"UTF-8\">"\
+"<style>"\
 ".content {"\
 "    grid-area: content;"\
 "    background-color: rgb(30, 30, 30);"\
@@ -489,8 +490,7 @@ static void eventHandler(struct mg_connection *c,
             } else if (mg_http_match_uri(hm, "/api/")
                        || mg_http_match_uri(hm, "/api")) {
                 mg_http_reply(c, 200, "", "%s", HELP_STR);
-            } else if (mg_http_match_uri(hm,
-                                            api->replayFolerWildcard)) {
+            } else if (mg_http_match_uri(hm, api->replayFolerWildcard)) {
                 int gameFinished = 0;
                 int gameID = -1;
                 // Parse gameId from URI in form ../(<FOLDER>/)*<NAME>-id.cor
@@ -628,7 +628,7 @@ static void eventHandler(struct mg_connection *c,
                                           200,
                                           "",
                                           "%s\n"
-                                          "<body class=\"bg\">"
+                                          "<body>"
                                           "<div class=\"index\">"
                                           "<div class=\"index-inner\">"
                                           "<title>Game %d (%d/%d)</title>\n"
@@ -652,7 +652,7 @@ static void eventHandler(struct mg_connection *c,
                                         200,
                                         "",
                                         "%s\n"
-                                        "<body class=\"bg\">"
+                                        "<body>"
                                         "<div class=\"index\">"
                                         "<div class=\"index-inner\">"
                                         "<title>Game %d (%d/%d)</title>\n"
