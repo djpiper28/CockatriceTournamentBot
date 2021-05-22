@@ -406,7 +406,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     //Check all fields have data
     int valid = authToken != NULL && s->api->config.authToken != NULL
                 && gameName != NULL && password != NULL
-                && playerCount != -1 && spectatorsAllowed != -1
+                && playerCount < 1 && spectatorsAllowed != -1
                 && spectatorsNeedPassword != -1 && spectatorsCanChat != -1
                 && spectatorsCanSeeHands != -1 && onlyRegistered != -1;
                 
