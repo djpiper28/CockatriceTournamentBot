@@ -79,10 +79,11 @@ static void readProperty(char *line, int length, struct Config *config) {
         if (config->authToken != NULL) free(config->authToken);
         config->authToken = valueStr;
     } else if (strncmp("ratelimit", propertyStr, length) == 0) {
-        config->maxMessagesPerSecond = atoi(valueStr);
+        int temp = atoi(valueStr);
         if (config->maxMessagesPerSecond == 0) {
-            printf("[ERROR]: Rate limit is not set, defaulting to 5\n");
-            config->maxMessagesPerSecond = 5;
+            printf("[ERROR]: Rate limit is not set a valid value\n");            
+        } else {
+            config->maxMessagesPerSecond = temp;
         }
         free(valueStr);
     } else if (strncmp("replayFolder", propertyStr, length) == 0) {

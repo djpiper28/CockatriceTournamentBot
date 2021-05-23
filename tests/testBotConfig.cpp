@@ -126,19 +126,6 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "ratelimit=10\n"\
 "replayFolder=test///////"
 
-#define TEST_EIGHT_CONTENT \
-"username=test\n"\
-"password=test\n"\
-"serveraddress=test\n"\
-"roomName=test\n"\
-"authtoken=test\n"\
-"certfile=test\n"\
-"certkeyfile=test\n"\
-"bindAddr=test\n"\
-"clientID=test\n"\
-"replayFolder=test\n"\
-"ratelimit=test"
-
 #define TEST_NINE_CONTENT \
 "username=test\n"\
 "password=test\n"\
@@ -276,23 +263,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
-    
-    // Test eight is to make sure that the rate limit defaults to 5
-    readConfFromBuffer(&config, TEST_EIGHT_CONTENT, strlen(TEST_EIGHT_CONTENT));
-    // Assert all fields are set to test
-    CPPUNIT_ASSERT(strcmp(config.cockatriceUsername, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.cockatricePassword, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.roomName, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.cockatriceServer, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.clientID, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.replayFolder, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.cert, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
-    CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
-    CPPUNIT_ASSERT(config.maxMessagesPerSecond == 5);
-    freeConf(&config);
-    
+        
     // Test nine maks sure that when the value is empty it doesnt cause errors
     readConfFromBuffer(&config, TEST_NINE_CONTENT, strlen(TEST_NINE_CONTENT));
     // Assert all fields are set to test
