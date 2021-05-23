@@ -30,95 +30,6 @@ void stopAll(struct tournamentBot *bot) {
     freeBot(&bot->b);
 }
 
-#define LEN 1024
-static void createGameCommandCallback(struct gameCreateCallbackWaitParam *g) {
-    printf("[INFO]: Game with name '%s' and ID %d created by user command.\n",
-           g->gameName,
-           g->gameID);
-}
-
-int readNum(const char *msg) {
-    char *buffer = (char *) malloc(sizeof(char) * LEN);
-    
-    fgets(buffer, LEN, stdin);
-    int len;
-    
-    for (len = 0; len < LEN && buffer[len] != ' '
-            && buffer[len] != '\n'; len++);
-            
-    buffer[LEN - 1] = 0; //null terminator at line end or space or buffer end
-    
-    int number = atoi(buffer);
-    free(buffer);
-    
-    return number;
-}
-
-void startConsoleListener(struct tournamentBot *bot) {
-    int listening = 1;
-    char *commandBuffer = (char *) malloc(sizeof(char) * LEN);
-    
-    while (listening) {
-        fgets(commandBuffer, LEN, stdin);
-        
-        //Parse command
-        int len;
-        
-        for (len = 0; len < LEN && commandBuffer[len] != ' '
-                && commandBuffer[len] != '\n'; len++);
-                
-        commandBuffer[LEN - 1] = 0; //null terminator at line end or space or buffer end
-        
-        if (strncmp("exit", commandBuffer, LEN) == 0) {
-            listening = 0;
-        } else if (strncmp("creategame", commandBuffer, LEN) == 0) {
-            printf("Create Game Command:\n");
-            
-            //Read username
-            printf("> Game Name: ");
-            char *gameName = (char *) malloc(sizeof(char) * LEN);
-            fgets(gameName, LEN, stdin);
-            
-            //Remove line feed
-            for (len = 0; len < LEN && gameName[len] != '\n'; len++);
-            
-            gameName[LEN - 1] = 0; //null terminator at line end or space or buffer end
-            
-            //Read password
-            printf("> Game Password: ");
-            char *password = (char *) malloc(sizeof(char) * LEN);
-            fgets(password, LEN, stdin);
-            
-            //Remove line feed
-            for (len = 0; len < LEN && password[len] != '\n'; len++);
-            
-            password[LEN - 1] = 0; //null terminator at line end or space or buffer end
-            
-            
-            sendCreateGameCommand(&bot->b,
-                                  gameName,
-                                  password,
-                                  readNum("> Player Count: "),
-                                  readNum("> Join as Spectator (1 yes or, 0 no): "),
-                                  readNum("> Spectators Allowed (1 yes or, 0 no): "),
-                                  readNum("> Spectators Can Chat (1 yes or, 0 no): "),
-                                  readNum("> Spectators Need Password (1 yes or, 0 no): "),
-                                  readNum("> Spectators Can See Hands (1 yes or, 0 no): "),
-                                  readNum("> Only Registered (1 yes or, 0 no): "),
-                                  readNum("> Only Buddies (1 yes or, 0 no): "),
-                                  &createGameCommandCallback);
-                                  
-            free(gameName);
-            free(password);
-        } else {
-            printf("[Error]: No command '%s' found.\n", commandBuffer);
-        }
-    }
-    
-    free(commandBuffer);
-    stopAll(bot);
-}
-
 #ifndef DEBUG
 #define DEBUG 0
 #endif
@@ -189,68 +100,6 @@ MACRO_DEBUG_FOR_EVENT(onEventNotifyUser,
                       Event_NotifyUser)
 MACRO_DEBUG_FOR_EVENT(onEventReplayAdded,
                       Event_ReplayAdded)
-
-//Game events
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventJoin,
-                           Event_Join)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventLeave,
-                           Event_Leave)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventGameClosed,
-                           Event_GameClosed)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventHostChanged,
-                           Event_GameHostChanged)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventPlayerKicked,
-                           Event_Kicked)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventStateChanged,
-                           Event_GameStateChanged)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventPlayerPropertyChanged,
-                           Event_PlayerPropertiesChanged)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventGameSay,
-                           Event_GameSay)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventCreateArrow,
-                           Event_CreateArrow)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDeleteArrow,
-                           Event_DeleteArrow)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventCreateCounter,
-                           Event_CreateCounter)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetCounter,
-                           Event_SetCounter)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDelCounter,
-                           Event_DelCounter)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDrawCards,
-                           Event_DrawCards)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventRevealCards,
-                           Event_RevealCards)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventShuffle,
-                           Event_Shuffle)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventRollDie,
-                           Event_RollDie)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventMoveCard,
-                           Event_MoveCard)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventFlipCard,
-                           Event_FlipCard)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDestroyCard,
-                           Event_DestroyCard)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventAttachCard,
-                           Event_AttachCard)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventCreateToken,
-                           Event_CreateToken)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetCardAttr,
-                           Event_SetCardAttr)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetCardCounter,
-                           Event_SetCardCounter)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetActivePlayer,
-                           Event_SetActivePlayer)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventSetActivePhase,
-                           Event_SetActivePhase)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventDumpZone,
-                           Event_DumpZone)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventStopDumpZone,
-                           Event_StopDumpZone)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventChangeZoneProperties,
-                           Event_ChangeZoneProperties)
-MACRO_DEBUG_FOR_GAME_EVENT(onGameEventReverseTurn,
-                           Event_ReverseTurn)
 
 //Room events
 MACRO_DEBUG_FOR_EVENT(onEventJoinRoom,
@@ -460,8 +309,6 @@ int main(int argc, char * args[]) {
             
             tb_startServer(&bot.server);
             startBot(&bot.b);
-            
-            startConsoleListener(&bot);
         } else {
             printf("[ERROR]: Missing properties in config file, see README.md at %s/blob/main/README.md.\n",
                    GITHUB_REPO);
