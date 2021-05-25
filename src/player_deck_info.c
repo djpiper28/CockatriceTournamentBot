@@ -94,13 +94,10 @@ int isPlayerAllowed(char *playerName,
 
 int isPlayerDeckAllowed(char *deckHash,
                         struct game g) {
-    if (g.gameData.gameDataPtr == NULL) {
-        return 0;
-    } else {
-        struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-        // Default to not allowing
-        int allowed = 0;
-        
+    // Default to not allowing
+    int allowed = 0;
+    if (g.gameData.gameDataPtr != NULL) {
+        struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;        
         for (int i = 0; i < pdi->deckCount && !allowed; i++) {
             // If the deckHash is * then they can join or;
             // If the deckHash matches the expected name
@@ -108,9 +105,8 @@ int isPlayerDeckAllowed(char *deckHash,
                     && strncmp(pdi->deckHash[i], "*", PLAYER_NAME_LENGTH) == 0)
                 || strncmp(pdi->deckHash[i], deckHash, PLAYER_NAME_LENGTH) == 0;
         }
-        
-        return allowed;
     }
+    return allowed;
 }
 
 void clearPlayerSlot(int playerIndex,

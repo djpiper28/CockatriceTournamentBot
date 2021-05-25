@@ -315,10 +315,10 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         onlyRegistered = -1,
         isPlayerDeckVerif = 0,
         playerNames = 0,
-        deckHashes = 0,
+        deckHashes = 0;
     int deckCount[MAX_PLAYERS];
     char playerNameBuffers[MAX_PLAYERS][PLAYER_NAME_LENGTH],
-         deckHashBuffers[MAX_PLAYERS][DECK_HASH_LENGTH];    
+         deckHashBuffers[MAX_PLAYERS][MAX_DECKS][DECK_HASH_LENGTH];    
         
     //Read the buffer line by line
     size_t ptr = 0;
@@ -380,7 +380,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 } else if (strncmp(prop, "deckHash", propLen) == 0) {
                     if (deckHashes < MAX_PLAYERS) {
                         if (deckCount[deckHashes] < MAX_DECKS) {
-                            strncpy(deckHashBuffers[deckHashes] + deckCount[deckHashes],
+                            strncpy(deckHashBuffers[deckHashes][deckCount[deckHashes]],
                                     tmp, DECK_HASH_LENGTH);
                             
                             if (deckCount[deckHashes] == 0) {
@@ -456,14 +456,14 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 int i = 0;
                 
                 for (; i < playerNames && i < deckHashes; i++) {
-                    pdi[i] = initPlayerDeckInfo(deckHashBuffers + i,
+                    pdi[i] = initPlayerDeckInfo((char **) deckHashBuffers[i],
                                                 deckCount[i],
                                                 playerNameBuffers[i],
                                                 0);
                 }
                 
                 for (i = playerNames; i < playerCount; i++) {
-                    pdi[i] = initPlayerDeckInfo(&"*",
+                    pdi[i] = initPlayerDeckInfo((char **) &"*",
                                                 1,
                                                 "*",
                                                 1);                    

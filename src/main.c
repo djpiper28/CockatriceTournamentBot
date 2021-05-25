@@ -13,6 +13,9 @@
 #include "room_commands.pb.h"
 #include "player_deck_info.h"
 
+#include "command_kick_from_game.pb.h"
+#include "command_game_say.pb.h"
+
 struct tournamentBot {
     struct Config config;
     struct triceBot b;
@@ -155,11 +158,11 @@ void playerJoin(struct triceBot *b,
                 Event_Join event) {
     // Get player deck info
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-    if (pdi != NULL && event.has_player_properties()) {        
+    if (pdi != NULL && event.has_player_properties()) {
         ServerInfo_PlayerProperties pp = event.player_properties();
         
         if (pp.has_user_info()) {
-            ServerInfo_User user = pp.get_user_info();
+            ServerInfo_User user = pp.user_info();
             if (user.has_name() && user.has_id()) {
                 int index = -1;
                 for (int i = 0; index == -1 && i < g.playerCount; i++) {
@@ -169,7 +172,7 @@ void playerJoin(struct triceBot *b,
                 }
                 
                 // Check if player is allowed
-                int allowed = isPlayerAllowed(user.name(), index, g);
+                int allowed = isPlayerAllowed((char *) user.name().c_str(), index, g);
                 
                 // If they are not then kick them
                 if (!allowed) {
@@ -193,10 +196,60 @@ void playerJoin(struct triceBot *b,
     }
 }
 
-void playerPropertyChange(struct triceBot *b,,
+void playerPropertyChange(struct triceBot *b,
                           struct game g,
                           Event_PlayerPropertiesChanged event) {
-    // Check if the deck has been changed
+    struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
+    if (pdi != NULL && event.has_player_properties()) {        
+        ServerInfo_PlayerProperties pp = event.player_properties();
+        // Check if the deck has been changed
+        if (pp.has_deck_hash() && pp.has_player_id()) {
+            char *deckHash = (char *) pp.deck_hash().c_str();
+            int allowed = isPlayerDeckAllowed(deckHash, g);
+            
+            // If the hash is not allowed then tell the user
+            if (!allowed) {
+                int index = -1;
+                for (int i = 0; index == -1 && i < g.playerCount; i++) {
+                    if (g.playerArr[i].playerID == pp.player_id()) {
+                        index = i;
+                    }
+                }
+                
+                char *space = " ";
+                int spaceLen = strlen(space);
+                int length = 512 + (DECK_HASH_LENGTH + spaceLen) * pdi->deckCount;
+                char *messageBuffer = (char *) malloc(sizeof(char) * length);
+                snprintf(messageBuffer,
+                         512,
+                         "@%s, you loaded a deck with hash %s which is not expected. Please load a deck with of these hashes: ",
+                         g.playerArr[index].playerName,
+                         deckHash);
+                
+                for (int i = 0; i < pdi->deckCount; i++) {
+                    strncat(messageBuffer, pdi->deckHash[i], DECK_HASH_LENGTH);
+                    strncat(messageBuffer, space, spaceLen);
+                }
+                
+                Command_GameSay gameSayCmd;
+                gameSayCmd.set_message(messageBuffer);
+                
+                CommandContainer cont;
+                GameCommand *gc = cont.add_game_command();
+                gc->MutableExtension(Command_GameSay::ext)
+                    ->CopyFrom(gameSayCmd);
+                
+                struct pendingCommand *cmd = prepCmd(b,
+                                                     cont,
+                                                     g.gameID,
+                                                     b->magicRoomID);
+                
+                enq(cmd, &b->sendQueue);
+                
+                free(messageBuffer);
+            }
+        }
+    }
 }
 
 void gameEndCallback(struct triceBot *b,
@@ -356,6 +409,8 @@ int main(int argc, char * args[]) {
             
             set_onGameEnd(&onGameEnd, &bot.b);
             set_onBotDisconnect(&onBotDisconnect, &bot.b);
+            set_onGameEventPlayerPropertyChanged(&playerPropertyChange, &bot.b);
+            set_onGameEventJoin(playerJoin, &bot.b);
             
             tb_startServer(&bot.server);
             startBot(&bot.b);
