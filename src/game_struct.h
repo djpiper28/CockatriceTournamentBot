@@ -3,6 +3,12 @@
 
 #include <pthread.h>
 
+struct gameData {
+    void *gameDataPtr;
+    void (*freeGameData) (void *);
+    void *(*copyGameData) (void *);
+};
+
 /**
  * Used for game create callback
  * Only the gameID is mutable, use the mutex when accessing or modifying it
@@ -12,6 +18,7 @@ struct gameCreateCallbackWaitParam {
     int   gameID,
           sendTime,
           gameNameLength;
+    struct gameData gameData;
     pthread_mutex_t mutex;
     void (*callbackFn)(struct gameCreateCallbackWaitParam *);
 };
@@ -34,6 +41,7 @@ struct game {
         playerCount;
     long startTime,
          creationTime;
+    struct gameData gameData;
     struct player *playerArr;
 };
 
@@ -42,8 +50,10 @@ struct player {
     char *playerName;
 };
 
-// Add to non-circular linked-list
-struct game *createGame(int gameID, int playerCount);
+// Add to non-circular linked-list, game data can be NULL
+struct game *createGame(int gameID,
+                        int playerCount,
+                        struct gameData gameData);
 
 /**
  * Adds a player to a game, playerName is copied
@@ -71,6 +81,7 @@ void initGameList(struct gameList *gl);
 void initGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *param,
                                      char *gameName,
                                      int gameNameLength,
+                                     struct gameData gameData,
                                      void (*callbackFn)(struct gameCreateCallbackWaitParam *));
 
 void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp);
@@ -87,8 +98,10 @@ struct game *getGameWithIDNTS(struct gameList *g, int gameID);
 struct game *getGameWithID(struct gameList *g, int gameID);
 
 // gameID is -1 i the game is not found, returns a copy
-struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID);
-struct game getGameWithIDNotRef(struct gameList *g, int gameID);
+struct game getGameWithIDNotRefNTS(struct gameList *g,
+                                   int gameID);
+struct game getGameWithIDNotRef(struct gameList *g,
+                                int gameID);
 
 // Frees a game copy from getGameWithIDNotRef
 void freeGameCopy(struct game g);

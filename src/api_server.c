@@ -14,6 +14,7 @@
 #include "mongoose.h"
 #include "bot_c_flags.h"
 #include "cmd_queue.h"
+#include "player_deck_info.h"
 
 #include "command_kick_from_game.pb.h"
 #include "commands.pb.h"
@@ -298,6 +299,8 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
     }
 }
 
+#define MAX_PLAYERS 25
+
 static void serverCreateGameCommand(struct ServerConnection *s,
                                     struct mg_connection *c,
                                     struct mg_http_message *hm) {
@@ -309,14 +312,19 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         spectatorsNeedPassword = -1,
         spectatorsCanChat = -1,
         spectatorsCanSeeHands = -1,
-        onlyRegistered = -1;
+        onlyRegistered = -1,
+        isPlayerDeckVerif = 0,
+        playerNames = 0,
+        deckHashes = 0,
+    int deckCount[MAX_PLAYERS];
+    char playerNameBuffers[MAX_PLAYERS][PLAYER_NAME_LENGTH],
+         deckHashBuffers[MAX_PLAYERS][DECK_HASH_LENGTH];    
         
     //Read the buffer line by line
     size_t ptr = 0;
     
     while (ptr < hm->body.len - 1) {
-        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr, &ptr, hm->body.len);
-        
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr, &ptr, hm->body.len);        
         size_t eqPtr = 0;
         
         for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
@@ -362,6 +370,26 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     gameName = tmp;
                 } else if (strncmp(prop, "password", propLen) == 0) {
                     password = tmp;
+                } if (strncmp(prop, "playerName", propLen) == 0) {
+                    if (playerNames < MAX_PLAYERS) {
+                        strncpy(playerNameBuffers[playerNames], tmp, 256);
+                        deckCount[playerNames] = 0;
+                        playerNames++;
+                    }
+                    free(tmp);
+                } else if (strncmp(prop, "deckHash", propLen) == 0) {
+                    if (deckHashes < MAX_PLAYERS) {
+                        if (deckCount[deckHashes] < MAX_DECKS) {
+                            strncpy(deckHashBuffers[deckHashes] + deckCount[deckHashes],
+                                    tmp, DECK_HASH_LENGTH);
+                            
+                            if (deckCount[deckHashes] == 0) {
+                                deckHashes++;
+                            }
+                            deckCount[deckHashes]++;
+                        }
+                    }
+                    free(tmp);
                 } else {
                     //Check is number
                     int isNum = valueLen < 3,
@@ -369,29 +397,33 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                         
                     if (isNum) {
                         tb_readNumberIfPropertiesMatch(number,
-                                                    &playerCount,
-                                                    "playerCount",
-                                                    prop);
+                                                       &playerCount,
+                                                       "playerCount",
+                                                       prop);
                         tb_readNumberIfPropertiesMatch(number,
-                                                    &spectatorsAllowed,
-                                                    "spectatorsAllowed",
-                                                    prop);
+                                                       &spectatorsAllowed,
+                                                       "spectatorsAllowed",
+                                                       prop);
                         tb_readNumberIfPropertiesMatch(number,
-                                                    &spectatorsNeedPassword,
-                                                    "spectatorsNeedPassword",
-                                                    prop);
+                                                       &spectatorsNeedPassword,
+                                                       "spectatorsNeedPassword",
+                                                       prop);
                         tb_readNumberIfPropertiesMatch(number,
-                                                    &spectatorsCanChat,
-                                                    "spectatorsCanChat",
-                                                    prop);
+                                                       &spectatorsCanChat,
+                                                       "spectatorsCanChat",
+                                                       prop);
                         tb_readNumberIfPropertiesMatch(number,
-                                                    &spectatorsCanSeeHands,
-                                                    "spectatorsCanSeeHands",
-                                                    prop);
+                                                       &spectatorsCanSeeHands,
+                                                       "spectatorsCanSeeHands",
+                                                       prop);
                         tb_readNumberIfPropertiesMatch(number,
-                                                    &onlyRegistered,
-                                                    "onlyRegistered",
-                                                    prop);
+                                                       &onlyRegistered,
+                                                       "onlyRegistered",
+                                                       prop);
+                        tb_readNumberIfPropertiesMatch(number,
+                                                       &isPlayerDeckVerif,
+                                                       "playerDeckVerification",
+                                                       prop);
                     }
                     
                     //Free tmp here as it is not assigned to a ptr
@@ -408,11 +440,38 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 && gameName != NULL && password != NULL
                 && playerCount < 1 && spectatorsAllowed != -1
                 && spectatorsNeedPassword != -1 && spectatorsCanChat != -1
-                && spectatorsCanSeeHands != -1 && onlyRegistered != -1;
-                
+                && spectatorsCanSeeHands != -1 && onlyRegistered != -1
+                && (!isPlayerDeckVerif || (isPlayerDeckVerif
+                    && playerCount <= playerNames
+                    && deckHashes == playerNames
+                    && playerCount <= MAX_PLAYERS));
+    
     if (valid) {
         //Check authtoken
         if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
+            struct gameData gameData = {NULL, NULL, NULL};
+            
+            if (isPlayerDeckVerif) {
+                struct playerDeckInfo *pdi = initPlayerDeckInfoArr(playerCount);
+                int i = 0;
+                
+                for (; i < playerNames && i < deckHashes; i++) {
+                    pdi[i] = initPlayerDeckInfo(deckHashBuffers + i,
+                                                deckCount[i],
+                                                playerNameBuffers[i],
+                                                0);
+                }
+                
+                for (i = playerNames; i < playerCount; i++) {
+                    pdi[i] = initPlayerDeckInfo(&"*",
+                                                1,
+                                                "*",
+                                                1);                    
+                }
+                
+                gameData = gameDataForPlayerDeckInfo(pdi);
+            }
+            
             s->param = sendCreateGameCommand(s->api->triceBot,
                                              gameName,
                                              password,
@@ -424,6 +483,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                                              spectatorsCanSeeHands,
                                              onlyRegistered,
                                              0,
+                                             gameData,
                                              NULL);
             s->isGameCreate = 1;
             

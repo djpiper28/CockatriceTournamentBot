@@ -11,6 +11,7 @@
 #include "commands.pb.h"
 #include "command_leave_game.pb.h"
 #include "room_commands.pb.h"
+#include "player_deck_info.h"
 
 struct tournamentBot {
     struct Config config;
@@ -148,6 +149,55 @@ void addDebugFunctions(struct triceBot *b) {
 }
 
 #endif
+
+void playerJoin(struct triceBot *b,
+                struct game g,
+                Event_Join event) {
+    // Get player deck info
+    struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
+    if (pdi != NULL && event.has_player_properties()) {        
+        ServerInfo_PlayerProperties pp = event.player_properties();
+        
+        if (pp.has_user_info()) {
+            ServerInfo_User user = pp.get_user_info();
+            if (user.has_name() && user.has_id()) {
+                int index = -1;
+                for (int i = 0; index == -1 && i < g.playerCount; i++) {
+                    if (g.playerArr[i].playerID == user.id()) {
+                        index = i;
+                    }
+                }
+                
+                // Check if player is allowed
+                int allowed = isPlayerAllowed(user.name(), index, g);
+                
+                // If they are not then kick them
+                if (!allowed) {
+                    Command_KickFromGame kickCommand;
+                    kickCommand.set_player_id(user.id());
+                    
+                    CommandContainer cont;
+                    GameCommand *gc = cont.add_game_command();
+                    gc->MutableExtension(Command_KickFromGame::ext)
+                        ->CopyFrom(kickCommand);
+                    
+                    struct pendingCommand *cmd = prepCmd(b,
+                                                         cont,
+                                                         g.gameID,
+                                                         b->magicRoomID);
+                    
+                    enq(cmd, &b->sendQueue);
+                }
+            }
+        }        
+    }
+}
+
+void playerPropertyChange(struct triceBot *b,,
+                          struct game g,
+                          Event_PlayerPropertiesChanged event) {
+    // Check if the deck has been changed
+}
 
 void gameEndCallback(struct triceBot *b,
                      const Response *r,

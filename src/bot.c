@@ -924,18 +924,20 @@ void handleGameCreate(struct triceBot *b,
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
                                               gameName);
     
-    //Create and add game item to the list
-    addGame(&b->gameList, createGame(gameCreate.game_info().game_id(),
-                                     gameCreate.game_info().max_players()));
-    
-    if (cmd != NULL) {
-                                         
+    if (cmd != NULL) {       
         //Game create callbackQueue
         struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *)
-                cmd->param;
-                
+            cmd->param;
+        
         //Check for null pointer
-        if (game != NULL) {
+        if (game != NULL) {            
+            //Create and add game item to the list
+            addGame(&b->gameList, createGame(gameCreate.game_info().game_id(),
+                                             gameCreate.game_info().max_players(),
+                                             game->gameData));
+            // The game data should not freed when the create param is.
+            game->gameData = {NULL, NULL, NULL};
+            
             //Set the game ID (used in callbackFn both cases)
             pthread_mutex_lock(&game->mutex);
             game->gameID = gameCreate.game_info().game_id();
@@ -998,6 +1000,7 @@ sendCreateGameCommand(struct triceBot *b,
                       int spectatorsCanSeeHands,
                       int onlyRegistered,
                       int onlyBuddies,
+                      struct gameData gameData,
                       void (*callbackFn)(struct gameCreateCallbackWaitParam *)) {
     Command_CreateGame createGame;
     int gameNameLength = strnlen(gameName, BUFFER_LENGTH);
@@ -1032,9 +1035,10 @@ sendCreateGameCommand(struct triceBot *b,
         (struct gameCreateCallbackWaitParam *)
         malloc(sizeof(struct gameCreateCallbackWaitParam));
     
-    initGameCreateCallbackWaitParam(param, 
-                                    gameNameCopy, 
-                                    gameNameLength, 
+    initGameCreateCallbackWaitParam(param,
+                                    gameNameCopy,
+                                    gameNameLength,
+                                    gameData,
                                     callbackFn);
     
     cmd->param = (void *) param;
@@ -1063,7 +1067,6 @@ void handleSessionEvent(struct triceBot *b,
         printf("[INFO]: Automatic login being sent.\n");
         sendLogin(b);
 #endif
-        
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventServerIdentifictaion,
                                           Event_ServerIdentification)
     } else if (event.HasExtension(Event_ServerCompleteList::ext)) {
