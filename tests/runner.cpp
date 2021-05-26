@@ -16,15 +16,9 @@
 #include "testCmdQueue.h"
 #include "testGameStruct.h"
 #include "testApiServer.h"
+#include "testPlayerDeckInfo.h"
 
 #define XMLOUT
-
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestTriceStructs, "test trice_structs.h");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBot, "test bot.h");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBotConfig, "test bot_config.h");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestCmdQueue, "test cmd_queue.h");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestGameStruct, "test game_struct.h");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestApiServer, "test api_server.h");
 
 // register test suite
 CppUnit::Test *suite() {
@@ -65,7 +59,7 @@ int main(int argc, char* argv[]) {
         std::cout << std::endl;
         
         // Print test in XML or compiler compatible format.
-        #if defined XMLOUT
+        #ifdef XMLOUT
         CppUnit::XmlOutputter outputter( &result, std::cerr );
         #else
         CppUnit::CompilerOutputter outputter( &result, std::cerr );

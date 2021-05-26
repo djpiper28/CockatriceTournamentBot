@@ -160,8 +160,7 @@ void playerJoin(struct triceBot *b,
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
     if (pdi != NULL && event.has_player_properties()) {
         ServerInfo_PlayerProperties pp = event.player_properties();
-        
-        if (pp.has_user_info()) {
+        if ((!(pp.spectator() || pp.judge())) && pp.has_user_info()) {
             ServerInfo_User user = pp.user_info();
             if (user.has_name() && user.has_id()) {
                 int index = -1;

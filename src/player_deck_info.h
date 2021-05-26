@@ -20,7 +20,7 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
                                          char *playerName,
                                          int isEmptySlot);
 
-void freePlayerDeckInfo(void *ptr);
+void freePlayerDeckInfoArray(void* ptr);
 
 void *copyPlayerDeckInfo(void *ptr);
 

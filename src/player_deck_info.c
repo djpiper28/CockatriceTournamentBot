@@ -12,27 +12,21 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
                                          int deckCount,
                                          char *playerName,
                                          int isEmptySlot) {
-    struct playerDeckInfo pdi;
+    struct playerDeckInfo pdi;    
     
     pdi.isEmptySlot = isEmptySlot;
     pdi.playerUsingSlot = -1;
     
-    // dear api user bruh
-    if (strncmp(playerName, "*", PLAYER_NAME_LENGTH) == 0) {
-        pdi.isEmptySlot = 1;
-    } else {
-        for (int i = 0; i < deckCount; i++) {
-            strncpy(pdi.deckHash[i], deckHash[i], 9);
-        }
-        strncpy(pdi.playerName, playerName, PLAYER_NAME_LENGTH);
+    for (int i = 0; i < deckCount; i++) {
+        strncpy(pdi.deckHash[i], deckHash[i], DECK_HASH_LENGTH);
     }
+    strncpy(pdi.playerName, playerName, PLAYER_NAME_LENGTH);
     
     return pdi;
 }
 
-void freePlayerDeckInfo(void *ptr) {
-    struct playerDeckInfo *pdiIn = (struct playerDeckInfo *) ptr;
-    free(pdiIn);
+void freePlayerDeckInfoArray(void *ptr) {
+    free(ptr);
 }
 
 void *copyPlayerDeckInfo(void *ptr) {
@@ -51,7 +45,7 @@ void *copyPlayerDeckInfo(void *ptr) {
 struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
     struct gameData g = {
         (void *) pdi, 
-        &freePlayerDeckInfo,
+        &freePlayerDeckInfoArray,
         &copyPlayerDeckInfo
         
     };
@@ -71,15 +65,15 @@ int isPlayerAllowed(char *playerName,
         // Iterate over the slots
         for (int i = 0; i < g.playerCount && !allowed; i++) {
             // Check if a player is not using the slot and it can joined by p
-            if (pdi[i].playerUsingSlot != -1) {
+            if (pdi[i].playerUsingSlot == -1) {
                 // Empty slots are slots with no expected player data
                 if (pdi[i].isEmptySlot) {
                     allowed = 1;
                 } else {                    
                     // If the playerName is * then they can join or;
                     // If the playername matches the expected name
-                    allowed = strncmp(pdi->playerName, "*", PLAYER_NAME_LENGTH) == 0
-                        || strncmp(pdi->playerName, playerName, PLAYER_NAME_LENGTH) == 0;
+                    allowed = strncmp(pdi[i].playerName, "*", PLAYER_NAME_LENGTH) == 0
+                        || strncmp(pdi[i].playerName, playerName, PLAYER_NAME_LENGTH) == 0;
                 }
                 
                 if (allowed) {
