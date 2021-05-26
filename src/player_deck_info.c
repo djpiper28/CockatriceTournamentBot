@@ -13,7 +13,7 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
                                          char *playerName,
                                          int isEmptySlot) {
     struct playerDeckInfo pdi;    
-    
+    pdi.deckCount = deckCount;
     pdi.isEmptySlot = isEmptySlot;
     pdi.playerUsingSlot = -1;
     
@@ -87,17 +87,25 @@ int isPlayerAllowed(char *playerName,
 }
 
 int isPlayerDeckAllowed(char *deckHash,
+                        int playerArrayIndex,
                         struct game g) {
     // Default to not allowing
     int allowed = 0;
     if (g.gameData.gameDataPtr != NULL) {
-        struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;        
-        for (int i = 0; i < pdi->deckCount && !allowed; i++) {
+        struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
+        
+        if (pdi[playerArrayIndex].deckCount == 1) {
+            allowed = strncmp(pdi[playerArrayIndex].deckHash[0],
+                              "*",
+                              DECK_HASH_LENGTH) == 0;
+        }
+        
+        for (int i = 0; i < pdi[playerArrayIndex].deckCount && !allowed; i++) {
             // If the deckHash is * then they can join or;
             // If the deckHash matches the expected name
-            allowed = (pdi->deckCount == 1 
-                    && strncmp(pdi->deckHash[i], "*", PLAYER_NAME_LENGTH) == 0)
-                || strncmp(pdi->deckHash[i], deckHash, PLAYER_NAME_LENGTH) == 0;
+            allowed = strncmp(pdi[playerArrayIndex].deckHash[i],
+                              deckHash,
+                              DECK_HASH_LENGTH) == 0;
         }
     }
     return allowed;

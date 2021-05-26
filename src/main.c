@@ -213,18 +213,18 @@ void playerPropertyChange(struct triceBot *b,
         ServerInfo_PlayerProperties pp = event.player_properties();
         // Check if the deck has been changed
         if (pp.has_deck_hash() && pp.has_player_id()) {
+            int index = -1;
+            for (int i = 0; index == -1 && i < g.playerCount; i++) {
+                if (g.playerArr[i].playerID == pp.player_id()) {
+                    index = i;
+                }
+            }
+            
             char *deckHash = (char *) pp.deck_hash().c_str();
-            int allowed = isPlayerDeckAllowed(deckHash, g);
+            int allowed = isPlayerDeckAllowed(deckHash, index, g);
             
             // If the hash is not allowed then tell the user
             if (!allowed) {
-                int index = -1;
-                for (int i = 0; index == -1 && i < g.playerCount; i++) {
-                    if (g.playerArr[i].playerID == pp.player_id()) {
-                        index = i;
-                    }
-                }
-                
                 char *space = " ";
                 int spaceLen = strlen(space);
                 int length = 512 + (DECK_HASH_LENGTH + spaceLen) * pdi->deckCount;

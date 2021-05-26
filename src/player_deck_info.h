@@ -31,6 +31,7 @@ int isPlayerAllowed(char *playerName,
                     struct game g);
 
 int isPlayerDeckAllowed(char *deckHash,
+                        int playerArrayIndex,
                         struct game g);
 
 void clearPlayerSlot(int playerIndex,

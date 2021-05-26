@@ -63,7 +63,7 @@ void TestPlayerDeckInfo::testInitAndFree() {
     }
 }
 
-void TestPlayerDeckInfo::testDeckFilter() {
+void TestPlayerDeckInfo::testPlayerDeckFilters() {
     // Init test
     int max_players = 5;
     int count = 5;
@@ -125,22 +125,41 @@ void TestPlayerDeckInfo::testDeckFilter() {
     
     allowed = isPlayerAllowed("any old player", 0, *g);
     CPPUNIT_ASSERT(!allowed);
+    
+    // Test empty slot
+    pdi[0] = initPlayerDeckInfo(hashes, count, "testestestsest", 1);
+    allowed = isPlayerAllowed("any old player", 0, *g);
+    CPPUNIT_ASSERT(allowed);
+    
+    allowed = isPlayerAllowed("any old player", 0, *g);
+    CPPUNIT_ASSERT(!allowed);
+    
+    for (int i = 0; i < count; i++) {
+        free(hashes[i]);
+    }
+    free(hashes);
         
-    for (int i = 0; i < count; i++) {
-        free(hashes[i]);
-    }
+    // Test deck hash checker
+    allowed = isPlayerDeckAllowed("hash1234", 0, *g);
+    CPPUNIT_ASSERT(allowed);
+    
+    allowed = isPlayerDeckAllowed("badhash_", 0, *g);
+    CPPUNIT_ASSERT(!allowed);
+    
+    
+    hashes = (char **) malloc(sizeof(char *) * count);
+    *hashes = (char *) malloc(sizeof(char) * 9);
+    snprintf(*hashes, 9, "*");
+    pdi[0] = initPlayerDeckInfo(hashes, 1, "player-name", 0);
+    
+    // Test deck hash checker
+    allowed = isPlayerDeckAllowed("hash1234", 0, *g);
+    CPPUNIT_ASSERT(allowed);
+    
+    allowed = isPlayerDeckAllowed("badhash2", 0, *g);
+    CPPUNIT_ASSERT(allowed);
+    
+    free(*hashes);
+    free(hashes);
     freePlayerDeckInfoArray(pdi);
-}
-
-void TestPlayerDeckInfo::testPlayerFilter() {
-    int count = 5;
-    char **hashes = (char **) malloc(sizeof(char *) * count);
-    for (int i = 0; i < count; i++) {
-        hashes[i] = (char *) malloc(sizeof(char) * 9);
-        snprintf(hashes[i], 9, "hash1234");
-    }    
-    struct playerDeckInfo pdi = initPlayerDeckInfo(hashes, count, "test-Player", 0);
-    for (int i = 0; i < count; i++) {
-        free(hashes[i]);
-    }
 }
