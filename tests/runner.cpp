@@ -20,6 +20,14 @@
 
 #define XMLOUT
 
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestTriceStructs, "test trice_structs.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBot, "test bot.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestBotConfig, "test bot_config.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestCmdQueue, "test cmd_queue.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestGameStruct, "test game_struct.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestApiServer, "test api_server.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestPlayerDeckInfo, "test player_deck_info.h");
+
 // register test suite
 CppUnit::Test *suite() {
     CppUnit::TestFactoryRegistry &registry =
