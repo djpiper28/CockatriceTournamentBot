@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
-#include <pthread.h>
 
 // Init the game list structure
 void initGameList(struct gameList *gl) {
@@ -83,12 +82,14 @@ int removePlayer(struct gameList *gl,
 void initGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *param,
                                      char *gameName,
                                      int gameNameLength,
+                                     struct gameData gameData,
                                      void (*callbackFn)(struct gameCreateCallbackWaitParam *)) {
     param->gameName = gameName;
     param->gameNameLength = gameNameLength;
     param->gameID = -1;
     param->sendTime = time(NULL);
     param->callbackFn = callbackFn;
+    param->gameData = gameData;
     param->mutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
@@ -97,6 +98,11 @@ void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp) {
     if (gp != NULL) {
         if (gp->gameName != NULL) {
             free(gp->gameName);
+        }
+        
+        if (gp->gameData.gameDataPtr != NULL
+            && gp->gameData.freeGameData != NULL) {
+            gp->gameData.freeGameData(gp->gameData.gameDataPtr);
         }
         
         pthread_mutex_destroy(&gp->mutex);
@@ -118,8 +124,13 @@ static void freeGameListNodeNTS(struct gameListNode *gl) {
                 free(gl->currentGame->playerArr);
             }
             
+            if (gl->currentGame->gameData.gameDataPtr != NULL
+                && gl->currentGame->gameData.freeGameData != NULL) {
+                gl->currentGame->gameData.freeGameData(gl->currentGame->gameData.gameDataPtr);
+            }
+            
             free(gl->currentGame);
-        }        
+        }
         free(gl);
     }
 }
@@ -184,6 +195,13 @@ void freeGameCopy(struct game g) {
             free(g.playerArr[i].playerName);
         }
     }
+    
+    // Free game data
+    if (g.gameData.gameDataPtr != NULL
+        && g.gameData.freeGameData != NULL) {
+        g.gameData.freeGameData(g.gameData.gameDataPtr);
+    }
+    
     free(g.playerArr);
 }
 
@@ -209,6 +227,12 @@ struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
             } else {
                 playerArr[i].playerName = NULL;
             }
+        }
+        
+        // Copy game data
+        if (out.gameData.gameDataPtr != NULL
+            && out.gameData.copyGameData != NULL) {
+            out.gameData.gameDataPtr = out.gameData.copyGameData(out.gameData.gameDataPtr);
         }
         
         out.playerArr = playerArr;
@@ -254,14 +278,16 @@ int getPlayerIDForGameIDAndName(struct gameList *gl, int gameID, char *playerNam
     return playerID;
 }
 
-struct game *createGame(int gameID, int playerCount) {
+struct game *createGame(int gameID, int playerCount, struct gameData gameData) {
     struct game *g = (struct game *) malloc(sizeof(struct game));
     g->gameID = gameID;
     g->started = 0;
     g->startTime = -1;
     g->creationTime = time(NULL);
+    g->gameData = gameData;
     g->playerCount = playerCount;
     g->playerArr = (struct player *) malloc(sizeof(struct player) * playerCount);
+    
     for (int i = 0; i < playerCount; i++) {
         g->playerArr[i].playerName = NULL;
     }

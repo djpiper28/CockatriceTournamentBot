@@ -25,4 +25,8 @@
 #define DISCORD 1
 #endif
 
+#ifndef DECK_HASH_LENGTH
+#define DECK_HASH_LENGTH 9
+#endif
+
 #endif

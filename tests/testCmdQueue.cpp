@@ -101,7 +101,7 @@ void TestCmdQueue::testSearchOps() {
         
         char *buff = (char *) malloc(sizeof(char) * LEN);
         GAME_NAME_MACRO
-        initGameCreateCallbackWaitParam(param, buff, LEN, NULL);
+        initGameCreateCallbackWaitParam(param, buff, LEN, {NULL, NULL, NULL}, NULL);
         
         CPPUNIT_ASSERT(isGameEq(buff, nodes[i]));
         
@@ -277,7 +277,7 @@ void TestCmdQueue::testGameCreateCallbackFree() {
     
     char *buff = (char *) malloc(sizeof(char) * LEN);
     snprintf(buff, LEN, "game-%d", 1);
-    initGameCreateCallbackWaitParam(param, buff, LEN, &testFn);
+    initGameCreateCallbackWaitParam(param, buff, LEN, {NULL, NULL, NULL}, &testFn);
     
     CPPUNIT_ASSERT(isGameEq(buff, node));
     

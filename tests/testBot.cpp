@@ -342,7 +342,7 @@ void TestBot::testGameEventFunctionsAreCalled() {
     serverMessage.set_allocated_game_event_container(gc);
     GameEvent *ge;
     
-    addGame(&b.gameList, createGame(ID, COUNT));
+    addGame(&b.gameList, createGame(ID, COUNT, {NULL, NULL, NULL}));
     
     TEST_GAME_EVENT_FN_CALLED(onGameEventJoin,
                               Event_Join)
@@ -461,7 +461,7 @@ void TestBot::testExecuteCallback() {
     
     p = (struct gameCreateCallbackWaitParam *)
         malloc(sizeof(struct gameCreateCallbackWaitParam));
-    initGameCreateCallbackWaitParam(p, test, strlen(test), &testGameCreateCallback);
+    initGameCreateCallbackWaitParam(p, test, strlen(test), {NULL, NULL, NULL}, &testGameCreateCallback);
     cmd->callbackFunction = &testCallbackGameCreateParam;
     cmd->param = (void *) p;
     cmd->isGame = 1;
@@ -539,7 +539,6 @@ void TestBot::testReplayDownload() {
 pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
 int success2 = 0;
 
-#define ID 24
 void testFn2(struct gameCreateCallbackWaitParam *p) {
     pthread_mutex_lock(&mutex2);
     success2 = p->gameID == ID;
@@ -580,7 +579,7 @@ void TestBot::testHandleGameCreate() {
     
     char *buff = (char *) malloc(sizeof(char) * LEN);
     snprintf(buff, LEN, "%s", NAME);
-    initGameCreateCallbackWaitParam(param, buff, LEN, &testFn2);
+    initGameCreateCallbackWaitParam(param, buff, LEN, {NULL, NULL, NULL}, &testFn2);
     
     enq(node, &b.callbackQueue);
     
@@ -609,7 +608,7 @@ void TestBot::testHandleGameCreate() {
     success2 = 0;
     success_ = 0;
     
-    sendCreateGameCommand(&b, NAME, "password", 1, 1, 1, 1, 1, 1, 1, 1, testFn2);
+    sendCreateGameCommand(&b, NAME, "password", 1, 1, 1, 1, 1, 1, 1, 1, {NULL, NULL, NULL}, testFn2);
     enq(deq(&b.sendQueue), &b.callbackQueue);
     handleGameCreate(&b, game);
     

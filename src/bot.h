@@ -118,6 +118,7 @@ sendCreateGameCommand(struct triceBot *b,
                       int spectatorsCanSeeHands,
                       int onlyRegistered,
                       int onlyBuddies,
+                      struct gameData gameData,
                       void (*callbackFn)(struct gameCreateCallbackWaitParam *));
 
 
