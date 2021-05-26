@@ -106,10 +106,12 @@ int isPlayerDeckAllowed(char *deckHash,
 void clearPlayerSlot(int playerIndex,
                      struct game g) {
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-    int found = 0;
-    for (int i = 0; i < g.playerCount && !found; i++) {
-        if (pdi[i].playerUsingSlot == playerIndex) {
-            pdi[i].playerUsingSlot = -1;
+    if (pdi != NULL) {
+        int found = 0;
+        for (int i = 0; i < g.playerCount && !found; i++) {
+            if (pdi[i].playerUsingSlot == playerIndex) {
+                pdi[i].playerUsingSlot = -1;
+            }
         }
     }
 }

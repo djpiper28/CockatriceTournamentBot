@@ -89,6 +89,11 @@ void TestPlayerDeckInfo::testDeckFilter() {
     allowed = isPlayerAllowed("bad", 0, *g);
     CPPUNIT_ASSERT(!allowed);
     
+    // Assert slot clearing works
+    clearPlayerSlot(0, *g);
+    allowed = isPlayerAllowed("bad", 0, *g);
+    CPPUNIT_ASSERT(!allowed);
+    
     // Accepting state - in list and player deck info
     allowed = isPlayerAllowed("test-player", 0, *g);    
     CPPUNIT_ASSERT(allowed);

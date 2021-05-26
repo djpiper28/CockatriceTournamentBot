@@ -195,6 +195,16 @@ void playerJoin(struct triceBot *b,
     }
 }
 
+void playerLeave(struct triceBot *b,
+                 struct game g,
+                 Event_Leave event) {
+    for (int i = 0; i < g.playerCount; i++) {
+        if(g.playerArr[i].playerName == NULL) {
+            clearPlayerSlot(g.playerArr[i].playerID, g);
+        }
+    }
+}
+
 void playerPropertyChange(struct triceBot *b,
                           struct game g,
                           Event_PlayerPropertiesChanged event) {
@@ -409,7 +419,8 @@ int main(int argc, char * args[]) {
             set_onGameEnd(&onGameEnd, &bot.b);
             set_onBotDisconnect(&onBotDisconnect, &bot.b);
             set_onGameEventPlayerPropertyChanged(&playerPropertyChange, &bot.b);
-            set_onGameEventJoin(playerJoin, &bot.b);
+            set_onGameEventJoin(&playerJoin, &bot.b);
+            set_onGameEventLeave(&playerLeave, &bot.b);
             
             tb_startServer(&bot.server);
             startBot(&bot.b);
