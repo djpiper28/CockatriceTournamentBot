@@ -12,7 +12,6 @@ public:
     TestPlayerDeckInfo(void);
     void testInitAndFree();
     void testPlayerDeckFilters();
-    void testCopyAndFree();
 };
 
 #endif

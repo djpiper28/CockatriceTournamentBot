@@ -29,19 +29,6 @@ void freePlayerDeckInfoArray(void *ptr) {
     free(ptr);
 }
 
-void *copyPlayerDeckInfo(void *ptr) {
-    struct playerDeckInfo *pdiIn = (struct playerDeckInfo *) ptr;
-    struct playerDeckInfo *pdi = (struct playerDeckInfo *) malloc(sizeof(struct playerDeckInfo));
-    
-    pdi->isEmptySlot = pdiIn->isEmptySlot;
-    for (int i = 0; i < pdiIn->deckCount; i++) {
-        strncpy(pdi->deckHash[i], pdiIn->deckHash[i], DECK_HASH_LENGTH);
-    }
-    strncpy(pdi->playerName, pdiIn->playerName, PLAYER_NAME_LENGTH);
-    
-    return (void *) pdi;
-}
-
 struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
     struct gameData g = {
         (void *) pdi,
