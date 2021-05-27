@@ -55,7 +55,9 @@ struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
 int isPlayerAllowed(char *playerName,
                     int playerArrayIndex,
                     struct game g) {
-    if (g.gameData.gameDataPtr == NULL) {
+    if (g.gameData.gameDataPtr == NULL 
+        && playerArrayIndex >= 0 
+        && playerArrayIndex < g.playerCount) {
         return 0;
     } else {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
@@ -91,7 +93,9 @@ int isPlayerDeckAllowed(char *deckHash,
                         struct game g) {
     // Default to not allowing
     int allowed = 0;
-    if (g.gameData.gameDataPtr != NULL) {
+    if (g.gameData.gameDataPtr != NULL 
+        && playerArrayIndex >= 0 
+        && playerArrayIndex < g.playerCount) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
         
         if (pdi[playerArrayIndex].deckCount == 1) {
