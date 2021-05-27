@@ -57,8 +57,8 @@ class TriceBot:
         
         return -2
     
-    def createGame(self, gamename: str, password: str, playercount: int, spectatorsallowed: bool, spectatorsneedpassword: bool, spectatorscanchat: bool, spectatorscanseehands: bool, onlyregistered: bool, playerdeckverification: bool, playernames: str[], deckHashes: str[][]):
-        if len(playernames != len(deckHashes)):
+    def createGame(self, gamename: str, password: str, playercount: int, spectatorsallowed: bool, spectatorsneedpassword: bool, spectatorscanchat: bool, spectatorscanseehands: bool, onlyregistered: bool, playerdeckverification: bool, playernames, deckHashes):
+        if len(playernames) != len(deckHashes):
             GameMade(False, -1, -1) # They must the same length dummy!
             
         body  = f'authtoken={self.authToken}\n'
@@ -73,16 +73,16 @@ class TriceBot:
         body += f'playerDeckVerification={int(playerdeckverification)}\n'
         
         if playerdeckverification:
-            for i in range(0, playernames):
-                if playerName[i] = "": # No name
+            for i in range(0, len(playernames)):
+                if playernames[i] == "": # No name
                     body += f'playerName=*\n'
                 else:
-                    body += f'playerName={playerName[i]}\n'
+                    body += f'playerName={playernames[i]}\n'
                     if len(deckHashes[i]) == 0:
                         body += f'deckHash=*\n'
                     else:
                         for deckHash in deckHashes[i]:
-                            body += f'deckHash={deckHashe}\n'
+                            body += f'deckHash={deckHash}\n'
         
         try:
             message = self.req("api/creategame", body)   
