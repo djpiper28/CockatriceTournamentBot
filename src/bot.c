@@ -802,6 +802,7 @@ void handleGameEvent(struct triceBot *b,
                     //Track non-spectator, non-judge players.
                     if (!(pp.spectator() || pp.judge())) {
                         int found = 0;
+                        pid = pp.player_id();
                         
                         pthread_mutex_lock(&b->gameList.mutex);
                         for (int i = 0; !found && i < currentGame->playerCount; i++) {

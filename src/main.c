@@ -159,52 +159,44 @@ void playerJoin(struct triceBot *b,
         ServerInfo_PlayerProperties pp = event.player_properties();
         if ((!(pp.spectator() || pp.judge())) && pp.has_user_info()) {
             ServerInfo_User user = pp.user_info();
-            if (user.has_name() && user.has_id()) {
-                int index = -1;
-                for (int i = 0; index == -1 && i < g.playerCount; i++) {
-                    if (g.playerArr[i].playerID == user.id()) {
-                        index = i;
-                    }
-                }
+            
+            // Check if player is allowed
+            int allowed = isPlayerAllowed((char *) user.name().c_str(), pid, g);
+            
+            // If they are not then kick them
+            if (!allowed) {
+                char messageBuffer[512];
+                snprintf(messageBuffer, 512, "Player %s was kicked as they are not allowed in the game. This action was taken automatically please raise an issue at %s if this was en error.", user.name().c_str(), GITHUB_REPO);
                 
-                // Check if player is allowed
-                int allowed = isPlayerAllowed((char *) user.name().c_str(), index, g);
+                Command_GameSay gameSayCmd;
+                gameSayCmd.set_message(messageBuffer);
                 
-                // If they are not then kick them
-                if (!allowed) {
-                    char messageBuffer[512];
-                    snprintf(messageBuffer, 512, "Player %s was kicked as they are not allowed in the game. This action was taken automatically please raise an issue at %s if this was en error.", user.name(), GITHUB_REPO);
-                    
-                    Command_GameSay gameSayCmd;
-                    gameSayCmd.set_message(messageBuffer);
-                    
-                    CommandContainer cont;
-                    GameCommand *gc = cont.add_game_command();
-                    gc->MutableExtension(Command_GameSay::ext)
-                        ->CopyFrom(gameSayCmd);
-                    
-                    struct pendingCommand *cmd = prepCmd(b,
-                                                         cont,
-                                                         g.gameID,
-                                                         b->magicRoomID);
-                    
-                    enq(cmd, &b->sendQueue);
-                    
-                    Command_KickFromGame kickCommand;
-                    kickCommand.set_player_id(user.id());
-                    
-                    CommandContainer cont2;
-                    GameCommand *gc2 = cont2.add_game_command();
-                    gc2->MutableExtension(Command_KickFromGame::ext)
-                        ->CopyFrom(kickCommand);
-                    
-                    cmd = prepCmd(b,
-                                  cont2,
-                                  g.gameID,
-                                  b->magicRoomID);
-                    
-                    enq(cmd, &b->sendQueue);
-                }
+                CommandContainer cont;
+                GameCommand *gc = cont.add_game_command();
+                gc->MutableExtension(Command_GameSay::ext)
+                    ->CopyFrom(gameSayCmd);
+                
+                struct pendingCommand *cmd = prepCmd(b,
+                                                     cont,
+                                                     g.gameID,
+                                                     b->magicRoomID);
+                
+                enq(cmd, &b->sendQueue);
+                
+                Command_KickFromGame kickCommand;
+                kickCommand.set_player_id(pid);
+                
+                CommandContainer cont2;
+                GameCommand *gc2 = cont2.add_game_command();
+                gc2->MutableExtension(Command_KickFromGame::ext)
+                    ->CopyFrom(kickCommand);
+                
+                cmd = prepCmd(b,
+                              cont2,
+                              g.gameID,
+                              b->magicRoomID);
+                
+                enq(cmd, &b->sendQueue);
             }
         }        
     }
@@ -246,11 +238,19 @@ void playerPropertyChange(struct triceBot *b,
                 int spaceLen = strlen(space);
                 int length = 512 + (DECK_HASH_LENGTH + spaceLen) * pdi->deckCount;
                 char *messageBuffer = (char *) malloc(sizeof(char) * length);
-                snprintf(messageBuffer,
-                         512,
-                         "@%s, you loaded a deck with hash %s which is not expected. Please load a deck with of these hashes: ",
-                         g.playerArr[index].playerName,
-                         deckHash);
+                if (pdi->deckCount == 1) {
+                    snprintf(messageBuffer,
+                             512,
+                             "@%s, you loaded a deck with hash '%s', which is not expected. Please load the deck with hash: ",
+                             g.playerArr[index].playerName,
+                             deckHash);
+                } else {
+                    snprintf(messageBuffer,
+                            512,
+                            "@%s, you loaded a deck with hash '%s', which is not expected. Please load a deck with of these hashes: ",
+                            g.playerArr[index].playerName,
+                            deckHash);
+                }
                 
                 for (int i = 0; i < pdi->deckCount; i++) {
                     strncat(messageBuffer, pdi->deckHash[i], DECK_HASH_LENGTH);

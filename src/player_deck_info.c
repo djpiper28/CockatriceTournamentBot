@@ -100,7 +100,7 @@ int isPlayerDeckAllowed(char *deckHash,
                               DECK_HASH_LENGTH) == 0;
         }
         
-        for (int i = 0; i < pdi[playerArrayIndex].deckCount && !allowed; i++) {
+        for (int i = 0; i < pdi[playerArrayIndex].deckCount && i < MAX_DECKS && !allowed; i++) {
             // If the deckHash is * then they can join or;
             // If the deckHash matches the expected name
             allowed = strncmp(pdi[playerArrayIndex].deckHash[i],
