@@ -265,8 +265,8 @@ void playerPropertyChange(struct triceBot *b,
                             deckHash);
                 }
                 
-                for (int i = 0; i < pdi->deckCount; i++) {
-                    strncat(messageBuffer, pdi->deckHash[i], DECK_HASH_LENGTH);
+                for (int i = 0; i < pdi[index].deckCount; i++) {
+                    strncat(messageBuffer, pdi[index].deckHash[i], DECK_HASH_LENGTH);
                     strncat(messageBuffer, space, spaceLen);
                 }
                 

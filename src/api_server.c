@@ -463,13 +463,11 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 for (int i = 0; i < MAX_DECKS; i++) {
                     tmpBuffer[i] = (char *) malloc(sizeof(char) * DECK_HASH_LENGTH);
                 }
-                
-                int i = 0;
-                
+                                
                 // Add the player deck info to the data structure
-                for (; i < playerNames && i < deckHashes; i++) {
+                for (int i = 0; i < playerNames && i < deckHashes; i++) {
                     // Copy the deck hash to a string on the heap
-                    for (int j = 0; j < deckCount[j]; j++) {
+                    for (int j = 0; j < deckCount[i]; j++) {
                         strncpy(tmpBuffer[j], deckHashBuffers[i][j], DECK_HASH_LENGTH);
                     }
                     
@@ -486,7 +484,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 free(tmpBuffer);
                 
                 // Fill the empty slots
-                for (i = playerNames; i < playerCount; i++) {
+                for (int i = playerNames; i < playerCount; i++) {
                     pdi[i] = initPlayerDeckInfo((char **) &"*",
                                                 1,
                                                 "*",
