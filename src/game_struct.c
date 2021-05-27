@@ -195,13 +195,7 @@ void freeGameCopy(struct game g) {
             free(g.playerArr[i].playerName);
         }
     }
-    
-    // Free game data
-    if (g.gameData.gameDataPtr != NULL
-        && g.gameData.freeGameData != NULL) {
-        g.gameData.freeGameData(g.gameData.gameDataPtr);
-    }
-    
+        
     free(g.playerArr);
 }
 
@@ -227,12 +221,6 @@ struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
             } else {
                 playerArr[i].playerName = NULL;
             }
-        }
-        
-        // Copy game data
-        if (out.gameData.gameDataPtr != NULL
-            && out.gameData.copyGameData != NULL) {
-            out.gameData.gameDataPtr = out.gameData.copyGameData(out.gameData.gameDataPtr);
         }
         
         out.playerArr = playerArr;

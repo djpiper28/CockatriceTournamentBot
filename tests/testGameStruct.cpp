@@ -21,7 +21,7 @@ void TestGameStruct::testAddAndRemove() {
     struct gameList gl;
     initGameList(&gl);
     char buff[10];
-    struct gameData gameData = {NULL, NULL, NULL};
+    struct gameData gameData = {NULL, NULL};
     
     // Test add
     for (int i = 0; i < GAMES; i++) {
@@ -57,7 +57,7 @@ void TestGameStruct::testPlayerArray() {
     struct gameList gl;
     initGameList(&gl);
     char buff[10];
-    struct gameData gameData = {NULL, NULL, NULL};
+    struct gameData gameData = {NULL, NULL};
     
     // Test add
     for (int i = 0; i < GAMES * 2; i++) {
@@ -94,7 +94,7 @@ void TestGameStruct::testSearchList() {
     struct gameList gl;
     initGameList(&gl);
     char buff[10];
-    struct gameData gameData = {NULL, NULL, NULL};
+    struct gameData gameData = {NULL, NULL};
     
     // Test add
     for (int i = 0; i < GAMES * 2; i++) {

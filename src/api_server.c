@@ -455,7 +455,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     if (valid) {
         //Check authtoken
         if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
-            struct gameData gameData = {NULL, NULL, NULL};
+            struct gameData gameData = {NULL, NULL};
             
             if (isPlayerDeckVerif) {
                 struct playerDeckInfo *pdi = initPlayerDeckInfoArr(playerCount);

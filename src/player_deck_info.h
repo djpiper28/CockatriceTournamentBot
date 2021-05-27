@@ -22,8 +22,6 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
 
 void freePlayerDeckInfoArray(void* ptr);
 
-void *copyPlayerDeckInfo(void *ptr);
-
 struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi);
 
 int isPlayerAllowed(char *playerName,

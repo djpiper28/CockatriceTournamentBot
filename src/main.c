@@ -149,7 +149,7 @@ void addDebugFunctions(struct triceBot *b) {
 
 #endif
 
-int baseLen = strlen("Player @ was kicked, as they were not expected in this game. This action was taken automatically. If you do not think you should have been kicked checked your cockatrice name was put into the bot correctly, it is case sensitive. Then contact your tournament organiser, finally if that doesn't help please raise an issue at  if this was en error.") + strlen(GITHUB_REPO);
+int baseLen = strlen("Player @ was kicked, as they were not expected in this game. This action was taken automatically. If you do not think you should have been kicked checked your cockatrice name was put into the bot correctly, it is case sensitive. Then contact your tournament organiser, finally if that doesn't help please raise an issue at  if this was en error. Expected players: ") + strlen(GITHUB_REPO);
 
 void playerJoin(struct triceBot *b,
                 struct game g,
@@ -171,13 +171,13 @@ void playerJoin(struct triceBot *b,
                     (baseLen + (1 + g.playerCount) * (PLAYER_NAME_LENGTH + 1)));
                 snprintf(messageBuffer, 
                          512, 
-                         "Player @%s was kicked, as they were not expected in this game. This action was taken automatically. If you do not think you should have been kicked checked your cockatrice name was put into the bot correctly, it is case sensitive. Then contact your tournament organiser, finally if that doesn't help please raise an issue at %s if this was en error.", 
+                         "Player @%s was kicked, as they were not expected in this game. This action was taken automatically. If you do not think you should have been kicked checked your cockatrice name was put into the bot correctly, it is case sensitive. Then contact your tournament organiser, finally if that doesn't help please raise an issue at %s if this was en error. Expected players: ", 
                          user.name().c_str(), 
                          GITHUB_REPO);
                 
                 for (int i = 0; i < g.playerCount; i++) {
                     strncat(messageBuffer, pdi[i].playerName, PLAYER_NAME_LENGTH);
-                    strncat(" ", pdi[i].playerName, 2);
+                    strncat(messageBuffer, " ", 2);
                 }
                 
                 Command_GameSay gameSayCmd;

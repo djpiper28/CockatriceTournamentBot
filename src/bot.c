@@ -1000,7 +1000,7 @@ void handleGameCreate(struct triceBot *b,
                                              gameCreate.game_info().max_players(),
                                              game->gameData));
             // The game data should not freed when the create param is.
-            game->gameData = {NULL, NULL, NULL};
+            game->gameData = {NULL, NULL};
             
             //Set the game ID (used in callbackFn both cases)
             pthread_mutex_lock(&game->mutex);

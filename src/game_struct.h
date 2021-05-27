@@ -6,7 +6,6 @@
 struct gameData {
     void *gameDataPtr;
     void (*freeGameData) (void *);
-    void *(*copyGameData) (void *);
 };
 
 /**

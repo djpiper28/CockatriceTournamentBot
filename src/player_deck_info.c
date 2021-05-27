@@ -44,10 +44,8 @@ void *copyPlayerDeckInfo(void *ptr) {
 
 struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
     struct gameData g = {
-        (void *) pdi, 
-        &freePlayerDeckInfoArray,
-        &copyPlayerDeckInfo
-        
+        (void *) pdi,
+        &freePlayerDeckInfoArray
     };
     return g;
 }
@@ -55,14 +53,11 @@ struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
 int isPlayerAllowed(char *playerName,
                     int playerArrayIndex,
                     struct game g) {
-    if (g.gameData.gameDataPtr == NULL 
-        && playerArrayIndex >= 0 
-        && playerArrayIndex < g.playerCount) {
-        return 0;
-    } else {
+    // Default to not allowing
+    int allowed = 0;
+    
+    if (g.gameData.gameDataPtr != NULL) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-        // Default to not allowing
-        int allowed = 0;
         
         // Iterate over the slots
         for (int i = 0; i < g.playerCount && !allowed; i++) {
@@ -82,10 +77,10 @@ int isPlayerAllowed(char *playerName,
                     pdi[i].playerUsingSlot = playerArrayIndex;
                 }
             }
-        }     
-        
-        return allowed;
+        }
     }
+    
+    return allowed;
 }
 
 int isPlayerDeckAllowed(char *deckHash,
@@ -95,7 +90,7 @@ int isPlayerDeckAllowed(char *deckHash,
     int allowed = 0;
     if (g.gameData.gameDataPtr != NULL 
         && playerArrayIndex >= 0 
-        && playerArrayIndex < g.playerCount) {
+        && playerArrayIndex <= g.playerCount) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
         
         if (pdi[playerArrayIndex].deckCount == 1) {
