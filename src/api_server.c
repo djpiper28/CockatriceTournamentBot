@@ -318,8 +318,8 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         deckHashes = 0;
     int deckCount[MAX_PLAYERS];
     char playerNameBuffers[MAX_PLAYERS][PLAYER_NAME_LENGTH],
-         deckHashBuffers[MAX_PLAYERS][MAX_DECKS][DECK_HASH_LENGTH];    
-        
+         deckHashBuffers[MAX_PLAYERS][MAX_DECKS][DECK_HASH_LENGTH];   
+         
     //Read the buffer line by line
     size_t ptr = 0;
     
@@ -370,23 +370,29 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     gameName = tmp;
                 } else if (strncmp(prop, "password", propLen) == 0) {
                     password = tmp;
-                } if (strncmp(prop, "playerName", propLen) == 0) {
-                    if (playerNames < MAX_PLAYERS) {
-                        strncpy(playerNameBuffers[playerNames], tmp, 256);
+                } else if (strncmp(prop, "playerName", propLen) == 0) {                    
+                    if (playerNames < MAX_PLAYERS 
+                        && valueLen < PLAYER_NAME_LENGTH) {
+                        strncpy(playerNameBuffers[playerNames], tmp, PLAYER_NAME_LENGTH - 1);
                         deckCount[playerNames] = 0;
                         playerNames++;
                     }
                     free(tmp);
                 } else if (strncmp(prop, "deckHash", propLen) == 0) {
-                    if (deckHashes < MAX_PLAYERS) {
-                        if (deckCount[deckHashes] < MAX_DECKS) {
-                            strncpy(deckHashBuffers[deckHashes][deckCount[deckHashes]],
-                                    tmp, DECK_HASH_LENGTH);
-                            
-                            if (deckCount[deckHashes] == 0) {
-                                deckHashes++;
+                    if (playerNames > 0) {
+                        if (deckCount[playerNames - 1] == 0) {
+                            deckHashes++;
+                        }
+                        
+                        if (deckHashes <= MAX_PLAYERS) {
+                            if (deckCount[playerNames - 1] < MAX_DECKS 
+                                && valueLen + 1 == DECK_HASH_LENGTH) {
+                                strncpy(deckHashBuffers[deckHashes - 1]
+                                    [deckCount[playerNames - 1]],
+                                        tmp,
+                                        DECK_HASH_LENGTH - 1);
+                                deckCount[playerNames - 1]++;
                             }
-                            deckCount[deckHashes]++;
                         }
                     }
                     free(tmp);
@@ -438,12 +444,12 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     //Check all fields have data
     int valid = authToken != NULL && s->api->config.authToken != NULL
                 && gameName != NULL && password != NULL
-                && playerCount < 1 && spectatorsAllowed != -1
+                && playerCount > 0 && spectatorsAllowed != -1
                 && spectatorsNeedPassword != -1 && spectatorsCanChat != -1
                 && spectatorsCanSeeHands != -1 && onlyRegistered != -1
-                && (!isPlayerDeckVerif || (isPlayerDeckVerif
-                    && playerCount <= playerNames
-                    && deckHashes == playerNames
+                && ((!isPlayerDeckVerif) || (isPlayerDeckVerif
+                    && playerNames <= playerCount
+                    && deckHashes  == playerNames
                     && playerCount <= MAX_PLAYERS));
     
     if (valid) {
@@ -453,15 +459,33 @@ static void serverCreateGameCommand(struct ServerConnection *s,
             
             if (isPlayerDeckVerif) {
                 struct playerDeckInfo *pdi = initPlayerDeckInfoArr(playerCount);
+                char **tmpBuffer = (char**) malloc(sizeof(char *) * MAX_DECKS);
+                for (int i = 0; i < MAX_DECKS; i++) {
+                    tmpBuffer[i] = (char *) malloc(sizeof(char) * DECK_HASH_LENGTH);
+                }
+                
                 int i = 0;
                 
+                // Add the player deck info to the data structure
                 for (; i < playerNames && i < deckHashes; i++) {
-                    pdi[i] = initPlayerDeckInfo((char **) deckHashBuffers[i],
+                    // Copy the deck hash to a string on the heap
+                    for (int j = 0; j < deckCount[j]; j++) {
+                        strncpy(tmpBuffer[j], deckHashBuffers[i][j], DECK_HASH_LENGTH);
+                    }
+                    
+                    pdi[i] = initPlayerDeckInfo(tmpBuffer,
                                                 deckCount[i],
                                                 playerNameBuffers[i],
                                                 0);
                 }
                 
+                // Free the buffer
+                for (int i = 0; i < MAX_DECKS; i++) {
+                    free(tmpBuffer[i]);
+                }
+                free(tmpBuffer);
+                
+                // Fill the empty slots
                 for (i = playerNames; i < playerCount; i++) {
                     pdi[i] = initPlayerDeckInfo((char **) &"*",
                                                 1,

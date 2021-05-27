@@ -87,7 +87,7 @@ struct pendingCommandQueue {
 void (*fn) (struct triceBot *, type) = NULL;
 
 #define MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(fn, type)\
-void (*fn) (struct triceBot *, struct game, type) = NULL;
+void (*fn) (struct triceBot *, struct game, type, int pid) = NULL;
 
 #define MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(fn)\
 void (*fn) (struct triceBot *, struct game) = NULL;
@@ -229,7 +229,7 @@ struct triceBot {
 void set_##fn (void (*event) (struct triceBot *, type), struct triceBot *b);
 
 #define MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR_DEF(fn, type)\
-void set_##fn (void (*event) (struct triceBot *, struct game, type), struct triceBot *b);
+void set_##fn (void (*event) (struct triceBot *, struct game, type, int pid), struct triceBot *b);
 
 #define MACRO_THREAD_SAFE_SETTER_FOR_FUNCTION_PTR_DEF_1(fn)\
 void set_##fn (void (*event) (struct triceBot *), struct triceBot *b);

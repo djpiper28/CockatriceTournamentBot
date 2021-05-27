@@ -68,7 +68,7 @@ struct triceBot *b) {\
 }
 
 #define MACRO_THREAD_SAFE_SETTER_FOR_GAME_FUNCTION_PTR(fn, type)\
-void set_##fn (void (*event) (struct triceBot *, struct game, type),\
+void set_##fn (void (*event) (struct triceBot *, struct game, type, int pid),\
 struct triceBot *b) {\
     pthread_mutex_lock(&b->mutex);\
     b->fn = event;\

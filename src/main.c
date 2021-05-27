@@ -34,10 +34,6 @@ void stopAll(struct tournamentBot *bot) {
     freeBot(&bot->b);
 }
 
-#ifndef DEBUG
-#define DEBUG 0
-#endif
-
 #if DEBUG
 #define MACRO_DEBUG_FOR_EVENT(fn, type)\
 void DebugFor##fn (struct triceBot *b, type event) {\
@@ -52,7 +48,7 @@ void DebugFor##fn (struct triceBot *b, type event) {\
 }
 
 #define MACRO_DEBUG_FOR_GAME_EVENT(fn,type)\
-void DebugFor##fn (struct triceBot *b, struct game, type event) {\
+void DebugFor##fn (struct triceBot *b, struct game, type event, int pid) {\
     time_t rawtime;\
     struct tm info;\
     char buffer[80];\
@@ -155,7 +151,8 @@ void addDebugFunctions(struct triceBot *b) {
 
 void playerJoin(struct triceBot *b,
                 struct game g,
-                Event_Join event) {
+                Event_Join event,
+                int pid) {
     // Get player deck info
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
     if (pdi != NULL && event.has_player_properties()) {
@@ -175,18 +172,36 @@ void playerJoin(struct triceBot *b,
                 
                 // If they are not then kick them
                 if (!allowed) {
-                    Command_KickFromGame kickCommand;
-                    kickCommand.set_player_id(user.id());
+                    char messageBuffer[512];
+                    snprintf(messageBuffer, 512, "Player %s was kicked as they are not allowed in the game. This action was taken automatically please raise an issue at %s if this was en error.", user.name(), GITHUB_REPO);
+                    
+                    Command_GameSay gameSayCmd;
+                    gameSayCmd.set_message(messageBuffer);
                     
                     CommandContainer cont;
                     GameCommand *gc = cont.add_game_command();
-                    gc->MutableExtension(Command_KickFromGame::ext)
-                        ->CopyFrom(kickCommand);
+                    gc->MutableExtension(Command_GameSay::ext)
+                        ->CopyFrom(gameSayCmd);
                     
                     struct pendingCommand *cmd = prepCmd(b,
                                                          cont,
                                                          g.gameID,
                                                          b->magicRoomID);
+                    
+                    enq(cmd, &b->sendQueue);
+                    
+                    Command_KickFromGame kickCommand;
+                    kickCommand.set_player_id(user.id());
+                    
+                    CommandContainer cont2;
+                    GameCommand *gc2 = cont2.add_game_command();
+                    gc2->MutableExtension(Command_KickFromGame::ext)
+                        ->CopyFrom(kickCommand);
+                    
+                    cmd = prepCmd(b,
+                                  cont2,
+                                  g.gameID,
+                                  b->magicRoomID);
                     
                     enq(cmd, &b->sendQueue);
                 }
@@ -197,7 +212,8 @@ void playerJoin(struct triceBot *b,
 
 void playerLeave(struct triceBot *b,
                  struct game g,
-                 Event_Leave event) {
+                 Event_Leave event,
+                 int pid) {
     for (int i = 0; i < g.playerCount; i++) {
         if(g.playerArr[i].playerName == NULL) {
             clearPlayerSlot(g.playerArr[i].playerID, g);
@@ -207,15 +223,16 @@ void playerLeave(struct triceBot *b,
 
 void playerPropertyChange(struct triceBot *b,
                           struct game g,
-                          Event_PlayerPropertiesChanged event) {
+                          Event_PlayerPropertiesChanged event,
+                          int pid) {
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
     if (pdi != NULL && event.has_player_properties()) {        
         ServerInfo_PlayerProperties pp = event.player_properties();
         // Check if the deck has been changed
-        if (pp.has_deck_hash() && pp.has_player_id()) {
+        if (pp.has_deck_hash()) {
             int index = -1;
             for (int i = 0; index == -1 && i < g.playerCount; i++) {
-                if (g.playerArr[i].playerID == pp.player_id()) {
+                if (g.playerArr[i].playerID == pid) {
                     index = i;
                 }
             }
@@ -310,8 +327,13 @@ void onGameEnd(struct triceBot *b,
     enq(cmd, &b->sendQueue);
 }
 
-void onBotDisconnect(struct triceBot *b) {
+void botDisconnect(struct triceBot *b) {
+    printf("[INFO]: The bot disconnected and will restart.\n");
     startBot(b);
+}
+
+void botConnect(struct triceBot *b) {
+    printf("[INFO]: The bot has successfully connected to the server and will finish starting.\n");
 }
 
 int main(int argc, char * args[]) {
@@ -319,7 +341,7 @@ int main(int argc, char * args[]) {
            PROG_NAME, GITHUB_REPO);
     printf("-> Version %d.%d\n", VERSION_MAJOR, VERSION_MINOR);
     printf("-> Use the first argument for the mongoose debug level (0,1,2,3 or 4).\n");
-    printf("[INFO]: Starting bot\n");
+    printf("[INFO]: Starting bot...\n");
     
     mg_log_set(argc > 1 ? args[1] : "0");
     
@@ -417,13 +439,14 @@ int main(int argc, char * args[]) {
 #endif
             
             set_onGameEnd(&onGameEnd, &bot.b);
-            set_onBotDisconnect(&onBotDisconnect, &bot.b);
-            set_onGameEventPlayerPropertyChanged(&playerPropertyChange, &bot.b);
+            set_onBotConnect(&botConnect, &bot.b);
+            set_onBotDisconnect(&botDisconnect, &bot.b);
             set_onGameEventJoin(&playerJoin, &bot.b);
             set_onGameEventLeave(&playerLeave, &bot.b);
+            set_onGameEventPlayerPropertyChanged(&playerPropertyChange, &bot.b);
             
-            tb_startServer(&bot.server);
             startBot(&bot.b);
+            tb_startServer(&bot.server);
         } else {
             printf("[ERROR]: Missing properties in config file, see README.md at %s/blob/main/README.md.\n",
                    GITHUB_REPO);
@@ -432,5 +455,9 @@ int main(int argc, char * args[]) {
         printf("[ERROR]: There was an error reading the config.\n");
     } else if (status == -1) {
         printf("[ERROR]: No config file exists, a new one was made.\n");
+    }
+    
+    for (;;) {
+        sleep(5);
     }
 }

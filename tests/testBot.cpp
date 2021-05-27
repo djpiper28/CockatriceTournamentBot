@@ -133,7 +133,7 @@ static void TEST##fn (struct triceBot *b, type event) {\
 
 #define TEST_GAME_EVENT_FN(fn,type)\
 int fn##called = 0;\
-static void TEST##fn (struct triceBot *b, struct game, type event) {\
+static void TEST##fn (struct triceBot *b, struct game, type event, int pid) {\
     fn##called++;\
 }
 

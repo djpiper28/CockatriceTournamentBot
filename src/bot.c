@@ -103,14 +103,15 @@ if (fn != NULL) {\
 }
 
 //This has an if statement unlike the rest as the only edge case is long
+//The event must be called event and the player id an int called pid
 #define MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(fn, type)\
 if (event.HasExtension(type::ext)) {\
     pthread_mutex_lock(&b->mutex);\
-    void (*fn) (struct triceBot *b, struct game, type) = b->fn;\
+    void (*fn) (struct triceBot *b, struct game, type, int) = b->fn;\
     pthread_mutex_unlock(&b->mutex);\
     \
     if (fn != NULL) {\
-        fn(b, g, event.GetExtension(type::ext));\
+        fn(b, g, event.GetExtension(type::ext), pid);\
     }\
 }
 
@@ -137,6 +138,67 @@ void initBot(struct triceBot *b,
     b->sendQueue.tail = NULL;
     b->callbackQueue.head = NULL;
     b->callbackQueue.tail = NULL;
+    
+    // Set all event functions to NULL
+    b->onEventServerIdentifictaion = NULL;
+    b->onEventServerCompleteList = NULL;
+    b->onEventServerMessage = NULL;
+    b->onEventServerShutdown = NULL;
+    b->onEventConnectionClosed = NULL;
+    b->onEventUserMessage = NULL;
+    b->onEventListRooms = NULL;
+    b->onEventAddToList = NULL;
+    b->onEventRemoveFromList = NULL;
+    b->onEventUserJoined = NULL;
+    b->onEventUserLeft = NULL;
+    b->onEventGameJoined = NULL;
+    b->onEventNotifyUser = NULL;
+    b->onEventReplayAdded = NULL;
+    
+    //Event Function Pointers for room events
+    b->onEventJoinRoom = NULL;
+    b->onEventLeaveRoom = NULL;
+    b->onEventRoomSay = NULL;
+    
+    //Game events
+    b->onGameEventJoin = NULL;
+    b->onGameEventGameClosed = NULL;
+    b->onGameEventHostChanged = NULL;
+    b->onGameEventPlayerKicked = NULL;
+    b->onGameEventPlayerPropertyChanged = NULL;
+    b->onGameEventGameSay = NULL;
+    b->onGameEventCreateArrow = NULL;
+    b->onGameEventDeleteArrow = NULL;
+    b->onGameEventCreateCounter = NULL;
+    b->onGameEventSetCounter = NULL;
+    b->onGameEventDelCounter = NULL;
+    b->onGameEventDrawCards = NULL;
+    b->onGameEventRevealCards = NULL;
+    b->onGameEventShuffle = NULL;
+    b->onGameEventRollDie = NULL;
+    b->onGameEventMoveCard = NULL;
+    b->onGameEventFlipCard = NULL;
+    b->onGameEventDestroyCard = NULL;
+    b->onGameEventCreateToken = NULL;
+    b->onGameEventSetCardAttr = NULL;
+    b->onGameEventSetCardCounter = NULL;
+    b->onGameEventSetActivePlayer = NULL;
+    b->onGameEventSetActivePhase = NULL;
+    b->onGameEventDumpZone = NULL;
+    b->onGameEventStopDumpZone = NULL;
+    b->onGameEventChangeZoneProperties = NULL;
+    b->onGameEventReverseTurn = NULL;
+    
+    //Game state changes
+    b->onGameStart = NULL;
+    b->onGameEnd = NULL;
+    
+    //Bot state changes
+    b->onBotDisconnect = NULL;
+    b->onBotConnect = NULL;
+    b->onBotConnectionError = NULL;
+    b->onBotLogin = NULL;
+    b->onReplayDownload = NULL;
 }
 
 /**
@@ -696,6 +758,7 @@ void handleGameEvent(struct triceBot *b,
         
         for (int i = 0; i < size; i++) {
             GameEvent event = gameEventContainer.event_list().Get(i);
+            int pid = event.has_player_id() ? event.player_id() : -1;
             
             if (event.HasExtension(Event_GameStateChanged::ext)) {
                 Event_GameStateChanged stateChange = event.GetExtension(

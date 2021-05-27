@@ -31,7 +31,7 @@ initBot(&b, testConfig);
 static void TEST##fn (struct triceBot *b, type event) {}
 
 #define TEST_GAME_EVENT_FN(fn,type)\
-static void TEST##fn (struct triceBot *b, struct game, type event) {}
+static void TEST##fn (struct triceBot *b, struct game, type event, int pid) {}
 
 #define TEST_STATE_CHANGE_FN(fn)\
 static void TEST##fn (struct triceBot *b) {}
