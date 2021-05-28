@@ -174,6 +174,9 @@ void playerJoin(struct triceBot *b,
                          "Player @%s was kicked, as they were not expected in this game. This action was taken automatically. If you do not think you should have been kicked checked your cockatrice name was put into the bot correctly, it is case sensitive. Then contact your tournament organiser, finally if that doesn't help please raise an issue at %s if this was en error. Expected players: ", 
                          user.name().c_str(), 
                          GITHUB_REPO);
+                printf("[INFO]: Player %s was kicked from game %d.\n",
+                       user.name().c_str(),
+                       g.gameID);
                 
                 for (int i = 0; i < g.playerCount; i++) {
                     strncat(messageBuffer, pdi[i].playerName, PLAYER_NAME_LENGTH);
@@ -254,16 +257,21 @@ void playerPropertyChange(struct triceBot *b,
                 if (pdi->deckCount == 1) {
                     snprintf(messageBuffer,
                              512,
-                             "@%s, you loaded a deck with hash '%s', which is not expected. Please load the deck with hash: ",
+                             "@%s, you loaded a deck with hash '%s', which is not "
+                             "expected. Please load the deck with hash: ",
                              g.playerArr[index].playerName,
                              deckHash);
                 } else {
                     snprintf(messageBuffer,
                             512,
-                            "@%s, you loaded a deck with hash '%s', which is not expected. Please load a deck with of these hashes: ",
+                            "@%s, you loaded a deck with hash '%s', which is not "
+                            "expected. Please load a deck with of these hashes: ",
                             g.playerArr[index].playerName,
                             deckHash);
                 }
+                
+                printf("[INFO]: Player %s loaded an invalid deck.\n",
+                       g.playerArr[index].playerName)
                 
                 for (int i = 0; i < pdi[index].deckCount; i++) {
                     strncat(messageBuffer, pdi[index].deckHash[i], DECK_HASH_LENGTH);
