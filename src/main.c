@@ -271,7 +271,7 @@ void playerPropertyChange(struct triceBot *b,
                 }
                 
                 printf("[INFO]: Player %s loaded an invalid deck.\n",
-                       g.playerArr[index].playerName)
+                       g.playerArr[index].playerName);
                 
                 for (int i = 0; i < pdi[index].deckCount; i++) {
                     strncat(messageBuffer, pdi[index].deckHash[i], DECK_HASH_LENGTH);
