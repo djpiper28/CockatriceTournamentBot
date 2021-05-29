@@ -38,7 +38,7 @@ struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
 }
 
 int isPlayerAllowed(char *playerName,
-                    int playerArrayIndex,
+                    int pid,
                     struct game g) {
     // Default to not allowing
     int exactMatch = 0;
@@ -57,11 +57,12 @@ int isPlayerAllowed(char *playerName,
                 if (pdi[i].isEmptySlot) {
                     allowed = 1;
                 } else {                    
-                    // If the playerName is * then they can join or;
-                    // If the playername matches the expected name
+                    // If the playername matches the expected name or;
                     int exactMatch = strncmp(pdi[i].playerName,
                                              playerName,
                                              PLAYER_NAME_LENGTH) == 0;
+                    
+                    // If the playerName is * then they can join
                     allowed = strncmp(pdi[i].playerName,
                                       "*",
                                       PLAYER_NAME_LENGTH) == 0
@@ -75,7 +76,7 @@ int isPlayerAllowed(char *playerName,
         }
         
         if (index != -1) {
-            pdi[index].playerUsingSlot = playerArrayIndex;
+            pdi[index].playerUsingSlot = pid;
         }
     }
     
@@ -83,25 +84,30 @@ int isPlayerAllowed(char *playerName,
 }
 
 int isPlayerDeckAllowed(char *deckHash,
-                        int playerArrayIndex,
+                        int pid,
                         struct game g) {
     // Default to not allowing
     int allowed = 0;
-    if (g.gameData.gameDataPtr != NULL 
-        && playerArrayIndex >= 0 
-        && playerArrayIndex <= g.playerCount) {
+    if (g.gameData.gameDataPtr != NULL) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
         
-        if (pdi[playerArrayIndex].deckCount == 1) {
-            allowed = strncmp(pdi[playerArrayIndex].deckHash[0],
+        int index = -1;
+        for (int i = 0; index == -1 && i < g.playerCount; i++) {
+            if (pdi[i].playerUsingSlot == pid) {
+                index = i;
+            }
+        }
+        
+        if (pdi[index].deckCount == 1) {
+            allowed = strncmp(pdi[index].deckHash[0],
                               "*",
                               DECK_HASH_LENGTH) == 0;
         }
         
-        for (int i = 0; i < pdi[playerArrayIndex].deckCount && i < MAX_DECKS && !allowed; i++) {
+        for (int i = 0; i < pdi[index].deckCount && i < MAX_DECKS && !allowed; i++) {
             // If the deckHash is * then they can join or;
             // If the deckHash matches the expected name
-            allowed = strncmp(pdi[playerArrayIndex].deckHash[i],
+            allowed = strncmp(pdi[index].deckHash[i],
                               deckHash,
                               DECK_HASH_LENGTH) == 0;
         }

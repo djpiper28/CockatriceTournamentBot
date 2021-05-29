@@ -237,19 +237,12 @@ void playerPropertyChange(struct triceBot *b,
     if (pdi != NULL && event.has_player_properties()) {        
         ServerInfo_PlayerProperties pp = event.player_properties();
         // Check if the deck has been changed
-        if (pp.has_deck_hash()) {
-            int index = -1;
-            for (int i = 0; index == -1 && i < g.playerCount; i++) {
-                if (g.playerArr[i].playerID == pid) {
-                    index = i;
-                }
-            }
-            
+        if (pp.has_deck_hash()) {            
             char *deckHash = (char *) pp.deck_hash().c_str();
-            int allowed = isPlayerDeckAllowed(deckHash, index, g);
+            int allowed = isPlayerDeckAllowed(deckHash, pid, g);
             
             // If the hash is not allowed then tell the user
-            if (index != -1 && !allowed) {
+            if (pid != -1 && !allowed) {
                 char *space = " ";
                 int spaceLen = strlen(space);
                 int length = 512 + (DECK_HASH_LENGTH + spaceLen) * pdi->deckCount;
@@ -259,22 +252,22 @@ void playerPropertyChange(struct triceBot *b,
                              512,
                              "@%s, you loaded a deck with hash '%s', which is not "
                              "expected. Please load the deck with hash: ",
-                             g.playerArr[index].playerName,
+                             g.playerArr[pid].playerName,
                              deckHash);
                 } else {
                     snprintf(messageBuffer,
                             512,
                             "@%s, you loaded a deck with hash '%s', which is not "
                             "expected. Please load a deck with of these hashes: ",
-                            g.playerArr[index].playerName,
+                            g.playerArr[pid].playerName,
                             deckHash);
                 }
                 
                 printf("[INFO]: Player %s loaded an invalid deck.\n",
-                       g.playerArr[index].playerName);
+                       g.playerArr[pid].playerName);
                 
-                for (int i = 0; i < pdi[index].deckCount; i++) {
-                    strncat(messageBuffer, pdi[index].deckHash[i], DECK_HASH_LENGTH);
+                for (int i = 0; i < pdi[pid].deckCount; i++) {
+                    strncat(messageBuffer, pdi[pid].deckHash[i], DECK_HASH_LENGTH);
                     strncat(messageBuffer, space, spaceLen);
                 }
                 
