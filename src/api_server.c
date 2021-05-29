@@ -199,7 +199,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
             size_t propLen = eqPtr;
             
             //Error case - no prop len or, value len
-            if (propLen > 0 || valueLen > 0) {
+            if (propLen > 0 && valueLen > 0) {
                 //Read value of the tag
                 char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
                 size_t j = 0;
@@ -233,7 +233,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
                     playerName = tmp;
                 } else {
                     //Check is number
-                    int isNum = valueLen < 8,
+                    int isNum = valueLen <= 9,
                         number = atoi(tmp);
                         
                     if (isNum) {
@@ -323,7 +323,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
             size_t propLen = eqPtr;
             
             //Error case - no prop len or, value len
-            if (propLen > 0 || valueLen > 0) {
+            if (propLen > 0 && valueLen > 0) {
                 //Read value of the tag
                 char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
                 size_t j = 0;
@@ -359,7 +359,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                     newPlayerName = tmp;
                 } else {                    
                     //Check is number
-                    int isNum = valueLen < 3,
+                    int isNum = valueLen <= 7,
                     number = atoi(tmp);
                     
                     if (isNum) {
@@ -375,18 +375,16 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                 free(prop);
             }
         }
-    }    
+    }
     
-    int valid = authToken != NULL 
-        && oldPlayerName != NULL 
+    int valid = authToken != NULL
+        && oldPlayerName != NULL
         && newPlayerName != NULL
         && gameID != -1;
     
-    if (valid) {        
+    if (valid) {
         //Check authtoken
-        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) != 0) {
-            sendInvalidAuthTokenResponse(c);            
-        } else {
+        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
             /* Cases:
             * 0 -> Player not found (error case)
             * . -> Player has multiple slots
@@ -395,34 +393,37 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
             * 3 | | -> New player name matches the current player in the slot
             */
             pthread_mutex_lock(&s->api->triceBot->gameList.mutex);
-            struct game *g = getGameWithIDNTS(&s->api->triceBot->gameList, gameID);
-            struct playerDeckInfo *pdi = (struct playerDeckInfo *) g->gameData.gameDataPtr;
+            struct game *g = getGameWithIDNTS(&s->api->triceBot->gameList,
+                                              gameID);
             if (g != NULL) {
+                struct playerDeckInfo *pdi = (struct playerDeckInfo *) g->gameData.gameDataPtr;
+                
                 // Find target in player deck info
                 int playerIndex = -1,
                     exactMatch = 0,
                     ambiguousMatches = 0;
                 
-                    for (int i = 0; (!exactMatch) 
-                        && ambiguousMatches <= 1 
-                        && i < g->playerCount; i++) {
-                    if (strncmp(pdi[i].playerName,
-                                oldPlayerName,
-                                BUFFER_LENGTH) == 0) {
-                        // 3 player names match
-                        playerIndex = i;
-                        exactMatch = 1;
-                    } else if (strncmp("*",
-                               oldPlayerName,
-                               BUFFER_LENGTH) == 0 
-                        && pdi[i].playerUsingSlot == -1) {
-                        // 2 Only empty slots are treated as good
-                        playerIndex = i;
-                        ambiguousMatches++;
+                for (int i = 0; (!exactMatch)
+                    && ambiguousMatches < 2
+                    && i < g->playerCount; i++) {
+                    // 2 Only empty slots are treated as good
+                    if (pdi[i].playerUsingSlot == -1) {
+                        if (strncmp(pdi[i].playerName,
+                            oldPlayerName,
+                            BUFFER_LENGTH) == 0) {
+                            // 3 player names match
+                            playerIndex = i;
+                            exactMatch = 1;
+                        } else if (strncmp("*",
+                                       pdi[i].playerName,
+                                       BUFFER_LENGTH) == 0) {
+                            playerIndex = i;
+                            ambiguousMatches++;
+                        }
                     }
                 }
                 
-                if (playerIndex == -1 && ambiguousMatches <= 1) {
+                if (playerIndex != -1 && ambiguousMatches <= 1) {
                     // 1 if ambiguousMatches == 1
                     strncpy(pdi[playerIndex].playerName,
                             newPlayerName,
@@ -437,9 +438,12 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
             }
             
             pthread_mutex_unlock(&s->api->triceBot->gameList.mutex);
+        } else {            
+            sendInvalidAuthTokenResponse(c);
         }
     } else {
         printf("[INFO]: Invalid update player info command.\n");
+        send404(c);
     }
 }
 
@@ -466,7 +470,9 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     size_t ptr = 0;
     
     while (ptr < hm->body.len - 1) {
-        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr, &ptr, hm->body.len);        
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
+                                                      &ptr,
+                                                      hm->body.len);        
         size_t eqPtr = 0;
         
         for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
@@ -477,7 +483,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
             size_t propLen = eqPtr;
             
             //Error case - no prop len or, value len
-            if (propLen > 0 || valueLen > 0) {
+            if (propLen > 0 && valueLen > 0) {
                 //Read value of the tag
                 char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
                 size_t j = 0;
@@ -541,7 +547,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     free(tmp);
                 } else {
                     //Check is number
-                    int isNum = valueLen < 3,
+                    int isNum = valueLen <= 9,
                         number = atoi(tmp);
                         
                     if (isNum) {
