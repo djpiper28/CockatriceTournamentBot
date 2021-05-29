@@ -105,6 +105,7 @@ h1, h2, h3 {
             -> Returns this page :)
 
             <h3 name="../api/version">../api/version</h3>
+            <h4>Check the server version</h4>
             -> Request body should be null
             -> Returns the server version i.e:
             <blockquote>
@@ -112,6 +113,7 @@ h1, h2, h3 {
             </blockquote>
 
             <h3 name="../api/checkauthkey">../api/checkauthkey</h3>
+            <h4>Checks you have the right auth key</h4>
             -> Request body is auth token i.e:
 
             <blockquote>
@@ -250,6 +252,30 @@ h1, h2, h3 {
             </blockquote>
             if the player deck verification data is invalid
 
+            <h3 name="../api/updateplayerinfo">../api/updateplayerinfo</h3>
+            <h4>Updates player info for a game</h4>
+            -> Only updates the player name, as updating the decks is open for abuse.
+            -> Request body should be in this format:
+            <blockquote>
+            gameid=123456
+            <br>            
+            oldplayername=naughtius maximus
+            <br>
+            newplayername=biggus dickus
+            </blockquote>
+            -> Returns success if the operation was successful
+            <blockquote>
+            success
+            </blockquote>
+            -> If the game cannot be found it returns:
+            <blockquote>
+            error game not found
+            </blockquote>
+            -> If the bot cannot find a valid target
+            <blockquote>
+            error player not found
+            </blockquote>
+            
             <h3 name="../api/kickplayer">../api/kickplayer</h3>
             <h4>Kicks a player</h4>
             
