@@ -7,7 +7,7 @@ class GameMade:
         self.replayName = replayName
 
 class ChangePlayerInfo:
-    def __init__(self, success: bool, playerFound: bool=True, gameFound: bool=True, error: bool=False)
+    def __init__(self, success: bool, playerFound: bool=True, gameFound: bool=True, error: bool=False):
         self.success = success
         self.playerFound = playerFound
         self.gameFound = gameFound
@@ -26,7 +26,10 @@ class TriceBot:
         
     # verify = false as self signed ssl certificates will cause errors here
     def req(self, urlpostfix: str, data: str) -> str:
-        return requests.get(f'{self.apiURL}/{urlpostfix}', timeout=7.0, data=data,  verify=False).text
+        print(data)
+        resp = requests.get(f'{self.apiURL}/{urlpostfix}', timeout=7.0, data=data,  verify=False).text
+        print(resp)
+        return resp
         
     def checkauthkey(self):
         return self.req("api/checkauthkey", self.authToken) == "1"
@@ -38,7 +41,8 @@ class TriceBot:
     def changePlayerInfo(self, gameID: int, oldPlayerName: str, newPlayerName: str) -> str:
         body  = f'authtoken={self.authToken}\n'
         body += f'oldplayername={oldPlayerName}\n'
-        body += f'newplayername={newPlayerName}'
+        body += f'newplayername={newPlayerName}\n'
+        body += f'gameid={gameID}'
         
         res = ""
         try:
