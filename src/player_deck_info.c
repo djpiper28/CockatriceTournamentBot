@@ -41,33 +41,45 @@ int isPlayerAllowed(char *playerName,
                     int playerArrayIndex,
                     struct game g) {
     // Default to not allowing
-    int allowed = 0;
+    int exactMatch = 0;
+    int index = -1;
     
     if (g.gameData.gameDataPtr != NULL) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
         
         // Iterate over the slots
-        for (int i = 0; i < g.playerCount && !allowed; i++) {
+        for (int i = 0; i < g.playerCount && !exactMatch; i++) {
             // Check if a player is not using the slot and it can joined by p
             if (pdi[i].playerUsingSlot == -1) {
+                int allowed;
+                
                 // Empty slots are slots with no expected player data
                 if (pdi[i].isEmptySlot) {
                     allowed = 1;
                 } else {                    
                     // If the playerName is * then they can join or;
                     // If the playername matches the expected name
-                    allowed = strncmp(pdi[i].playerName, "*", PLAYER_NAME_LENGTH) == 0
-                        || strncmp(pdi[i].playerName, playerName, PLAYER_NAME_LENGTH) == 0;
+                    int exactMatch = strncmp(pdi[i].playerName,
+                                             playerName,
+                                             PLAYER_NAME_LENGTH) == 0;
+                    allowed = strncmp(pdi[i].playerName,
+                                      "*",
+                                      PLAYER_NAME_LENGTH) == 0
+                        || exactMatch;
                 }
                 
                 if (allowed) {
-                    pdi[i].playerUsingSlot = playerArrayIndex;
+                    index = i;
                 }
             }
         }
+        
+        if (index != -1) {
+            pdi[index].playerUsingSlot = playerArrayIndex;
+        }
     }
     
-    return allowed;
+    return index != -1;
 }
 
 int isPlayerDeckAllowed(char *deckHash,
