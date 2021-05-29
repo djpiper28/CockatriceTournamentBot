@@ -117,6 +117,7 @@ void clearPlayerSlot(int playerIndex,
         for (int i = 0; i < g.playerCount && !found; i++) {
             if (pdi[i].playerUsingSlot == playerIndex) {
                 pdi[i].playerUsingSlot = -1;
+                found = 1;
             }
         }
     }

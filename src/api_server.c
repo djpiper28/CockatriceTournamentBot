@@ -1078,10 +1078,6 @@ static void *pollingThread(void *apiIn) {
 }
 
 int tb_startServer(struct tb_apiServer *api) {
-    //WARNING: -probably bad
-    signal(SIGPIPE, SIG_IGN);
-    
-    
     pthread_mutex_lock(&api->bottleneck);
     
     if (api->running) {

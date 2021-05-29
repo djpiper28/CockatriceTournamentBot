@@ -249,7 +249,7 @@ void playerPropertyChange(struct triceBot *b,
             int allowed = isPlayerDeckAllowed(deckHash, index, g);
             
             // If the hash is not allowed then tell the user
-            if (!allowed) {
+            if (index != -1 && !allowed) {
                 char *space = " ";
                 int spaceLen = strlen(space);
                 int length = 512 + (DECK_HASH_LENGTH + spaceLen) * pdi->deckCount;
