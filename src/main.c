@@ -461,6 +461,10 @@ int main(int argc, char * args[]) {
             
             startBot(&bot.b);
             tb_startServer(&bot.server);
+            
+            for (;;) {
+                sleep(5);
+            }
         } else {
             printf("[ERROR]: Missing properties in config file, see README.md at %s/blob/main/README.md.\n",
                    GITHUB_REPO);
@@ -469,9 +473,5 @@ int main(int argc, char * args[]) {
         printf("[ERROR]: There was an error reading the config.\n");
     } else if (status == -1) {
         printf("[ERROR]: No config file exists, a new one was made.\n");
-    }
-    
-    for (;;) {
-        sleep(5);
     }
 }
