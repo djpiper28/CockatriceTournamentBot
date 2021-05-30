@@ -57,7 +57,7 @@ int isPlayerAllowed(char *playerName,
                 if (pdi[i].isEmptySlot) {
                     allowed = 1;
                 } else {                    
-                    // If the playername matches the expected name or;
+                    // If the playername matches the expected name exactly or;
                     int exactMatch = strncmp(pdi[i].playerName,
                                              playerName,
                                              PLAYER_NAME_LENGTH) == 0;

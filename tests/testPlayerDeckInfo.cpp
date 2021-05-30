@@ -151,6 +151,7 @@ void TestPlayerDeckInfo::testPlayerDeckFilters() {
     *hashes = (char *) malloc(sizeof(char) * 9);
     snprintf(*hashes, 9, "*");
     pdi[0] = initPlayerDeckInfo(hashes, 1, "player-name", 0);
+    pdi[0].playerUsingSlot = 0;
     
     // Test deck hash checker
     allowed = isPlayerDeckAllowed("hash1234", 0, *g);
@@ -163,3 +164,34 @@ void TestPlayerDeckInfo::testPlayerDeckFilters() {
     free(hashes);
     freePlayerDeckInfoArray(pdi);
 }
+
+void TestPlayerDeckInfo::testPlayerSlotSystem() {
+    // Init a pdi
+    int max_players = 5;
+    int count = 5;
+    char **hashes = (char **) malloc(sizeof(char *) * count);
+    for (int i = 0; i < count; i++) {
+        hashes[i] = (char *) malloc(sizeof(char) * 9);
+        snprintf(hashes[i], 9, "hash1234");
+    }
+    
+    struct playerDeckInfo *pdi = initPlayerDeckInfoArr(max_players);
+    pdi[max_players - 1] = initPlayerDeckInfo(hashes, count, "djpiper28", 0);
+    for (int i = 0; i < max_players - 1; i++) {        
+        char *name = (char *) malloc(sizeof(char) * 256);
+        snprintf(name, 256, "*");
+        pdi[i] = initPlayerDeckInfo(hashes, count, name, 0);
+        free(name);
+    }
+    
+    struct game *g = createGame(1, max_players, gameDataForPlayerDeckInfo(pdi));
+    
+    int allowed = isPlayerAllowed("djpiper28", 0, *g);
+    CPPUNIT_ASSERT(allowed);
+    
+    for (int i = 1; i < max_players; i++) {
+        allowed = isPlayerAllowed("test-name", i, *g);
+        CPPUNIT_ASSERT(allowed);
+    }    
+}
+
