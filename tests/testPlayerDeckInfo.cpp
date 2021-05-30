@@ -217,7 +217,7 @@ void TestPlayerDeckInfo::testPlayerSlotSystem() {
     
     g = createGame(1, max_players, gameDataForPlayerDeckInfo(pdi));
     
-    allowed = isPlayerAllowed("djpiper28", 0, *g);
+    allowed = isPlayerAllowed("DjPiPeR28", 0, *g);
     CPPUNIT_ASSERT(allowed);
     
     for (int i = 0; i < max_players; i++) {
