@@ -22,12 +22,6 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
     }
     strncpy(pdi.playerName, playerName, PLAYER_NAME_LENGTH);
     
-    // To lowercase
-    for (int i = 0; i < PLAYER_NAME_LENGTH && pdi.playerName[i] != 0; i++) {
-        pdi.playerName[i] = pdi.playerName[i] > 0x40 && pdi.playerName[i] < 0x5b ? 
-            pdi.playerName[i] | 0x60 : pdi.playerName[i];
-    }
-    
     return pdi;
 }
 
@@ -51,7 +45,7 @@ int isPlayerAllowed(char *playerName,
     int index = -1;
     char nameCp[PLAYER_NAME_LENGTH];
     strncpy(nameCp, playerName, PLAYER_NAME_LENGTH);
-
+    
     // To lowercase fresh from stack overflow
     for (int i = 0; i < PLAYER_NAME_LENGTH && nameCp[i] != 0; i++) {
         nameCp[i] = nameCp[i] > 0x40 && nameCp[i] < 0x5b ? 
@@ -70,9 +64,18 @@ int isPlayerAllowed(char *playerName,
                 // Empty slots are slots with no expected player data
                 if (pdi[i].isEmptySlot) {
                     allowed = 1;
-                } else {                    
+                } else {
+                    char pdiNameCp[PLAYER_NAME_LENGTH];
+                    strncpy(pdiNameCp, pdi[i].playerName, PLAYER_NAME_LENGTH);
+                    
+                    // To lowercase fresh from stack overflow
+                    for (int i = 0; i < PLAYER_NAME_LENGTH && pdiNameCp[i] != 0; i++) {
+                        pdiNameCp[i] = pdiNameCp[i] > 0x40 && pdiNameCp[i] < 0x5b ? 
+                        pdiNameCp[i] | 0x60 : pdiNameCp[i];
+                    }
+                    
                     // If the playername matches the expected name exactly or;
-                    exactMatch = strncmp(pdi[i].playerName,
+                    exactMatch = strncmp(pdiNameCp,
                                          nameCp,
                                          PLAYER_NAME_LENGTH) == 0;
                     
