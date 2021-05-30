@@ -22,6 +22,12 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
     }
     strncpy(pdi.playerName, playerName, PLAYER_NAME_LENGTH);
     
+    // To lowercase
+    for (int i = 0; i < PLAYER_NAME_LENGTH && pdi.playerName[i] != 0; i++) {
+        pdi.playerName[i] = pdi.playerName[i] > 0x40 && pdi.playerName[i] < 0x5b ? 
+            pdi.playerName[i] | 0x60 : pdi.playerName[i];
+    }
+    
     return pdi;
 }
 
@@ -43,6 +49,14 @@ int isPlayerAllowed(char *playerName,
     // Default to not allowing
     int exactMatch = 0;
     int index = -1;
+    char nameCp[PLAYER_NAME_LENGTH];
+    strncpy(nameCp, playerName, PLAYER_NAME_LENGTH);
+
+    // To lowercase fresh from stack overflow
+    for (int i = 0; i < PLAYER_NAME_LENGTH && nameCp[i] != 0; i++) {
+        nameCp[i] = nameCp[i] > 0x40 && nameCp[i] < 0x5b ? 
+            nameCp[i] | 0x60 : nameCp[i];
+    }
     
     if (g.gameData.gameDataPtr != NULL) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
@@ -59,7 +73,7 @@ int isPlayerAllowed(char *playerName,
                 } else {                    
                     // If the playername matches the expected name exactly or;
                     exactMatch = strncmp(pdi[i].playerName,
-                                         playerName,
+                                         nameCp,
                                          PLAYER_NAME_LENGTH) == 0;
                     
                     // If the playerName is * then they can join
