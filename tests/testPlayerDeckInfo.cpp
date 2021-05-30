@@ -165,6 +165,16 @@ void TestPlayerDeckInfo::testPlayerDeckFilters() {
     freePlayerDeckInfoArray(pdi);
 }
 
+static void printPDI(struct playerDeckInfo pdi) {
+    printf("> Player using slot: %d\n", pdi.playerUsingSlot);
+    printf("> Empty slot: %d\n", pdi.isEmptySlot);
+    printf("> Player name: %s\n", pdi.playerName);
+    printf("> Deck hashes: %d\n", pdi.deckCount);
+    for (int i = 0; i < pdi.deckCount; i++) {
+        printf(">>%s\n", pdi.deckHash[i]);
+    }
+}
+
 void TestPlayerDeckInfo::testPlayerSlotSystem() {
     // Init a pdi
     int max_players = 5;
@@ -175,6 +185,7 @@ void TestPlayerDeckInfo::testPlayerSlotSystem() {
         snprintf(hashes[i], 9, "hash1234");
     }
     
+    // * * * * ... djpiper28
     struct playerDeckInfo *pdi = initPlayerDeckInfoArr(max_players);
     pdi[max_players - 1] = initPlayerDeckInfo(hashes, count, "djpiper28", 0);
     for (int i = 0; i < max_players - 1; i++) {        
@@ -192,6 +203,36 @@ void TestPlayerDeckInfo::testPlayerSlotSystem() {
     for (int i = 1; i < max_players; i++) {
         allowed = isPlayerAllowed("test-name", i, *g);
         CPPUNIT_ASSERT(allowed);
-    }    
+    }
+    
+    // djpiper28 * * ... * *
+    pdi = initPlayerDeckInfoArr(max_players);
+    pdi[0] = initPlayerDeckInfo(hashes, count, "djpiper28", 0);
+    for (int i = 1; i < max_players; i++) {        
+        char *name = (char *) malloc(sizeof(char) * 256);
+        snprintf(name, 256, "*");
+        pdi[i] = initPlayerDeckInfo(hashes, count, name, 0);
+        free(name);
+    }
+    
+    g = createGame(1, max_players, gameDataForPlayerDeckInfo(pdi));
+    
+    allowed = isPlayerAllowed("djpiper28", 0, *g);
+    CPPUNIT_ASSERT(allowed);
+    
+    for (int i = 0; i < max_players; i++) {
+        printPDI(pdi[i]);
+    }
+    printf("=========\n");
+    
+    for (int i = 1; i < max_players; i++) {
+        allowed = isPlayerAllowed("test-name", i, *g);
+        CPPUNIT_ASSERT(allowed);
+        
+        for (int j = 0; j < max_players; j++) {
+            printPDI(pdi[j]);
+        }
+        printf("=========\n");
+    }  
 }
 

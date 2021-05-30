@@ -58,15 +58,14 @@ int isPlayerAllowed(char *playerName,
                     allowed = 1;
                 } else {                    
                     // If the playername matches the expected name exactly or;
-                    int exactMatch = strncmp(pdi[i].playerName,
-                                             playerName,
-                                             PLAYER_NAME_LENGTH) == 0;
+                    exactMatch = strncmp(pdi[i].playerName,
+                                         playerName,
+                                         PLAYER_NAME_LENGTH) == 0;
                     
                     // If the playerName is * then they can join
-                    allowed = strncmp(pdi[i].playerName,
-                                      "*",
-                                      PLAYER_NAME_LENGTH) == 0
-                        || exactMatch;
+                    allowed = exactMatch || strncmp(pdi[i].playerName,
+                                                    "*",
+                                                    PLAYER_NAME_LENGTH) == 0;
                 }
                 
                 if (allowed) {
