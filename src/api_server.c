@@ -792,6 +792,11 @@ static void eventHandler(struct mg_connection *c,
             } else if (mg_http_match_uri(hm, "/api/updateplayerinfo/")
                        || mg_http_match_uri(hm, "/api/updateplayerinfo")) {
                 serverUpdatePlayerInfo(s, c, hm);
+            } else if (mg_http_match_uri(hm, 
+                                         "/api/disableplayerdeckverification/")
+                || mg_http_match_uri(hm,
+                                     "/api/disableplayerdeckverification")) {
+                serverDisablePlayerDeckVerififcation(s, c, hm);
             } else if (mg_http_match_uri(hm, "/api/kickplayer/")
                        || mg_http_match_uri(hm, "/api/kickplayer")) {
                 serverKickPlayerCommand(s, c, hm);
