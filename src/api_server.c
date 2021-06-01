@@ -395,7 +395,7 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
         printf("[INFO]: Invalid update player info command.\n");
         send404(c);
     }
-                                   }
+}
 
 #define MAX_PLAYERS 25
 
