@@ -108,36 +108,43 @@ void TestApiServer::testUtilFunctions() {
     char *data = "12\n45\n78";
     size_t len = strlen(data);
     size_t ptr = 0;
-    struct tb_apiServerStr lineTwo = tb_readNextLine(data, &ptr, len);
-    CPPUNIT_ASSERT(lineTwo.ptr == data);
-    CPPUNIT_ASSERT(lineTwo.len == 2);
+    struct tb_apiServerStr lineOne = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineOne.ptr == data);
+    CPPUNIT_ASSERT(lineOne.len == 2);
     CPPUNIT_ASSERT(ptr == 3);
         
-    struct tb_apiServerStr lineThree = tb_readNextLine(data, &ptr, len);
-    CPPUNIT_ASSERT(lineThree.ptr == data + 3);
-    CPPUNIT_ASSERT(lineThree.len == 2);
+    struct tb_apiServerStr lineTwo = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineTwo.ptr == data + 3);
+    CPPUNIT_ASSERT(lineTwo.len == 2);
     CPPUNIT_ASSERT(ptr == 6);
     
     struct tb_apiServerPropety prop;
-    data = "abc=def\nghi=jkl";
+    data = "abc=def\nghi=jkl\nestset";
     len = strlen(data);
     ptr = 0;
-    lineTwo = tb_readNextLine(data, &ptr, len);
-    CPPUNIT_ASSERT(lineTwo.ptr == data);
+    lineOne = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineOne.ptr == data);
     
-    prop = tb_readProperty(lineTwo);
+    prop = tb_readProperty(lineOne);
     CPPUNIT_ASSERT(prop.property != NULL);
     CPPUNIT_ASSERT(prop.value != NULL);
     CPPUNIT_ASSERT(strncmp(prop.property, "abc", prop.propLen) == 0);
     CPPUNIT_ASSERT(strncmp(prop.value, "def", prop.propLen) == 0);
     
-    lineThree = tb_readNextLine(data, &ptr, len);
-    CPPUNIT_ASSERT(lineThree.ptr == data + 8);
+    lineTwo = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineTwo.ptr == data + 8);
     
-    prop = tb_readProperty(lineThree);
+    prop = tb_readProperty(lineTwo);
     CPPUNIT_ASSERT(prop.property != NULL);
     CPPUNIT_ASSERT(prop.value != NULL);
     CPPUNIT_ASSERT(strncmp(prop.property, "ghi", prop.propLen) == 0);
     CPPUNIT_ASSERT(strncmp(prop.value, "jkl", prop.propLen) == 0);
+    
+    struct tb_apiServerStr lineThree = tb_readNextLine(data, &ptr, len);
+    prop = tb_readProperty(lineThree);
+    CPPUNIT_ASSERT(prop.propLen == 0);
+    CPPUNIT_ASSERT(prop.valueLen== 0);
+    CPPUNIT_ASSERT(prop.property == NULL);
+    CPPUNIT_ASSERT(prop.value == NULL);
 }
 
