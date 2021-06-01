@@ -114,11 +114,12 @@ issue, then (optional) run with a debugger and get the full backtrace of the
 program. Make sure that the program is called with an argument
 of `3` to get some verbose mongoose logs.
 
-## Code Styling
+## Contributing
+### Code Styling
 Where possible, code should be ISO C with exceptions for protobuf or cppunit
 library binds.
 
-### Indentation And New Lines
+#### Indentation And New Lines
  - Indentation should be with spaces not tabs (4 spaces).
  - Functions should have each arg on separate lines that are indented to the function name's end.
 i.e:
@@ -137,28 +138,27 @@ struct a = {
 };
 ```
 
-### Tests
+#### Tests
 Tests are written in mostly C but use the cppunit library as needed with
 classes named in camelCase. Tests are compiled by automatically and can be
 ran with `ctest` or `./CockatriceTournamentBotTests`.
 
-### Compiler Directives
+#### Compiler Directives
  - All defines should be named in SCREAMING_SNAKE_CASE
  - All compiler directives should be at the top of the code if possible
  - The `#ifndef #define` should be used to guard against multiple header inclusions
 
-### Naming Conventions
+#### Naming Conventions
  - camelCase for function names and variable names
  - PascalCase for struct names
  - snake_case for file cxx file names
  - camelCase for python file names
 
-### Comments
+#### Comments
  - Please add comments
 
-### Constants
+#### Constants
  - #define them please as `const` is cringe
 
 ## TODO:
 - allow multi-room gaming
-- player and deck verification
