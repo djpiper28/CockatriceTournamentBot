@@ -9,6 +9,12 @@ struct tb_apiServerStr {
     size_t len;
 };
 
+struct tb_apiServerPropety {
+    size_t eqPtr, valueLen, propLen;
+    char *property;
+    char *value;
+};
+
 struct tb_apiServer {
     pthread_t pollingThreadT;
     pthread_mutex_t bottleneck;
@@ -18,6 +24,8 @@ struct tb_apiServer {
     int running;
     char * replayFolerWildcard;
 };
+
+struct tb_apiServerPropety tb_readProperty(struct tb_apiServerStr line);
 
 struct tb_apiServerStr tb_readNextLine(const char *buffer,
                                        size_t *ptr,

@@ -202,8 +202,7 @@ h1, h2, h3 {
             </blockquote>
             
             <h4>Example Request</h4>
-            <blockquote>
-            
+            <blockquote>            
             authtoken=token
             <br>
             gamename=name
@@ -252,6 +251,29 @@ h1, h2, h3 {
             </blockquote>
             if the player deck verification data is invalid
 
+            <h3 name="../api/disableplayerdeckverification">../api/disableplayerdeckverification</h3>
+            <h4>This endpoint will disable player deck verification for a specified game.</h4>
+            
+            <h4>Example Request</h4>
+            <blockquote>            
+            authtoken=token
+            <br>
+            gameid=123
+            </blockquote>
+            
+            -> Returns success if the operation was successful:
+            <blockquote>
+            success
+            </blockquote>
+            -> If the game cannot be found it returns:
+            <blockquote>
+            error game not found
+            </blockquote>
+            -> If the player deck verification is already disabled:
+            <blockquote>
+            already disabled
+            </blockquote>
+            
             <h3 name="../api/updateplayerinfo">../api/updateplayerinfo</h3>
             <h4>Updates player info for a game</h4>
             -> Only updates the player name, as updating the decks is open for abuse.
@@ -276,6 +298,10 @@ h1, h2, h3 {
             -> If the bot cannot find a valid target
             <blockquote>
             error player not found
+            </blockquote>
+            -> If the game has no player deck verifcation enabled 
+            <blockquote>
+            not enabled
             </blockquote>
             
             <h3 name="../api/kickplayer">../api/kickplayer</h3>

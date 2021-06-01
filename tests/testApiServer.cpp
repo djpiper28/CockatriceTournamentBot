@@ -114,8 +114,30 @@ void TestApiServer::testUtilFunctions() {
     CPPUNIT_ASSERT(ptr == 3);
         
     struct tb_apiServerStr lineThree = tb_readNextLine(data, &ptr, len);
-    CPPUNIT_ASSERT(lineThree.ptr == data + 3);    
+    CPPUNIT_ASSERT(lineThree.ptr == data + 3);
     CPPUNIT_ASSERT(lineThree.len == 2);
     CPPUNIT_ASSERT(ptr == 6);
+    
+    struct tb_apiServerPropety prop;
+    data = "abc=def\nghi=jkl";
+    len = strlen(data);
+    ptr = 0;
+    lineTwo = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineTwo.ptr == data);
+    
+    prop = tb_readProperty(lineTwo);
+    CPPUNIT_ASSERT(prop.property != NULL);
+    CPPUNIT_ASSERT(prop.value != NULL);
+    CPPUNIT_ASSERT(strncmp(prop.property, "abc", prop.propLen) == 0);
+    CPPUNIT_ASSERT(strncmp(prop.value, "def", prop.propLen) == 0);
+    
+    lineThree = tb_readNextLine(data, &ptr, len);
+    CPPUNIT_ASSERT(lineThree.ptr == data + 8);
+    
+    prop = tb_readProperty(lineThree);
+    CPPUNIT_ASSERT(prop.property != NULL);
+    CPPUNIT_ASSERT(prop.value != NULL);
+    CPPUNIT_ASSERT(strncmp(prop.property, "ghi", prop.propLen) == 0);
+    CPPUNIT_ASSERT(strncmp(prop.value, "jkl", prop.propLen) == 0);
 }
 

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <signal.h>
+#include <string.h>
 #include "bot_conf.h"
 #include "game_struct.h"
 #include "version.h"
@@ -177,6 +178,51 @@ struct tb_apiServerStr tb_readNextLine(const char *buffer,
     return string;
 }
 
+struct tb_apiServerPropety tb_readProperty(struct tb_apiServerStr line) {
+    size_t eqPtr = 0, valueLen = 0, propLen = 0;
+    char *tmp = NULL, *prop = NULL;
+    
+    for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
+    
+    //Check is line has equals with non-null strings on each side
+    if (eqPtr < line.len - 1 && eqPtr > 1) {
+        valueLen = line.len - eqPtr - 1;
+        propLen = eqPtr;
+        
+        //Error case - no prop len or, value len
+        if (propLen > 0 && valueLen > 0) {
+            //Read value of the tag
+            tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
+            size_t j = 0;
+            
+            for (size_t i = eqPtr + 1; j < valueLen; i++) {
+                tmp[j] = line.ptr[i];
+                j++;
+            }
+            
+            tmp[valueLen] = 0;
+            
+            //Read prop tag into prop
+            prop = (char *) malloc(sizeof(char) * (propLen + 1));
+            
+            for (size_t i = 0; i < eqPtr; i++) {
+                prop[i] = line.ptr[i];
+            }
+            
+            prop[propLen] = 0;
+        }
+    }
+    
+    struct tb_apiServerPropety property = {eqPtr,
+                                           valueLen,
+                                           propLen,
+                                           prop,
+                                           tmp
+                                          };
+    return property;
+}
+
+
 static void serverKickPlayerCommand(struct ServerConnection *s,
                                     struct mg_connection *c,
                                     struct mg_http_message *hm) {
@@ -187,68 +233,38 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
     size_t ptr = 0;
     
     while (ptr < hm->body.len - 1) {
-        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr, &ptr, hm->body.len);
-        
-        size_t eqPtr = 0;
-        
-        for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
-        
-        //Check is line has equals with non-null strings on each side
-        if (eqPtr < line.len - 1 && eqPtr > 1) {
-            size_t valueLen = line.len - eqPtr - 1;
-            size_t propLen = eqPtr;
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
+                                                      &ptr,
+                                                      hm->body.len);
+        struct tb_apiServerPropety propety = tb_readProperty(line);
             
-            //Error case - no prop len or, value len
-            if (propLen > 0 && valueLen > 0) {
-                //Read value of the tag
-                char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
-                size_t j = 0;
-                
-                for (size_t i = eqPtr + 1; j < valueLen; i++) {
-                    tmp[j] = line.ptr[i];
-                    j++;
-                }
-                
-                tmp[valueLen] = 0;
-                
-                //Read prop tag into prop
-                char *prop = (char *) malloc(sizeof(char) * (propLen + 1));
-                
-                for (size_t i = 0; i < eqPtr; i++) {
-                    prop[i] = line.ptr[i];
-                }
-                
-                prop[propLen] = 0;
-                
-                //Process line
-                //Prop len
-                
-                if (MAX_PROP_LEN < propLen) {
-                    propLen = MAX_PROP_LEN;
-                }
-                
-                if (strncmp(prop, "authtoken", propLen) == 0) {
-                    authToken = tmp;
-                } else if (strncmp(prop, "target", propLen) == 0) {
-                    playerName = tmp;
-                } else {
-                    //Check is number
-                    int isNum = valueLen <= 9,
-                        number = atoi(tmp);
-                        
-                    if (isNum) {
-                        tb_readNumberIfPropertiesMatch(number,
-                                                    &gameID,
-                                                    "gameid",
-                                                    prop);
-                    }
-                    
-                    //Free tmp here as it is not assigned to a ptr
-                    free(tmp);
-                }
-                
-                free(prop);
+        //Error case - no prop len or, value len
+        if (propety.propLen > 0 && propety.valueLen > 0) {
+            if (MAX_PROP_LEN < propety.propLen) {
+                propety.propLen = MAX_PROP_LEN;
             }
+            
+            if (strncmp(propety.property, "authtoken", propety.propLen) == 0) {
+                authToken = propety.value;
+            } else if (strncmp(propety.property, "target", propety.propLen) == 0) {
+                playerName = propety.value;
+            } else {
+                //Check is number
+                int isNum = propety.valueLen <= 9,
+                number = atoi(propety.value);
+                
+                if (isNum) {
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &gameID,
+                                                   "gameid",
+                                                   propety.property);
+                }
+                
+                //Free tmp here as it is not assigned to a ptr
+                free(propety.value);
+            }
+            
+            free(propety.property);
         }
     }
     
@@ -299,6 +315,88 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
     }
 }
 
+
+static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
+                                                 struct mg_connection *c,
+                                                 struct mg_http_message *hm) {
+    char *authToken = NULL;
+    int gameID = -1;
+    
+    //Read the buffer line by line
+    size_t ptr = 0;
+    
+    while (ptr < hm->body.len - 1) {
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
+                                                      &ptr,
+                                                      hm->body.len);
+        struct tb_apiServerPropety property = tb_readProperty(line);
+        
+        //Error case - no prop len or, value len
+        if (property.propLen > 0 && property.valueLen > 0) {
+            if (MAX_PROP_LEN < property.propLen) {
+                property.propLen = MAX_PROP_LEN;
+            }
+            
+            if (strncmp(property.property, "authtoken", property.propLen) == 0) {
+                authToken = property.value;
+            } else {
+                //Check is number
+                int isNum = property.valueLen <= 7,
+                number = atoi(property.value);
+                
+                if (isNum) {
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &gameID,
+                                                   "gameid",
+                                                   property.property);
+                }
+                
+                free(property.value);
+            }
+            
+            free(property.value);
+        }
+    }
+    
+    int valid = authToken != NULL && gameID != -1;
+    
+    if (valid) {
+        //Check authtoken
+        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
+            /* Cases:
+             * 0 -> Player not found (error case)
+             * . -> Player has multiple slots
+             * 1 | -> At least one slot is empty (use the first empty slot)
+             * 2 | -> No slots are empty
+             * 3 | | -> New player name matches the current player in the slot
+             */
+            pthread_mutex_lock(&s->api->triceBot->gameList.mutex);
+            struct game *g = getGameWithIDNTS(&s->api->triceBot->gameList,
+                                              gameID);
+            if (g != NULL) {
+                struct playerDeckInfo *pdi = (struct playerDeckInfo *) g->gameData.gameDataPtr;
+                if (pdi != NULL) {
+                    struct gameData gameData = {NULL, NULL};                    
+                    g->gameData.freeGameData(pdi);
+                    g->gameData = gameData;
+                    mg_http_reply(c, 200, "", "success");
+                } else {
+                    mg_http_reply(c, 200, "", "already disabled");
+                }
+            } else {
+                mg_http_reply(c, 200, "", "error game not found");
+            }
+            
+            pthread_mutex_unlock(&s->api->triceBot->gameList.mutex);
+        } else {            
+            sendInvalidAuthTokenResponse(c);
+        }
+    } else {
+        printf("[INFO]: Invalid update player info command.\n");
+        send404(c);
+    }
+                                   }
+
 #define MAX_PLAYERS 25
 
 static void serverUpdatePlayerInfo(struct ServerConnection *s,
@@ -312,68 +410,39 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
     size_t ptr = 0;
     
     while (ptr < hm->body.len - 1) {
-        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr, &ptr, hm->body.len);        
-        size_t eqPtr = 0;
-        
-        for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
-        
-        //Check is line has equals with non-null strings on each side
-        if (eqPtr < line.len - 1 && eqPtr > 1) {
-            size_t valueLen = line.len - eqPtr - 1;
-            size_t propLen = eqPtr;
-            
-            //Error case - no prop len or, value len
-            if (propLen > 0 && valueLen > 0) {
-                //Read value of the tag
-                char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
-                size_t j = 0;
-                
-                for (size_t i = eqPtr + 1; j < valueLen; i++) {
-                    tmp[j] = line.ptr[i];
-                    j++;
-                }
-                
-                tmp[valueLen] = 0;
-                
-                //Read prop tag into prop
-                char *prop = (char *) malloc(sizeof(char) * (propLen + 1));
-                
-                for (size_t i = 0; i < eqPtr; i++) {
-                    prop[i] = line.ptr[i];
-                }
-                
-                prop[propLen] = 0;
-                
-                //Process line
-                //Prop len
-                
-                if (MAX_PROP_LEN < propLen) {
-                    propLen = MAX_PROP_LEN;
-                }
-                
-                if (strncmp(prop, "authtoken", propLen) == 0) {
-                    authToken = tmp;
-                } else if (strncmp(prop, "oldplayername", propLen) == 0) {
-                    oldPlayerName = tmp;
-                } else if (strncmp(prop, "newplayername", propLen) == 0) {
-                    newPlayerName = tmp;
-                } else {                    
-                    //Check is number
-                    int isNum = valueLen <= 7,
-                    number = atoi(tmp);
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
+                                                      &ptr,
+                                                      hm->body.len);
+        struct tb_apiServerPropety property = tb_readProperty(line);
                     
-                    if (isNum) {
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &gameID,
-                                                       "gameid",
-                                                       prop);
-                    }
-                    
-                    free(tmp);
-                }
-                
-                free(prop);
+        //Error case - no prop len or, value len
+        if (property.propLen > 0 && property.valueLen > 0) {
+            if (MAX_PROP_LEN < property.propLen) {
+                property.propLen = MAX_PROP_LEN;
             }
+            
+            if (strncmp(property.property, "authtoken", property.propLen) == 0) {
+                authToken = property.value;
+            } else if (strncmp(property.property, "oldplayername", property.propLen) == 0) {
+                oldPlayerName = property.value;
+            } else if (strncmp(property.property, "newplayername", property.propLen) == 0) {
+                newPlayerName = property.value;
+            } else {
+                //Check is number
+                int isNum = property.valueLen <= 7,
+                number = atoi(property.value);
+                
+                if (isNum) {
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &gameID,
+                                                   "gameid",
+                                                   property.property);
+                }
+                
+                free(property.value);
+            }
+            
+            free(property.value);
         }
     }
     
@@ -397,44 +466,47 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                                               gameID);
             if (g != NULL) {
                 struct playerDeckInfo *pdi = (struct playerDeckInfo *) g->gameData.gameDataPtr;
-                
-                // Find target in player deck info
-                int playerIndex = -1,
-                    exactMatch = 0,
-                    ambiguousMatches = 0;
-                
-                for (int i = 0; (!exactMatch)
-                    && ambiguousMatches < 2
-                    && i < g->playerCount; i++) {
-                    // 2 Only empty slots are treated as good
-                    if (pdi[i].playerUsingSlot == -1) {
-                        if (strncmp(pdi[i].playerName,
-                            oldPlayerName,
-                            BUFFER_LENGTH) == 0) {
-                            // 3 player names match
-                            playerIndex = i;
-                            exactMatch = 1;
-                        } else if (strncmp("*",
-                                       pdi[i].playerName,
-                                       BUFFER_LENGTH) == 0) {
-                            playerIndex = i;
-                            ambiguousMatches++;
+                if (pdi != NULL) {
+                    // Find target in player deck info
+                    int playerIndex = -1,
+                        exactMatch = 0,
+                        ambiguousMatches = 0;
+                    
+                    for (int i = 0; (!exactMatch)
+                        && ambiguousMatches < 2
+                        && i < g->playerCount; i++) {
+                        // 2 Only empty slots are treated as good
+                        if (pdi[i].playerUsingSlot == -1) {
+                            if (strncmp(pdi[i].playerName,
+                                oldPlayerName,
+                                BUFFER_LENGTH) == 0) {
+                                // 3 player names match
+                                playerIndex = i;
+                                exactMatch = 1;
+                            } else if (strncmp("*",
+                                        pdi[i].playerName,
+                                        BUFFER_LENGTH) == 0) {
+                                playerIndex = i;
+                                ambiguousMatches++;
+                            }
                         }
                     }
-                }
-                
-                if (playerIndex != -1 && ambiguousMatches <= 1) {
-                    // 1 if ambiguousMatches == 1
-                    strncpy(pdi[playerIndex].playerName,
-                            newPlayerName,
-                            PLAYER_NAME_LENGTH);
-                    mg_http_reply(c, 200, "", "success");
+                    
+                    if (playerIndex != -1 && ambiguousMatches <= 1) {
+                        // 1 if ambiguousMatches == 1
+                        strncpy(pdi[playerIndex].playerName,
+                                newPlayerName,
+                                PLAYER_NAME_LENGTH);
+                        mg_http_reply(c, 200, "", "success");
+                    } else {
+                        // 0 if playerIndex == -1
+                        mg_http_reply(c, 200, "", "error player not found");
+                    }
                 } else {
-                    // 0 if playerIndex == -1
-                    mg_http_reply(c, 200, "", "error player not found");
+                    mg_http_reply(c, 200, "", "error game not found");
                 }
             } else {
-                mg_http_reply(c, 200, "", "error game not found");
+                mg_http_reply(c, 200, "", "not enabled");                
             }
             
             pthread_mutex_unlock(&s->api->triceBot->gameList.mutex);
@@ -464,7 +536,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
         deckHashes = 0;
     int deckCount[MAX_PLAYERS];
     char playerNameBuffers[MAX_PLAYERS][PLAYER_NAME_LENGTH],
-         deckHashBuffers[MAX_PLAYERS][MAX_DECKS][DECK_HASH_LENGTH];   
+         deckHashBuffers[MAX_PLAYERS][MAX_DECKS][DECK_HASH_LENGTH];
          
     //Read the buffer line by line
     size_t ptr = 0;
@@ -472,123 +544,91 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     while (ptr < hm->body.len - 1) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
                                                       &ptr,
-                                                      hm->body.len);        
-        size_t eqPtr = 0;
-        
-        for (; eqPtr < line.len && line.ptr[eqPtr] != '='; eqPtr++);
-        
-        //Check is line has equals with non-null strings on each side
-        if (eqPtr < line.len - 1 && eqPtr > 1) {
-            size_t valueLen = line.len - eqPtr - 1;
-            size_t propLen = eqPtr;
+                                                      hm->body.len);
+        struct tb_apiServerPropety property = tb_readProperty(line);
+        //Error case - no prop len or, value len
+        if (property.propLen > 0 && property.valueLen > 0) {
+            if (MAX_PROP_LEN < property.propLen) {
+                property.propLen = MAX_PROP_LEN;
+            }
             
-            //Error case - no prop len or, value len
-            if (propLen > 0 && valueLen > 0) {
-                //Read value of the tag
-                char *tmp = (char *) malloc(sizeof(char) * (valueLen + 1));
-                size_t j = 0;
-                
-                for (size_t i = eqPtr + 1; j < valueLen; i++) {
-                    tmp[j] = line.ptr[i];
-                    j++;
+            if (strncmp(property.property, "authtoken", property.propLen) == 0) {
+                authToken = property.value;
+            } else if (strncmp(property.property, "gamename", property.propLen) == 0) {
+                gameName = property.value;
+            } else if (strncmp(property.property, "password", property.propLen) == 0) {
+                password = property.value;
+            } else if (strncmp(property.property, "playerName", property.propLen) == 0) {
+                if (playerNames < MAX_PLAYERS 
+                    && property.valueLen < PLAYER_NAME_LENGTH) {
+                    strncpy(playerNameBuffers[playerNames],
+                            property.value,
+                            PLAYER_NAME_LENGTH - 1);
+                    deckCount[playerNames] = 0;
+                    playerNames++;
                 }
-                
-                tmp[valueLen] = 0;
-                
-                //Read prop tag into prop
-                char *prop = (char *) malloc(sizeof(char) * (propLen + 1));
-                
-                for (size_t i = 0; i < eqPtr; i++) {
-                    prop[i] = line.ptr[i];
-                }
-                
-                prop[propLen] = 0;
-                
-                //Process line
-                //Prop len
-                
-                if (MAX_PROP_LEN < propLen) {
-                    propLen = MAX_PROP_LEN;
-                }
-                
-                if (strncmp(prop, "authtoken", propLen) == 0) {
-                    authToken = tmp;
-                } else if (strncmp(prop, "gamename", propLen) == 0) {
-                    gameName = tmp;
-                } else if (strncmp(prop, "password", propLen) == 0) {
-                    password = tmp;
-                } else if (strncmp(prop, "playerName", propLen) == 0) {                    
-                    if (playerNames < MAX_PLAYERS 
-                        && valueLen < PLAYER_NAME_LENGTH) {
-                        strncpy(playerNameBuffers[playerNames],
-                                tmp,
-                                PLAYER_NAME_LENGTH - 1);
-                        deckCount[playerNames] = 0;
-                        playerNames++;
-                    }
-                    free(tmp);
-                } else if (strncmp(prop, "deckHash", propLen) == 0) {
-                    if (playerNames > 0) {
-                        if (deckCount[playerNames - 1] == 0) {
-                            deckHashes++;
-                        }
-                        
-                        if (deckHashes <= MAX_PLAYERS) {
-                            if (deckCount[playerNames - 1] < MAX_DECKS 
-                                && valueLen + 1 == DECK_HASH_LENGTH) {
-                                strncpy(deckHashBuffers[deckHashes - 1]
-                                    [deckCount[playerNames - 1]],
-                                        tmp,
-                                        DECK_HASH_LENGTH - 1);
-                                deckCount[playerNames - 1]++;
-                            }
-                        }
-                    }
-                    free(tmp);
-                } else {
-                    //Check is number
-                    int isNum = valueLen <= 9,
-                        number = atoi(tmp);
-                        
-                    if (isNum) {
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &playerCount,
-                                                       "playerCount",
-                                                       prop);
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &spectatorsAllowed,
-                                                       "spectatorsAllowed",
-                                                       prop);
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &spectatorsNeedPassword,
-                                                       "spectatorsNeedPassword",
-                                                       prop);
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &spectatorsCanChat,
-                                                       "spectatorsCanChat",
-                                                       prop);
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &spectatorsCanSeeHands,
-                                                       "spectatorsCanSeeHands",
-                                                       prop);
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &onlyRegistered,
-                                                       "onlyRegistered",
-                                                       prop);
-                        tb_readNumberIfPropertiesMatch(number,
-                                                       &isPlayerDeckVerif,
-                                                       "playerDeckVerification",
-                                                       prop);
+                free(property.value);
+            } else if (strncmp(property.property, "deckHash", property.propLen) == 0) {
+                if (playerNames > 0) {
+                    if (deckCount[playerNames - 1] == 0) {
+                        deckHashes++;
                     }
                     
-                    //Free tmp here as it is not assigned to a ptr
-                    free(tmp);
+                    if (deckHashes <= MAX_PLAYERS) {
+                        if (deckCount[playerNames - 1] < MAX_DECKS 
+                            && property.valueLen + 1 == DECK_HASH_LENGTH) {
+                            strncpy(deckHashBuffers[deckHashes - 1]
+                                                   [deckCount[playerNames - 1]],
+                                    property.value,
+                                    DECK_HASH_LENGTH - 1);
+                            deckCount[playerNames - 1]++;
+                        }
+                    }
+                }
+                free(property.value);
+            } else {
+                //Check is number
+                int isNum = property.valueLen <= 9,
+                number = atoi(property.value);
+                
+                if (isNum) {
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &playerCount,
+                                                   "playerCount",
+                                                   property.property);
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &spectatorsAllowed,
+                                                   "spectatorsAllowed",
+                                                   property.property);
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &spectatorsNeedPassword,
+                                                   "spectatorsNeedPassword",
+                                                   property.property);
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &spectatorsCanChat,
+                                                   "spectatorsCanChat",
+                                                   property.property);
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &spectatorsCanSeeHands,
+                                                   "spectatorsCanSeeHands",
+                                                   property.property);
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &onlyRegistered,
+                                                   "onlyRegistered",
+                                                   property.property);
+                    tb_readNumberIfPropertiesMatch(number,
+                                                   &isPlayerDeckVerif,
+                                                   "playerDeckVerification",
+                                                   property.property);
                 }
                 
-                free(prop);
+                //Free tmp here as it is not assigned to a ptr
+                free(property.value);
             }
+            
+            free(property.property);
         }
-    }
+    }    
     
     //Check all fields have data
     int valid = authToken != NULL && s->api->config.authToken != NULL
