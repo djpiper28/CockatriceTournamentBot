@@ -11,8 +11,8 @@ def genCssFile(outputName, defineName, inputName):
     genSource = []
     with open(sourcePath) as fp:
         for line in fp:
-            line = line[:-1] # remove newline
-            genSource.append(line.replace('"', '\\"'))
+            line = line[:-1].replace('"', '\\"') # remove newline
+            genSource.append(line)
             cssStr += line
 
     genSourceString = "".join(genSource)
@@ -32,7 +32,7 @@ def genFile(outputName, defineName, inputName):
 
     thisDir = os.path.dirname(os.path.abspath(__file__))
     sourcePath = os.path.join(thisDir, "src", inputName)
-    headerNameRegex = re.compile(r'(.*<.*id=")(.*)(">.*)')
+    headerNameRegex = re.compile(r'(.*<.*id=")(.*)(".*>.*)')
 
 
     def escapesString(value):
@@ -43,7 +43,7 @@ def genFile(outputName, defineName, inputName):
     genSource = []
     with open(sourcePath) as fp:
         for line in fp:
-            line = line[:-1] # remove newline
+            line = line[:-1].replace('"', '\\"') # remove newline
             if line == "{CSS}":
                 line = css
             
@@ -61,7 +61,7 @@ def genFile(outputName, defineName, inputName):
                 )
                 line = "".join((first, escaped, rest))
 
-            genSource.append(line.replace('"', '\\"'))
+            genSource.append(line)
 
     try:
         indexLocation
