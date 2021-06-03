@@ -9,7 +9,9 @@
 #include "bot_conf.h"
 #include "game_struct.h"
 #include "version.h"
-#include "helppage.h"
+#include "help_page.h"
+#include "faq_page.h"
+#include "page_css.h"
 #include "trice_structs.h"
 #include "bot.h"
 #include "mongoose.h"
@@ -24,81 +26,6 @@
 #include "response.pb.h"
 
 #define DOWNLOAD_HEADER "Content-Disposition: attachment\r\n"
-#define PAGE_CSS "<!DOCTYPE html>"\
-"<html>"\
-"<head>"\
-"<meta charset=\"UTF-8\">"\
-"<style>"\
-".grid-container {"\
-"    display: grid;"\
-"    grid-template-columns: 1fr 1fr 1fr 1fr;"\
-"    grid-template-rows: 1fr 1fr 1fr;"\
-"    gap: 0px 0px;"\
-"    grid-template-areas:"\
-"    \"content content content content\""\
-"    \"content content content content\""\
-"    \". . . .\";"\
-"}"\
-".index {"\
-"    grid-area: index;"\
-"    color: white;"\
-"    font-family: verdana;"\
-"    padding: 32px;"\
-"}"\
-".index-inner {"\
-"    padding: 10px;"\
-"    position: -webkit-sticky;"\
-"    position: sticky;"\
-"    top: 0;"\
-"}"\
-"@Media (min-width: 500px) and (orientation: landscape) {"\
-"    .grid-container {"\
-"        display: grid;"\
-"        grid-template-columns: 1fr 1fr 1fr 1fr;"\
-"        grid-template-rows: 1fr 1fr 1fr;"\
-"        gap: 0px 0px;"\
-"        grid-template-areas:"\
-"        \". content content .\""\
-"        \". content content .\""\
-"        \". content content .\";"\
-"    }"\
-"}"\
-".content {"\
-"    grid-area: content;"\
-"    background-color: rgb(30, 30, 30);"\
-"    color: white;"\
-"    font-family: verdana;"\
-"    padding: 32px;"\
-"}"\
-".content-inner {"\
-"    margin-bottom: 32px;"\
-"    margin-left: 32px;"\
-"    margin-right: 32px;"\
-"    margin-top: 32px;"\
-"}"\
-".bg {"\
-"    margin-bottom: 0px;"\
-"    margin-left: 0px;"\
-"    margin-right: 0px;"\
-"    margin-top: 0px;"\
-"    background-color: rgb(10, 100, 100);"\
-"}"\
-"blockquote {"\
-"    padding-left: 10px;"\
-"    background-color: rgb(35, 35, 35);"\
-"    color: rgb(240, 240, 240);"\
-"    font-family: mono;"\
-"}"\
-"a {"\
-"    color: rgb(221, 216, 0);"\
-"    font-family: mono;"\
-"}"\
-"h1, h2, h3 {"\
-"    color: white;"\
-"    font-family: sans;"\
-"}"\
-"</style>"\
-"</head>"
 #define MAX_PROP_LEN 30
 
 //Internal connection struct
@@ -802,7 +729,10 @@ static void eventHandler(struct mg_connection *c,
                 serverKickPlayerCommand(s, c, hm);
             } else if (mg_http_match_uri(hm, "/api/")
                        || mg_http_match_uri(hm, "/api")) {
-                mg_http_reply(c, 200, "", "%s", HELP_STR);
+                mg_http_reply(c, 200, "", "%s", API_HELP);
+            } else if (mg_http_match_uri(hm, "/faq/")
+                       || mg_http_match_uri(hm, "/faq")) {
+                mg_http_reply(c, 200, "", "%s", FAQ);
             } else if (mg_http_match_uri(hm, api->replayFolerWildcard)) {
                 int gameFinished = 0;
                 int gameID = -1;
@@ -940,11 +870,16 @@ static void eventHandler(struct mg_connection *c,
                             mg_http_reply(c,
                                           200,
                                           "",
+                                          "<!DOCTYPE html\n>"
+                                          "<html>\n"
+                                          "<head>\n"
+                                          "<meta charset=\"UTF-8\">\n"
                                           "%s\n"
+                                          "<title>Game %d (%d/%d)</title>\n"
+                                          "</head>\n"
                                           "<body class=\"bg\">"
                                           "<div class=\"content\">"
                                           "<div class=\"content-inner\">"
-                                          "<title>Game %d (%d/%d)</title>\n"
                                           "<h1>%s</h1>\n"
                                           "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
@@ -964,7 +899,13 @@ static void eventHandler(struct mg_connection *c,
                             mg_http_reply(c,
                                         200,
                                         "",
+                                        "<!DOCTYPE html\n>"
+                                        "<html>\n"
+                                        "<head>\n"
+                                        "<meta charset=\"UTF-8\">\n"
                                         "%s\n"
+                                        "<title>Game %d (%d/%d)</title>\n"
+                                        "</head>\n"
                                         "<body class=\"bg\">"
                                         "<div class=\"content\">"
                                         "<div class=\"content-inner\">"

@@ -2,86 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Marchesa Cockatrice Bot API Documentation</title>
-<style>
-.grid-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    gap: 0px 0px;
-    grid-template-areas:
-        "content content content content"
-        "content content content content"
-        "index index index index";
-}
-
-.index {
-    grid-area: index; 
-    color: white;
-    font-family: verdana;
-    padding: 32px;
-}
-
-.index-inner {
-    padding: 10px;
-    position: -webkit-sticky;
-    position: sticky;
-    top: 0;
-}
-
-@Media (min-width: 500px) and (orientation: landscape) {
-    .grid-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        grid-template-rows: 1fr 1fr 1fr;                
-        gap: 0px 0px;
-        grid-template-areas:
-            "index content content ."
-            "index content content ."
-            "index content content .";
-    }
-}
-
-.content {
-    grid-area: content;
-    background-color: rgb(30, 30, 30);
-    color: white;
-    font-family: verdana;
-    padding: 32px;
-}
-
-.content-inner {
-    margin-bottom: 32px;
-    margin-left: 32px;
-    margin-right: 32px;
-    margin-top: 32px;
-}
-
-.bg {
-    margin-bottom: 0px;
-    margin-left: 0px;
-    margin-right: 0px;
-    margin-top: 0px;
-    background-color: rgb(10, 100, 100);
-}
-
-blockquote {
-    padding-left: 10px;
-    background-color: rgb(35, 35, 35);
-    color: rgb(240, 240, 240);
-    font-family: mono;
-}
-
-a {
-    color: rgb(221, 216, 0);
-    font-family: mono;
-}
-
-h1, h2, h3 {
-    color: white;
-    font-family: sans;
-}
-</style>
+<title>Marchesa Bot API Documentation</title>
+{CSS}
 </head>
 
 <body class="bg">
@@ -97,14 +19,14 @@ h1, h2, h3 {
         <div class="content-inner">
             <h1>API Documentation</h1>
 
-            <p>This API documentation should be accurate if it is not please visit the
-            <a href="/github">github repo</a> and make an issue.</p>
+            This API documentation should be accurate if it is not please visit the
+            <a href="/github">github repo</a> and make an issue.
 
             <p name="top"/>
-            <h3 name="../api/">../api/</h3>
+            <h3 name="/api/">../api/</h3>
             -> Returns this page :)
 
-            <h3 name="../api/version">../api/version</h3>
+            <h3 name="/api/version">../api/version</h3>
             <h4>Check the server version</h4>
             -> Request body should be null
             -> Returns the server version i.e:
@@ -112,7 +34,7 @@ h1, h2, h3 {
             v1.0
             </blockquote>
 
-            <h3 name="../api/checkauthkey">../api/checkauthkey</h3>
+            <h3 name="/api/checkauthkey">../api/checkauthkey</h3>
             <h4>Checks you have the right auth key</h4>
             -> Request body is auth token i.e:
 
@@ -144,7 +66,7 @@ h1, h2, h3 {
             error 404
             </blockquote>
 
-            <h3 name="../api/creategame">../api/creategame</h3>
+            <h3 name="/api/creategame">../api/creategame</h3>
             <h4>Creates a game</h4>            
             -> Request body follows this format (case-sensitive):
             <br>
@@ -251,7 +173,7 @@ h1, h2, h3 {
             </blockquote>
             if the player deck verification data is invalid
 
-            <h3 name="../api/disableplayerdeckverification">../api/disableplayerdeckverification</h3>
+            <h3 name="/api/disableplayerdeckverification">../api/disableplayerdeckverification</h3>
             <h4>This endpoint will disable player deck verification for a specified game.</h4>
             
             <h4>Example Request</h4>
@@ -274,7 +196,7 @@ h1, h2, h3 {
             already disabled
             </blockquote>
             
-            <h3 name="../api/updateplayerinfo">../api/updateplayerinfo</h3>
+            <h3 name="/api/updateplayerinfo">../api/updateplayerinfo</h3>
             <h4>Updates player info for a game</h4>
             -> Only updates the player name, as updating the decks is open for abuse.
             -> Request body should be in this format:
@@ -304,7 +226,7 @@ h1, h2, h3 {
             not enabled
             </blockquote>
             
-            <h3 name="../api/kickplayer">../api/kickplayer</h3>
+            <h3 name="/api/kickplayer">../api/kickplayer</h3>
             <h4>Kicks a player</h4>
             
             -> Request body should be in this format:
@@ -327,8 +249,8 @@ h1, h2, h3 {
             
             -> At the moment the response from servatrice is ignored.
             
-            <h3 name="../replay-%s-%d.cor">../replay-%s-%d.cor</h3>
-            <h3 name="../${REPLAY_FOLDER}/**/*%s-%d.cor">../${REPLAY_FOLDER}/**/*%s-%d.cor</h3>
+            <h3 name="Replay Downloads">../replay-%s-%d.cor</h3>
+            <h3>../${REPLAY_FOLDER}/**/*%s-%d.cor</h3>
             <h4>Downloads a replay or shows an error if the replay does not exist.</h4>
             -> %d is the game ID as returned by creategame and %s is the game name sent to the api.
             The replay may be overwritten after 
