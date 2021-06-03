@@ -11,11 +11,11 @@ def genCssFile(outputName, defineName, inputName):
     genSource = []
     with open(sourcePath) as fp:
         for line in fp:
-            line = line[:-1] # remove newline
-            genSource.append(line.replace('"', '\\"'))
+            line = line[:-1].replace('"', '\\"') # remove newline
+            genSource.append(line)
             cssStr += line
 
-    genSourceString = "\\n\\\n".join(genSource)
+    genSourceString = "".join(genSource)
     genSourceContents = f"""#ifndef {defineName}
     #define {defineName} "{genSourceString}"
     #endif
@@ -32,7 +32,7 @@ def genFile(outputName, defineName, inputName):
 
     thisDir = os.path.dirname(os.path.abspath(__file__))
     sourcePath = os.path.join(thisDir, "src", inputName)
-    headerNameRegex = re.compile(r'(.*<.*name=")(.*)(">.*)')
+    headerNameRegex = re.compile(r'(.*<.*id=\\")(.*)(\\">.*)')
 
 
     def escapesString(value):
@@ -43,7 +43,7 @@ def genFile(outputName, defineName, inputName):
     genSource = []
     with open(sourcePath) as fp:
         for line in fp:
-            line = line[:-1] # remove newline
+            line = line[:-1].replace('"', '\\"') # remove newline
             if line == "{CSS}":
                 line = css
             
@@ -59,9 +59,9 @@ def genFile(outputName, defineName, inputName):
                 anchorPointsProcessed.append(
                     f'<p><a href=\\"#{escaped}\\">{name}</a></p>'
                 )
-                line = "".join((first, escaped, rest))
+                #line = "".join((first, escaped, rest))
 
-            genSource.append(line.replace('"', '\\"'))
+            genSource.append(line)
 
     try:
         indexLocation
@@ -70,9 +70,9 @@ def genFile(outputName, defineName, inputName):
             "html source file does not contain index marker"
         ) from None
 
-    anchorPointsString = "\\n\\\n".join(anchorPointsProcessed)
+    anchorPointsString = "".join(anchorPointsProcessed)
     genSource[indexLocation] = anchorPointsString
-    genSourceString = "\\n\\\n".join(genSource)
+    genSourceString = "".join(genSource)
     genSourceContents = f"""#ifndef {defineName}
     #define {defineName} "{genSourceString}"
     #endif
