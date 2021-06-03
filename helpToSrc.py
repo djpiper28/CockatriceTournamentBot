@@ -13,7 +13,7 @@ def genCssFile(outputName, defineName, inputName):
         for line in fp:
             line = line[:-1] # remove newline
             genSource.append(line.replace('"', '\\"'))
-            cssStr += "line"
+            cssStr += line
 
     genSourceString = "\\n\\\n".join(genSource)
     genSourceContents = f"""#ifndef {defineName}
