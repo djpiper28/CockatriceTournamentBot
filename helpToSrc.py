@@ -32,7 +32,7 @@ def genFile(outputName, defineName, inputName):
 
     thisDir = os.path.dirname(os.path.abspath(__file__))
     sourcePath = os.path.join(thisDir, "src", inputName)
-    headerNameRegex = re.compile(r'(.*<.*id=")(.*)(".*>.*)')
+    headerNameRegex = re.compile(r'(.*<.*id=\\")(.*)(\\".*>.*)')
 
 
     def escapesString(value):
