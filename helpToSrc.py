@@ -15,7 +15,7 @@ def genCssFile(outputName, defineName, inputName):
             genSource.append(line.replace('"', '\\"'))
             cssStr += line
 
-    genSourceString = "\\n\\\n".join(genSource)
+    genSourceString = "".join(genSource)
     genSourceContents = f"""#ifndef {defineName}
     #define {defineName} "{genSourceString}"
     #endif
@@ -70,9 +70,9 @@ def genFile(outputName, defineName, inputName):
             "html source file does not contain index marker"
         ) from None
 
-    anchorPointsString = "\\n\\\n".join(anchorPointsProcessed)
+    anchorPointsString = "".join(anchorPointsProcessed)
     genSource[indexLocation] = anchorPointsString
-    genSourceString = "\\n\\\n".join(genSource)
+    genSourceString = "".join(genSource)
     genSourceContents = f"""#ifndef {defineName}
     #define {defineName} "{genSourceString}"
     #endif
