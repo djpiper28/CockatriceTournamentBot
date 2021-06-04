@@ -878,6 +878,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<title>Game %d (%d/%d)</title>\n"
                                           "</head>\n"
                                           "<body class=\"bg\">\n"
+                                          "<div class=\"grid-container\">\n"
                                           "<div class=\"index\">\n"
                                           "<div class=\"index-inner\">\n"
                                           "<h1>Game %d</h1>\n</div>\n</div>\n"
@@ -887,7 +888,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
                                           "<a href=\"%s\">Github Repo</a> | Version v%d.%d\n"
-                                          "</div>\n</div>\n</body>\n</html>",
+                                          "</div>\n</div>\n</div>\n</body>\n</html>",
                                           PAGE_CSS,
                                           gameID,
                                           players,
@@ -910,7 +911,8 @@ static void eventHandler(struct mg_connection *c,
                                         "%s\n"
                                         "<title>Game %d (%d/%d)</title>\n"
                                         "</head>\n"
-                                        "<body class=\"bg\">"                                        
+                                        "<body class=\"bg\">\n"
+                                        "<div class=\"grid-container\">\n"
                                         "<div class=\"index\">\n"
                                         "<div class=\"index-inner\">\n"
                                         "<h1>Game %d</h1>\n</div>\n</div>\n"
@@ -921,7 +923,7 @@ static void eventHandler(struct mg_connection *c,
                                         "<h4>Current players are:</h4>\n"
                                         "<ol>\n%s\n</ol>\n"
                                         "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
-                                        "</div>\n</div>\n</body>\n</html>",
+                                        "</div>\n</div>\n</div>\n</body>\n</html>",
                                         PAGE_CSS,
                                         gameID,
                                         players,
