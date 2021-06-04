@@ -1077,6 +1077,7 @@ sendCreateGameCommand(struct triceBot *b,
     createGame.set_password(password);
     createGame.set_max_players(playerCount);
     createGame.set_join_as_spectator(joinAsSpectator);
+    createGame.set_join_as_judge(joinAsSpectator);
     
     createGame.set_spectators_allowed(spectatorsAllowed);
     createGame.set_spectators_can_talk(spectatorsCanChat);

@@ -64,7 +64,7 @@ class TriceBot:
     # 1 if success
     # 0 auth token is bad, error 404 or network issue
     # -1 game not found
-    def disablePlayerDeckVerificatoin(str, gameID: str) -> int:
+    def disablePlayerDeckVerificatoin(self, gameID: str) -> int:
         body  = f'authtoken={self.authToken}\n'
         body += f'gameid={gameID}'
         
@@ -77,7 +77,7 @@ class TriceBot:
             res = "network error"
             return 0
             
-        if res == success:
+        if res == "success":
             return 1
         elif res == "error 404" or "invalid auth token":
             return 0
@@ -100,10 +100,9 @@ class TriceBot:
             print("[TRICEBOT ERROR]: Netty error")
             return 0
         
-        #Check for server error
+        # Check for server error
         if (message == "timeout error" or message == "error 404" or message == "invalid auth token"):        
-            return 0
-        
+            return 0        
         if (message == "success"):
             return 1
         elif (message == "error not found"):
@@ -128,7 +127,7 @@ class TriceBot:
         
         if playerdeckverification:
             for i in range(0, len(playernames)):
-                if playernames[i] == "": # No name
+                if playernames[i] == "" or playernames[i] == None: # No name
                     body += f'playerName=*\n'
                 else:
                     body += f'playerName={playernames[i]}\n'
