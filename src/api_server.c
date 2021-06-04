@@ -909,7 +909,6 @@ static void eventHandler(struct mg_connection *c,
                                         "<body class=\"bg\">"
                                         "<div class=\"content\">"
                                         "<div class=\"content-inner\">"
-                                        "<title>Game %d (%d/%d)</title>\n"
                                         "<h1>%s</h1>\n"
                                         "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                         "<h4>Current players are:</h4>\n"
