@@ -859,7 +859,7 @@ static void eventHandler(struct mg_connection *c,
                                          "<li>%s</li>",
                                          g.playerArr[i].playerName);
                                 snprintf(buff + ptr,
-                                        min(buffLen - ptr, BUFF_LEN),
+                                        min(1 + buffLen - ptr, BUFF_LEN),
                                         "%s",
                                         buffTmp);
                                 ptr += strnlen(buffTmp, BUFF_LEN);
@@ -877,9 +877,12 @@ static void eventHandler(struct mg_connection *c,
                                           "%s\n"
                                           "<title>Game %d (%d/%d)</title>\n"
                                           "</head>\n"
-                                          "<body class=\"bg\">"
-                                          "<div class=\"content\">"
-                                          "<div class=\"content-inner\">"
+                                          "<body class=\"bg\">\n"
+                                          "<div class=\"index\">\n"
+                                          "<div class=\"index-inner\">\n"
+                                          "<h1>Game %d</h1>\n</div>\n</div>\n"
+                                          "<div class=\"content\">\n"
+                                          "<div class=\"content-inner\">\n"
                                           "<h1>%s</h1>\n"
                                           "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
@@ -889,6 +892,7 @@ static void eventHandler(struct mg_connection *c,
                                           gameID,
                                           players,
                                           g.playerCount,
+                                          gameID,
                                           PROG_NAME,
                                           gameID,
                                           api->config.cockatriceServer,
@@ -906,7 +910,10 @@ static void eventHandler(struct mg_connection *c,
                                         "%s\n"
                                         "<title>Game %d (%d/%d)</title>\n"
                                         "</head>\n"
-                                        "<body class=\"bg\">"
+                                        "<body class=\"bg\">"                                        
+                                        "<div class=\"index\">\n"
+                                        "<div class=\"index-inner\">\n"
+                                        "<h1>Game %d</h1>\n</div>\n</div>\n"
                                         "<div class=\"content\">"
                                         "<div class=\"content-inner\">"
                                         "<h1>%s</h1>\n"
@@ -919,13 +926,14 @@ static void eventHandler(struct mg_connection *c,
                                         gameID,
                                         players,
                                         g.playerCount,
+                                        gameID,
                                         PROG_NAME,
                                         gameID,
                                         api->config.cockatriceServer,
                                         buff,
                                         GITHUB_REPO,
                                         VERSION_MAJOR,
-                                        VERSION_MINOR);                        
+                                        VERSION_MINOR);
                         }
                         
                         free(buff);
