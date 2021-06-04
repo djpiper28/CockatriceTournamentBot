@@ -23,10 +23,10 @@
             <a href="/github">github repo</a> and make an issue.
 
             <p id="top"/>
-            <h3 id="/api/">../api/</h3>
+            <h2 id="/api/">../api/</h2>
             -> Returns this page :)
 
-            <h3 id="/api/version">../api/version</h3>
+            <h2 id="/api/version">../api/version</h2>
             <h4>Check the server version</h4>
             -> Request body should be null
             -> Returns the server version i.e:
@@ -34,7 +34,7 @@
             v1.0
             </blockquote>
 
-            <h3 id="/api/checkauthkey">../api/checkauthkey</h3>
+            <h2 id="/api/checkauthkey">../api/checkauthkey</h2>
             <h4>Checks you have the right auth key</h4>
             -> Request body is auth token i.e:
 
@@ -52,13 +52,13 @@
             </blockquote>
             -> If it is invalid
 
-            <h3 id="Invalid Auth Tokens">Invalid Auth Tokens</h3>
+            <h2 id="Invalid Auth Tokens">Invalid Auth Tokens</h2>
             -> Any of the below requests that have an invalid auth token will give an error with response code 401 and body of
             <blockquote>
             invalid auth token
             </blockquote>
             
-            <h3 id="Invalid Commands">Invalid Commands</h3>
+            <h2 id="Invalid Commands">Invalid Commands</h2>
             -> Any invalid command will receive a 404 response.
             <br>
             -> At the moment there is no way to tell the exact error.
@@ -66,7 +66,7 @@
             error 404
             </blockquote>
 
-            <h3 id="/api/creategame">../api/creategame</h3>
+            <h2 id="/api/creategame">../api/creategame</h2>
             <h4>Creates a game</h4>            
             -> Request body follows this format (case-sensitive):
             <br>
@@ -173,7 +173,7 @@
             </blockquote>
             if the player deck verification data is invalid
 
-            <h3 id="/api/disableplayerdeckverification">../api/disableplayerdeckverification</h3>
+            <h2 id="/api/disableplayerdeckverification">../api/disableplayerdeckverification</h2>
             <h4>This endpoint will disable player deck verification for a specified game.</h4>
             
             <h4>Example Request</h4>
@@ -196,7 +196,7 @@
             already disabled
             </blockquote>
             
-            <h3 id="/api/updateplayerinfo">../api/updateplayerinfo</h3>
+            <h2 id="/api/updateplayerinfo">../api/updateplayerinfo</h2>
             <h4>Updates player info for a game</h4>
             -> Only updates the player name, as updating the decks is open for abuse.
             -> Request body should be in this format:
@@ -226,7 +226,7 @@
             not enabled
             </blockquote>
             
-            <h3 id="/api/kickplayer">../api/kickplayer</h3>
+            <h2 id="/api/kickplayer">../api/kickplayer</h2>
             <h4>Kicks a player</h4>
             
             -> Request body should be in this format:
@@ -249,7 +249,8 @@
             
             -> At the moment the response from servatrice is ignored.
             
-            <h3 id="Replay Downloads">../replay-%s-%d.cor</h3>
+            <h2 id="Replay Downloads">Replay Downloads</h2>
+            <h3>../replay-%s-%d.cor</h3>
             <h3>../${REPLAY_FOLDER}/**/*%s-%d.cor</h3>
             <h4>Downloads a replay or shows an error if the replay does not exist.</h4>
             -> %d is the game ID as returned by creategame and %s is the game name sent to the api.

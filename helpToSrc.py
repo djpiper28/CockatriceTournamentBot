@@ -32,7 +32,7 @@ def genFile(outputName, defineName, inputName):
 
     thisDir = os.path.dirname(os.path.abspath(__file__))
     sourcePath = os.path.join(thisDir, "src", inputName)
-    headerNameRegex = re.compile(r'(.*<.*id=")(.*)(">.*)')
+    headerNameRegex = re.compile(r'(.*<)([a-zA-Z0-9]+)(.*id=")(.*)(">.*)')
 
 
     def escapesString(value):
@@ -54,12 +54,16 @@ def genFile(outputName, defineName, inputName):
 
             match = headerNameRegex.fullmatch(line)
             if match:
-                first, name, rest = match.groups()
+                first, tag, prop, name, rest = match.groups()
+                indexTag = "p"
+                if tag == "h1" or tag == "h2" or tag == "h3":
+                    indexTag = tag
+                    
                 escaped = escapesString(name)
                 anchorPointsProcessed.append(
-                    f'<p><a href=\\"#{escaped}\\">{name}</a></p>'
+                    f'<{indexTag}><a href=\\"#{escaped}\\">{name}</a></{indexTag}>'
                 )
-                line = "".join((first, escaped, rest))
+                #line = "".join((first, escaped, rest))
 
             genSource.append(line.replace('"', '\\"'))
 
