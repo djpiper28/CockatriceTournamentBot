@@ -369,7 +369,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                 free(property.value);
             }
             
-            free(property.value);
+            free(property.property);
         }
     }
     
