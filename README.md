@@ -6,6 +6,19 @@
 
 (Linux only due to pthread and unistd dependancies)
 
+## Features
+ - Automatic game creation
+ - Automatic replay downloads
+ - Ability to kick players
+ - Automatic player/deck verification
+
+### Player Deck Verification
+This is when the bot can automatically kick players who are not welcome and tell
+playeres when they load the wrong deck. Both are entirely optional. The bot gets
+sent the list of players and decks from the api client, (i.e:
+[Squire Bot](https://github.com/TylerBloom/SquireBot)) and then when a player who
+is not meant to be in the game joins they can be kicked automatically by the bot.
+
 ## Interfacing with the bot
 The bot will host an https server (with self signed keys probably) and apps that
 interface with the bot will use that to connect and send commands which will then
