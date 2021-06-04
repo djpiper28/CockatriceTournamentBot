@@ -276,10 +276,12 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
                                                    &gameID,
                                                    "gameid",
                                                    property.property);
-                }                
+                }
+                
+                free(property.value);        
             }
             
-            free(property.value);
+            free(property.property);
         }
     }
     
