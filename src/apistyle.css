@@ -26,6 +26,7 @@
 
 @Media (min-width: 500px) and (orientation: landscape) {
     .grid-container {
+        min-height: 100vh;
         display: grid;
         grid-template-columns: 1fr 1fr 1fr 1fr;
         grid-template-rows: 1fr 1fr 1fr;                
@@ -58,6 +59,10 @@
     margin-right: 0px;
     margin-top: 0px;
     background-color: rgb(10, 100, 100);
+}
+
+body {
+    height: 100%;
 }
 
 blockquote {
