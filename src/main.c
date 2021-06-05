@@ -234,40 +234,55 @@ void playerPropertyChange(struct triceBot *b,
                           Event_PlayerPropertiesChanged event,
                           int pid) {
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-    if (pdi != NULL && event.has_player_properties()) {        
+    if (pdi != NULL && event.has_player_properties() && pid != -1) {        
         ServerInfo_PlayerProperties pp = event.player_properties();
         // Check if the deck has been changed
         if (pp.has_deck_hash()) {            
             char *deckHash = (char *) pp.deck_hash().c_str();
             int allowed = isPlayerDeckAllowed(deckHash, pid, g);
             
+            int plrArrayIndex = -1;
+            for (int i = 0; plrArrayIndex == -1 && i < g.playerCount; i++) {
+                if (g.playerArr[i].playerID == pid) {
+                    plrArrayIndex = pid;
+                }
+            }
+            
+            int pdiIndex = -1;            
+            for (int i = 0; pdiIndex == -1 && i < g.playerCount; i++) {
+                if (pdi[i].playerUsingSlot == pid) {
+                    pdiIndex = pid;
+                }
+            }
+                
+            
             // If the hash is not allowed then tell the user
-            if (pid != -1 && !allowed) {
+            if (plrArrayIndex != -1 && pdiIndex != -1 && !allowed) {
                 char *space = " ";
                 int spaceLen = strlen(space);
-                int length = 512 + (DECK_HASH_LENGTH + spaceLen) * pdi->deckCount;
+                int length = 512 + (DECK_HASH_LENGTH + spaceLen) * pdi[pdiIndex].deckCount;
                 char *messageBuffer = (char *) malloc(sizeof(char) * length);
-                if (pdi->deckCount == 1) {
+                if (pdi[pdiIndex].deckCount == 1) {
                     snprintf(messageBuffer,
                              512,
                              "@%s, you loaded a deck with hash '%s', which is not "
                              "expected. Please load the deck with hash: ",
-                             g.playerArr[pid].playerName,
+                             g.playerArr[plrArrayIndex].playerName,
                              deckHash);
                 } else {
                     snprintf(messageBuffer,
                             512,
                             "@%s, you loaded a deck with hash '%s', which is not "
                             "expected. Please load a deck with of these hashes: ",
-                            g.playerArr[pid].playerName,
+                             g.playerArr[plrArrayIndex].playerName,
                             deckHash);
                 }
                 
                 printf("[INFO]: Player %s loaded an invalid deck.\n",
-                       g.playerArr[pid].playerName);
+                       g.playerArr[plrArrayIndex].playerName);
                 
-                for (int i = 0; i < pdi[pid].deckCount; i++) {
-                    strncat(messageBuffer, pdi[pid].deckHash[i], DECK_HASH_LENGTH);
+                for (int i = 0; i < pdi[pdiIndex].deckCount; i++) {
+                    strncat(messageBuffer, pdi[pdiIndex].deckHash[i], DECK_HASH_LENGTH);
                     strncat(messageBuffer, space, spaceLen);
                 }
                 
