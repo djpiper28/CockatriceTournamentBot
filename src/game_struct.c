@@ -216,8 +216,8 @@ struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
             playerArr[i].playerID = out.playerArr[i].playerID;
             if (out.playerArr[i].playerName != NULL) {
                 int len = strnlen(out.playerArr[i].playerName, 256);
-                playerArr[i].playerName = (char *) malloc(sizeof(char) * len);
-                strncpy(playerArr[i].playerName, out.playerArr[i].playerName, len);
+                playerArr[i].playerName = (char *) malloc(sizeof(char) * (len + 1));
+                strncpy(playerArr[i].playerName, out.playerArr[i].playerName, len + 1);
             } else {
                 playerArr[i].playerName = NULL;
             }

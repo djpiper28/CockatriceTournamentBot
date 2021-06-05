@@ -244,14 +244,14 @@ void playerPropertyChange(struct triceBot *b,
             int plrArrayIndex = -1;
             for (int i = 0; plrArrayIndex == -1 && i < g.playerCount; i++) {
                 if (g.playerArr[i].playerID == pid) {
-                    plrArrayIndex = pid;
+                    plrArrayIndex = i;
                 }
             }
             
             int pdiIndex = -1;            
             for (int i = 0; pdiIndex == -1 && i < g.playerCount; i++) {
                 if (pdi[i].playerUsingSlot == pid) {
-                    pdiIndex = pid;
+                    pdiIndex = i;
                 }
             }
                 
@@ -274,7 +274,7 @@ void playerPropertyChange(struct triceBot *b,
                             512,
                             "@%s, you loaded a deck with hash '%s', which is not "
                             "expected. Please load a deck with of these hashes: ",
-                             g.playerArr[plrArrayIndex].playerName,
+                            g.playerArr[plrArrayIndex].playerName,
                             deckHash);
                 }
                 
