@@ -881,7 +881,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<div class=\"grid-container\">\n"
                                           "<div class=\"index\">\n"
                                           "<div class=\"index-inner\">\n"
-                                          "<h1>Game %d</h1>\n</div>\n</div>\n"
+                                          "<h1>%s</h1>\n</div>\n</div>\n"
                                           "<div class=\"content\">\n"
                                           "<div class=\"content-inner\">\n"
                                           "<h1>%s</h1>\n"
@@ -893,7 +893,7 @@ static void eventHandler(struct mg_connection *c,
                                           gameID,
                                           players,
                                           g.playerCount,
-                                          gameID,
+                                          g.gameName,
                                           PROG_NAME,
                                           gameID,
                                           api->config.cockatriceServer,
@@ -915,7 +915,7 @@ static void eventHandler(struct mg_connection *c,
                                         "<div class=\"grid-container\">\n"
                                         "<div class=\"index\">\n"
                                         "<div class=\"index-inner\">\n"
-                                        "<h1>Game %d</h1>\n</div>\n</div>\n"
+                                        "<h1>%s</h1>\n</div>\n</div>\n"
                                         "<div class=\"content\">"
                                         "<div class=\"content-inner\">"
                                         "<h1>%s</h1>\n"
@@ -928,7 +928,7 @@ static void eventHandler(struct mg_connection *c,
                                         gameID,
                                         players,
                                         g.playerCount,
-                                        gameID,
+                                        g.gameName,
                                         PROG_NAME,
                                         gameID,
                                         api->config.cockatriceServer,

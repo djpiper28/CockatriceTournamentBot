@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "testGameStruct.h"
 #include "../src/game_struct.h"
 
@@ -25,7 +27,7 @@ void TestGameStruct::testAddAndRemove() {
     
     // Test add
     for (int i = 0; i < GAMES; i++) {
-        addGame(&gl, createGame(i, PLAYERS, gameData));
+        addGame(&gl, createGame(i, PLAYERS, "game", gameData));
         CPPUNIT_ASSERT(getGameWithID(&gl, i) != NULL);
         for (int j = 0; j < PLAYERS; j++) {
             PLAYER_NAME
@@ -41,8 +43,8 @@ void TestGameStruct::testAddAndRemove() {
     
     // Test that duplicate games dont break the list
     for (int i = 0; i < GAMES; i++) {
-        addGame(&gl, createGame(i, PLAYERS, gameData));
-        addGame(&gl, createGame(i, PLAYERS, gameData));
+        addGame(&gl, createGame(i, PLAYERS, "game", gameData));
+        addGame(&gl, createGame(i, PLAYERS, "game", gameData));
     }
     
     for (int i = 0; i < GAMES; i++) {        
@@ -61,9 +63,10 @@ void TestGameStruct::testPlayerArray() {
     
     // Test add
     for (int i = 0; i < GAMES * 2; i++) {
-        addGame(&gl, createGame(i, PLAYERS, gameData));        
+        addGame(&gl, createGame(i, PLAYERS, "game", gameData));        
         struct game *g = getGameWithID(&gl, i);
         CPPUNIT_ASSERT(g != NULL);
+        CPPUNIT_ASSERT(strcmp(g->gameName, "game") == 0);
         
         for (int j = 0; j < PLAYERS; j++) {
             CPPUNIT_ASSERT(g->playerArr[j].playerName == NULL);
@@ -98,7 +101,7 @@ void TestGameStruct::testSearchList() {
     
     // Test add
     for (int i = 0; i < GAMES * 2; i++) {
-        addGame(&gl, createGame(i, PLAYERS, gameData));
+        addGame(&gl, createGame(i, PLAYERS, "game", gameData));
         CPPUNIT_ASSERT(getGameWithID(&gl, i) != NULL);
         for (int j = 0; j < PLAYERS; j++) {
             PLAYER_NAME

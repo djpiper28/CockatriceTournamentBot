@@ -129,6 +129,7 @@ static void freeGameListNodeNTS(struct gameListNode *gl) {
                 gl->currentGame->gameData.freeGameData(gl->currentGame->gameData.gameDataPtr);
             }
             
+            free(gl->currentGame->gameName);
             free(gl->currentGame);
         }
         free(gl);
@@ -195,7 +196,8 @@ void freeGameCopy(struct game g) {
             free(g.playerArr[i].playerName);
         }
     }
-        
+    
+    free(g.gameName);
     free(g.playerArr);
 }
 
@@ -207,6 +209,10 @@ struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
         out.playerArr = NULL;
     } else if (ga->gameID != -1) {
         out = *ga;
+        // Copy player name
+        int nameLen = strnlen(ga->gameName, 256);
+        out.gameName = (char *) malloc(sizeof(char) * (nameLen + 1));
+        strncpy(out.gameName, ga->gameName, nameLen + 1);
         
         // Copy player array
         struct player *playerArr = (struct player *) 
@@ -266,13 +272,22 @@ int getPlayerIDForGameIDAndName(struct gameList *gl, int gameID, char *playerNam
     return playerID;
 }
 
-struct game *createGame(int gameID, int playerCount, struct gameData gameData) {
+struct game *createGame(int gameID,
+                        int playerCount,
+                        char *gameName,
+                        struct gameData gameData) {
     struct game *g = (struct game *) malloc(sizeof(struct game));
     g->gameID = gameID;
     g->started = 0;
     g->startTime = -1;
     g->creationTime = time(NULL);
     g->gameData = gameData;
+    
+    // Copy game name
+    int nameLen = strnlen(gameName, 256);
+    g->gameName = (char *) malloc(sizeof(char) * (nameLen + 1));
+    strncpy(g->gameName, gameName, nameLen + 1);
+    
     g->playerCount = playerCount;
     g->playerArr = (struct player *) malloc(sizeof(struct player) * playerCount);
     

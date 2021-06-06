@@ -82,7 +82,7 @@ void TestPlayerDeckInfo::testPlayerDeckFilters() {
         free(name);
     }
     
-    struct game *g = createGame(1, max_players, gameDataForPlayerDeckInfo(pdi));
+    struct game *g = createGame(1, max_players, "game", gameDataForPlayerDeckInfo(pdi));
     int allowed;
     
     // Not in list or player deck info
@@ -195,7 +195,7 @@ void TestPlayerDeckInfo::testPlayerSlotSystem() {
         free(name);
     }
     
-    struct game *g = createGame(1, max_players, gameDataForPlayerDeckInfo(pdi));
+    struct game *g = createGame(1, max_players, "game", gameDataForPlayerDeckInfo(pdi));
     
     int allowed = isPlayerAllowed("djpiper28", 0, *g);
     CPPUNIT_ASSERT(allowed);
@@ -215,7 +215,7 @@ void TestPlayerDeckInfo::testPlayerSlotSystem() {
         free(name);
     }
     
-    g = createGame(1, max_players, gameDataForPlayerDeckInfo(pdi));
+    g = createGame(1, max_players, "game", gameDataForPlayerDeckInfo(pdi));
     
     allowed = isPlayerAllowed("DjPiPeR28", 0, *g);
     CPPUNIT_ASSERT(allowed);

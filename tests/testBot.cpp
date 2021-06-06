@@ -342,7 +342,7 @@ void TestBot::testGameEventFunctionsAreCalled() {
     serverMessage.set_allocated_game_event_container(gc);
     GameEvent *ge;
     
-    addGame(&b.gameList, createGame(ID, COUNT, {NULL, NULL}));
+    addGame(&b.gameList, createGame(ID, COUNT, "game", {NULL, NULL}));
     
     TEST_GAME_EVENT_FN_CALLED(onGameEventJoin,
                               Event_Join)

@@ -35,6 +35,7 @@ struct gameListNode {
 
 //playerArr has length playerCount. NULL players in playerArr haven't joined yet
 struct game {
+    char *gameName;
     int gameID,
         started,
         playerCount;
@@ -52,6 +53,7 @@ struct player {
 // Add to non-circular linked-list, game data can be NULL
 struct game *createGame(int gameID,
                         int playerCount,
+                        char *gameName,
                         struct gameData gameData);
 
 /**

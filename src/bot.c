@@ -998,6 +998,7 @@ void handleGameCreate(struct triceBot *b,
             //Create and add game item to the list
             addGame(&b->gameList, createGame(gameCreate.game_info().game_id(),
                                              gameCreate.game_info().max_players(),
+                                             game->gameName,
                                              game->gameData));
             // The game data should not freed when the create param is.
             game->gameData = {NULL, NULL};
