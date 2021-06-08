@@ -149,7 +149,13 @@ void addDebugFunctions(struct triceBot *b) {
 
 #endif
 
-int baseLen = strlen("Player @ was kicked, as they were not expected in this game. This action was taken automatically. If you do not think you should have been kicked checked your cockatrice name was put into the bot correctly, it is case sensitive. Then contact your tournament organiser, finally if that doesn't help please raise an issue at  if this was en error. Expected players: ") + strlen(GITHUB_REPO);
+int baseLen = strlen("Player @ was kicked, as they were not expected in this "                                 
+"game. This action was taken automatically. "
+"If you do not think you should have been kicked checked "
+"your cockatrice name was put into the bot correctly. "
+"Then contact your tournament organiser (they can disable "
+"this check), finally if that doesn't help please raise an "
+"issue at:  if this was an error. Expected players: ") + strlen(GITHUB_REPO);
 
 void playerJoin(struct triceBot *b,
                 struct game g,
@@ -171,7 +177,13 @@ void playerJoin(struct triceBot *b,
                     (baseLen + (1 + g.playerCount) * (PLAYER_NAME_LENGTH + 1)));
                 snprintf(messageBuffer, 
                          512, 
-                         "Player @%s was kicked, as they were not expected in this game. This action was taken automatically. If you do not think you should have been kicked checked your cockatrice name was put into the bot correctly, it is case sensitive. Then contact your tournament organiser, finally if that doesn't help please raise an issue at %s if this was en error. Expected players: ", 
+                         "Player @%s was kicked, as they were not expected in this "                                 
+                         "game. This action was taken automatically. "
+                         "If you do not think you should have been kicked checked "
+                         "your cockatrice name was put into the bot correctly. "
+                         "Then contact your tournament organiser (they can disable "
+                         "this check), finally if that doesn't help please raise an "
+                         "issue at: %s if this was an error. Expected players: ",
                          user.name().c_str(), 
                          GITHUB_REPO);
                 printf("[INFO]: Player %s was kicked from game %d.\n",
@@ -456,10 +468,14 @@ int main(int argc, char * args[]) {
         if (bot.config.maxMessagesPerSecond == -1) {
             valid = 0;
             printf("[ERROR]: Rate limit is not defined in config.conf.\n");
+        } else if (bot.config.maxMessagesPerSecond <= 0) {
+            valid = 0;
+            printf("[ERROR]: Rate limit is defined in config.conf but is an invalid value. "
+                   "Make sure it is a value above 0.\n");
         }
         
         if (valid) {
-            printf("[INFO]: Config read successfully.\n");
+            printf("[INFO]: Config file read successfully.\n");
             initBot(&bot.b, bot.config);
             tb_initServer(&bot.server, &bot.b, bot.config);
             
@@ -474,19 +490,25 @@ int main(int argc, char * args[]) {
             set_onGameEventLeave(&playerLeave, &bot.b);
             set_onGameEventPlayerPropertyChanged(&playerPropertyChange, &bot.b);
             
+            printf("[INFO]: Starting bot...\n");
+            
             startBot(&bot.b);
             tb_startServer(&bot.server);
+            
+            printf("[INFO]: Bot started.\n");
             
             for (;;) {
                 sleep(5);
             }
         } else {
-            printf("[ERROR]: Missing properties in config file, see README.md at %s/blob/main/README.md.\n",
+            printf("[ERROR]: Missing properties in config file, see README.md at "
+                   "%s/blob/main/README.md.\n",
                    GITHUB_REPO);
         }
     } else if (status == 0) {
-        printf("[ERROR]: There was an error reading the config.\n");
+        printf("[ERROR]: There was an error reading the config file.\n");
     } else if (status == -1) {
-        printf("[ERROR]: No config file exists, a new one was made.\n");
+        printf("[ERROR]: No config file exists, a new one was made. "
+               "Please edit it then restart the bot.\n");
     }
 }
