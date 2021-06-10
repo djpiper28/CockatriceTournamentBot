@@ -9,6 +9,8 @@ TestGameStruct::TestGameStruct () : CppUnit::TestCase("game_struct.h tests") {
     
 }
 
+int freeCalled[GAMES];
+
 void TestGameStruct::testInitAndFree() {
     struct gameList gl;
     initGameList(&gl);
@@ -16,9 +18,85 @@ void TestGameStruct::testInitAndFree() {
     freeGameList(&gl);
 }
 
-#define GAMES 256
-#define PLAYERS 4
-#define PLAYER_NAME snprintf(buff, 10, "player-%d", j);
+void freeGameData(void *data) {    
+    freeCalled[*(int*) data] = 1;
+    free(data);
+}
+
+void TestGameStruct::testGameInfo() {
+    struct gameList gl;
+    initGameList(&gl);
+    
+    char buff[10];
+    
+    // Init free called array    
+    for (int i = 0; i < GAMES; i++) {
+        freeCalled[i] = 0;
+    }
+    
+    // Test add
+    for (int i = 0; i < GAMES; i++) {
+        int *ptr = (int *) malloc(sizeof(int));
+        *ptr = i;
+        struct gameData gameData = {ptr, &freeGameData};
+        
+        addGame(&gl, createGame(i, PLAYERS, "game", gameData));
+        CPPUNIT_ASSERT(getGameWithID(&gl, i) != NULL);
+        struct game game = getGameWithIDNotRef(&gl, i);
+        
+        CPPUNIT_ASSERT(game.gameID == i);
+        CPPUNIT_ASSERT(*(int *) game.gameData.gameDataPtr == i);
+        freeGameCopy(game);
+        
+        CPPUNIT_ASSERT(freeCalled[i] == 0);
+        for (int j = 0; j < PLAYERS; j++) {
+            PLAYER_NAME
+            addPlayer(&gl, getGameWithID(&gl, i), buff, j, 1);
+        }
+    }
+    
+    // Test remove    
+    for (int i = 0; i < GAMES; i++) {
+        removeGame(&gl, getGameWithID(&gl, i));
+        CPPUNIT_ASSERT(getGameWithID(&gl, i) == NULL);
+        
+        // Assert the free function was called
+        CPPUNIT_ASSERT(freeCalled[i] == 1);
+    }
+    
+    freeGameList(&gl);
+}
+
+void TestGameStruct::testGameCopy() {
+    struct gameList gl;
+    initGameList(&gl);
+    
+    char buff[10];
+    struct gameData gameData = {NULL, NULL};
+    
+    // Test add
+    for (int i = 0; i < GAMES; i++) {
+        addGame(&gl, createGame(i, PLAYERS, "game", gameData));
+        CPPUNIT_ASSERT(getGameWithID(&gl, i) != NULL);
+        struct game game = getGameWithIDNotRef(&gl, i);
+        
+        CPPUNIT_ASSERT(game.gameID == i);
+        freeGameCopy(game);
+        for (int j = 0; j < PLAYERS; j++) {
+            PLAYER_NAME
+            addPlayer(&gl, getGameWithID(&gl, i), buff, j, 1);
+        }
+    }
+    
+    // Test remove    
+    for (int i = 0; i < GAMES; i++) {
+        removeGame(&gl, getGameWithID(&gl, i));
+        CPPUNIT_ASSERT(getGameWithID(&gl, i) == NULL);
+    }
+    
+    freeGameList(&gl);
+}
+
 void TestGameStruct::testAddAndRemove() {
     struct gameList gl;
     initGameList(&gl);
