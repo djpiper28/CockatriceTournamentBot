@@ -42,8 +42,8 @@ jobs:
       run : |
         if [ ! -d "build/" ]; then mkdir build; fi
         cd build
-        cmake .. # -DCMAKE_BUILD_TYPE=Debug
-        cmake --build . # --parallel x
+        cmake ..
+        cmake --build .
 
     - name: make tests and coverage
       shell: bash
@@ -52,8 +52,8 @@ jobs:
         cd build
         cmake .. -DCMAKE_BUILD_TYPE=TEST
         cmake --build .
-        ./CockatriceTournamentBotTests
-        make coverage        
+        #./CockatriceTournamentBotTests
+        make coverage
     
     - uses: codecov/codecov-action@v1
       with:

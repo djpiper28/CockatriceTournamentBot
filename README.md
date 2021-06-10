@@ -3,7 +3,6 @@
 ## Build status
 [![CodeQL - Build and Test (Ubuntu)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
 [![codecov](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graph/badge.svg?token=EFPY6BDV96)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
-
 (Linux only due to pthread and unistd dependancies)
 
 ## Features
@@ -128,6 +127,8 @@ program. Make sure that the program is called with an argument
 of `3` to get some verbose mongoose logs.
 
 ## Contributing
+[![commits](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/commits.svg)]
+
 ### Code Styling
 Where possible, code should be ISO C with exceptions for protobuf or cppunit
 library binds.
@@ -156,6 +157,7 @@ Tests are written in mostly C but use the cppunit library as needed with
 classes named in camelCase. Tests are compiled by automatically and can be
 ran with `ctest` or `./CockatriceTournamentBotTests`.
 
+[![tests](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/sunburst.svg)]
 #### Compiler Directives
  - All defines should be named in SCREAMING_SNAKE_CASE
  - All compiler directives should be at the top of the code if possible
