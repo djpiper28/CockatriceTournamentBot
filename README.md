@@ -127,7 +127,7 @@ program. Make sure that the program is called with an argument
 of `3` to get some verbose mongoose logs.
 
 ## Contributing
-[![commits](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/commits.svg)]
+[![commits](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/commits.svg)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
 
 ### Code Styling
 Where possible, code should be ISO C with exceptions for protobuf or cppunit
@@ -157,7 +157,8 @@ Tests are written in mostly C but use the cppunit library as needed with
 classes named in camelCase. Tests are compiled by automatically and can be
 ran with `ctest` or `./CockatriceTournamentBotTests`.
 
-[![tests](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/sunburst.svg)]
+[![tests](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/sunburst.svg)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
+
 #### Compiler Directives
  - All defines should be named in SCREAMING_SNAKE_CASE
  - All compiler directives should be at the top of the code if possible
