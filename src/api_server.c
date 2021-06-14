@@ -870,7 +870,7 @@ static void eventHandler(struct mg_connection *c,
                             mg_http_reply(c,
                                           200,
                                           "",
-                                          "<!DOCTYPE html\n>"
+                                          "<!DOCTYPE html>"
                                           "<html>\n"
                                           "<head>\n"
                                           "<meta charset=\"UTF-8\">\n"
@@ -904,7 +904,7 @@ static void eventHandler(struct mg_connection *c,
                             mg_http_reply(c,
                                         200,
                                         "",
-                                        "<!DOCTYPE html\n>"
+                                        "<!DOCTYPE html>"
                                         "<html>\n"
                                         "<head>\n"
                                         "<meta charset=\"UTF-8\">\n"
