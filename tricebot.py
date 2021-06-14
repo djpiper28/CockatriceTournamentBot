@@ -1,4 +1,8 @@
+import zipfile
+import urllib.parse
+import tempfile
 import requests
+import re
 
 class GameMade:
     def __init__(self, success: bool, gameID: int, replayName: str):
@@ -12,9 +16,9 @@ class ChangePlayerInfo:
         self.playerFound = playerFound
         self.gameFound = gameFound
         self.error = error
-        
-class TriceBot:    
-    #Set externURL to the domain address and apiURL to the loopback address in LAN configs
+
+class TriceBot:
+    # Set externURL to the domain address and apiURL to the loopback address in LAN configs
     def __init__(self, authToken: str, apiURL: str="https://0.0.0.0:8000", externURL: str=""):
         self.authToken = authToken
         self.apiURL = apiURL
@@ -36,6 +40,45 @@ class TriceBot:
     
     def getDownloadLink(self, replayName: str) -> str:
         return f'{self.externURL}/{replayName}'
+    
+    # Returns the zip file which contains all of the downloaded files
+    # Returns none if the zip file would be empty or if there was an IOError
+    def downloadReplays(self, replayURLs, replaysNotFound = []):                
+        # Download all the replays
+        replayStrs = []
+        
+        # Iterate over
+        for replayURL in replayURLs:
+            try:
+                res = self.req("api/updateplayerinfo", body)
+                name = urllib.parse.unquote(split[len(split) - 1])
+                if res == "error 404" or re.match("Not found \[.*\]", res) or re.match("<!DOCTYPE html>.*", res):
+                    # Error file not found
+                    replaysNotFound.append(name)
+                else:
+                    # Create a temp file and write the data
+                    split = replayURL.split("/")
+                    
+                    replayStrs.append(res)                    
+                    replayNames.append(name)
+            except OSError as exc:
+                # Network issues
+                print("[TRICEBOT ERROR]: Netty error")
+                replaysNotFound.append(replayURL)
+        
+        # Create zip file then close the temp files
+        try:
+            if (len(replayStrs) == 0):
+                return None
+            
+            zipf = zipfile.ZipFile(tempfile.TemporaryFile("wb+", 'w+'), zipfile.ZIP_DEFLATED, suffix="tricebot.py", prefix="replaydownloads")
+            for i in range(0, len(replayStrs)):
+                name = replayStrs[i]
+                replayStr = replayNames[i]            
+                ziph.writestr(replayStr, name)
+            return zipf
+        except IOError as exc:
+            return None
     
     # Returns a ChangePlayerInfo object that contains the state of the request
     def changePlayerInfo(self, gameID: int, oldPlayerName: str, newPlayerName: str) -> str:
@@ -84,6 +127,7 @@ class TriceBot:
         elif res == "game not found":
             return -1
         return 0
+    
     #  1 if success
     #  0 auth token is bad or error404 or network issue
     # -1 if player not found
@@ -96,7 +140,7 @@ class TriceBot:
         try:
             message = self.req("api/kickplayer", body)
         except OSError as exc:
-            #Network issues
+            # Network issues
             print("[TRICEBOT ERROR]: Netty error")
             return 0
         
@@ -145,22 +189,22 @@ class TriceBot:
             print("[TRICEBOT ERROR]: Netty error")
             return GameMade(False, -1, "")
             
-        #Check for server error
+        # Check for server error
         if (message.lower() == "timeout error") or (message.lower() == "error 404") or (message.lower() == "invalid auth token"):
             #Server issues         
             print("[TRICEBOT ERROR]: " + message)
             return GameMade(False, -1, "")
         
-        #Try to parse the message
+        # Try to parse the message
         lines = message.split("\n")
         gameID: int = -1
         replayName: str = ""
         
-        #Parse line for line
+        # Parse line for line
         for line in lines:
             parts = line.split("=")
             
-            #Check length
+            # Check length
             if len(parts) >= 2 :            
                 tag = parts[0]
                 value = ""
@@ -170,18 +214,18 @@ class TriceBot:
                         value += "="
                     
                 if tag == "gameid":
-                    #There has to be a better way to do this
+                    # There has to be a better way to do this
                     try:
                         gameID = int(value)
                     except:
-                        #Error checked at end
+                        # Error checked at end
                         pass
                 elif tag == "replayName":
-                    replayName = value.replace(" ", "%20")
-                #Ignore other tags
-            #Ignores lines that have no equals in them
+                    replayName = urllib.parse.quote(value)
+                # Ignore other tags
+            # Ignores lines that have no equals in them
         
-        #Check if there was an error
+        # Check if there was an error
         success = (gameID != -1) and (replayName != "")
         print(success)
         return GameMade(success, gameID, replayName)
