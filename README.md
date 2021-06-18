@@ -127,6 +127,8 @@ program. Make sure that the program is called with an argument
 of `3` to get some verbose mongoose logs.
 
 ## Contributing
+#### Commits and Code Coverage Graph
+(because I can)
 [![commits](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/commits.svg)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
 
 ### Code Styling
