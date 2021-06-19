@@ -1256,8 +1256,8 @@ static void botEventHandler(struct mg_connection *c,
                 int removeGameFlag = 0;
                 
                 //Check for game start timeout
-                if (!current->currentGame->started
-                        && currentTime - current->currentGame->creationTime > MAX_GAME_WAIT) {
+                if ((!current->currentGame->started)
+                        && (currentTime - current->currentGame->creationTime) > MAX_GAME_WAIT) {
                     pthread_mutex_lock(&b->mutex);
                 
                     Command_LeaveGame leaveGame;
