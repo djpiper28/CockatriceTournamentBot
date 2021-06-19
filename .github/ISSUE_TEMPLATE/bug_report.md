@@ -21,8 +21,8 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - Version [if known e.g. 22]
+**Version (please complete the following information):**
+ - Version [if known e.g. 1.7]
 
-**Additional context**
+**Additional context i.e: backtrace**
 Add any other context about the problem here.
