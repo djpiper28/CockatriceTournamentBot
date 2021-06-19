@@ -1245,17 +1245,21 @@ static void botEventHandler(struct mg_connection *c,
         long currentTime = time(NULL);
         
         if (b->lastGameWaitCheck != currentTime) {
-            //Itter over games
+            //Iterate over games
             pthread_mutex_lock(&b->mutex);
             pthread_mutex_lock(&b->gameList.mutex);
-            struct gameListNode *current = b->gameList.gamesHead;
+            struct gameListNode *current = b->gameList.gamesHead,
+                                *old = NULL;
             pthread_mutex_unlock(&b->mutex);
             
             while (current != NULL) {
+                int removeGameFlag = 0;
+                
                 //Check for game start timeout
                 if (!current->currentGame->started
                         && currentTime - current->currentGame->creationTime > MAX_GAME_WAIT) {
                     pthread_mutex_lock(&b->mutex);
+                
                     Command_LeaveGame leaveGame;
                     CommandContainer cont;
                     GameCommand *gc = cont.add_game_command();
@@ -1273,9 +1277,14 @@ static void botEventHandler(struct mg_connection *c,
                            
                     pthread_mutex_unlock(&b->mutex);
                     enq(cmd, &b->sendQueue);
+                    removeGameFlag = 1;
                 }
                 
+                old = current;
                 current = current->nextGame;
+                if (removeGameFlag) {
+                    removeGame(&b->gameList, old->currentGame);
+                }
             }
         }
         
