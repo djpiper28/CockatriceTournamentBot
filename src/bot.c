@@ -835,22 +835,9 @@ void handleGameEvent(struct triceBot *b,
             
             //Remove player from list
             if (event.HasExtension(Event_Leave::ext)) {
-                int disconnected = 0;
-                
-                pthread_mutex_lock(&b->gameList.mutex);
-                for (int i = 0; !disconnected && i < currentGame->playerCount; i++) {
-                    if (currentGame->playerArr[i].playerID == event.player_id()) {
-                        disconnected = 1;
-                    }
-                }
-                pthread_mutex_unlock(&b->gameList.mutex);    
-                
-                //Track non-spectator, non-judge players.
-                if (!disconnected) {
-                    removePlayer(&b->gameList,
-                                 currentGame,
-                                 event.player_id());
-                }
+                removePlayer(&b->gameList,
+                             currentGame,
+                             event.player_id());
             }
             
             //Change player ping
