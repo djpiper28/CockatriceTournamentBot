@@ -1283,7 +1283,9 @@ static void botEventHandler(struct mg_connection *c,
                 old = current;
                 current = current->nextGame;
                 if (removeGameFlag) {
+                    pthread_mutex_unlock(&b->gameList.mutex);
                     removeGame(&b->gameList, old->currentGame);
+                    break;
                 }
             }
         }
