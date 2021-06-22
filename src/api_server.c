@@ -878,7 +878,7 @@ static void eventHandler(struct mg_connection *c,
                             "<h4>Expected Players are</h4>\n");
                             
                             for (int i = 0; i < g.playerCount; i++) {
-                                strcat(pdiMSG, "\t- <h5>");
+                                strcat(pdiMSG, "<h5>\t- ");
                                 strncat(pdiMSG, pdi[i].playerName, PLAYER_NAME_LENGTH);
                                 strcat(pdiMSG, " \n</h5>");
                                 strcat(pdiMSG, "\t\t Expected decks are: ");
@@ -914,7 +914,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<h1>%s</h1>\n"
                                           "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
-                                          "%s\n"
+                                          "%s\n<br>\n"
                                           "<a href=\"%s\">Github Repo</a> | Version v%d.%d\n"
                                           "</div>\n</div>\n</div>\n</body>\n</html>",
                                           PAGE_CSS,
@@ -951,7 +951,7 @@ static void eventHandler(struct mg_connection *c,
                                         "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                         "<h4>Current players are:</h4>\n"
                                         "<ol>\n%s\n</ol>\n"
-                                        "%s\n"
+                                        "%s\n<br>\n"
                                         "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
                                         "</div>\n</div>\n</div>\n</body>\n</html>",
                                         PAGE_CSS,
