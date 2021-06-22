@@ -335,6 +335,8 @@ void gameEndCallback(struct triceBot *b,
                         g = current->currentGame;
                     }
                 }
+                
+                current = current->nextGame;
             }
             
             pthread_mutex_unlock(&b->gameList.mutex);
@@ -344,6 +346,7 @@ void gameEndCallback(struct triceBot *b,
             }
         }
     }
+    
     free(param);
 }
 

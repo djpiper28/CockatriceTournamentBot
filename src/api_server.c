@@ -1059,11 +1059,13 @@ static void eventHandler(struct mg_connection *c,
                 
                 if (ID != -1) {
                     freeGameCreateCallbackWaitParam(s->param);
+                    pthread_mutex_unlock(&s->param->mutex);
                     free(s);
                 } else {
                     s->param->callbackFn = &ErrorCallback;
-                    pthread_mutex_unlock(&s->param->mutex);
                 }
+                
+                pthread_mutex_unlock(&s->param->mutex);
             }
             
             c->fn_data = NULL;
