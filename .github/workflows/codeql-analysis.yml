@@ -11,7 +11,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze
+    name: Analyse, Compile. Unit Tests and Coverage.
     runs-on: ubuntu-latest
 
     strategy:
