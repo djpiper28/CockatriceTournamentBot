@@ -870,17 +870,17 @@ static void eventHandler(struct mg_connection *c,
                         char *pdiMSG = "";
                         if (isPDI) {
                             struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-                            int len = (PLAYER_NAME_LENGTH + 34) * g.playerCount 
+                            int len = (PLAYER_NAME_LENGTH + 25) * g.playerCount 
                                     + (DECK_HASH_LENGTH + 2) * MAX_DECKS * g.playerCount + 1024;
                             pdiMSG = (char *) malloc(sizeof(char) * len);
                                                         
-                            snprintf(pdiMSG, len, "<h3>Player deck info verification is enabled</h3>\n"
-                            "<h4>Expected Players are</h4>\n");
+                            snprintf(pdiMSG, len, "<h2>Player deck info verification is enabled</h2>\n"
+                            "<h3>Expected Players are</h3>\n");
                             
                             for (int i = 0; i < g.playerCount; i++) {
-                                strcat(pdiMSG, "<h5>\t- ");
+                                strcat(pdiMSG, "\t- ");
                                 strncat(pdiMSG, pdi[i].playerName, PLAYER_NAME_LENGTH);
-                                strcat(pdiMSG, " \n</h5>");
+                                strcat(pdiMSG, " \n");
                                 strcat(pdiMSG, "\t\t Expected decks are: ");
                                 
                                 for (int j = 0; j < pdi[i].deckCount; j++) {
