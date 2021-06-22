@@ -865,6 +865,33 @@ static void eventHandler(struct mg_connection *c,
                                 ptr += strnlen(buffTmp, BUFF_LEN);
                             }
                         }
+
+                        int isPDI = g.gameData.gameDataPtr != NULL;
+                        char *pdiMSG = "";
+                        if (isPDI) {
+                            struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
+                            int len = (PLAYER_NAME_LENGTH + 34) * g.playerCount 
+                                    + (DECK_HASH_LENGTH + 2) * MAX_DECKS * g.playerCount + 1024;
+                            pdiMSG = (char *) malloc(sizeof(char) * len);
+                                                        
+                            snprintf(pdiMSG, len, "<h3>Player deck info verification is enabled</h3>\n"
+                            "<h4>Expected Players are</h4>\n");
+                            
+                            for (int i = 0; i < g.playerCount; i++) {
+                                strcat(pdiMSG, "\t- <h5>");
+                                strncat(pdiMSG, pdi[i].playerName, PLAYER_NAME_LENGTH);
+                                strcat(pdiMSG, " \n</h5>");
+                                strcat(pdiMSG, "\t\t Expected decks are: ");
+                                
+                                for (int j = 0; j < pdi[i].deckCount; j++) {
+                                    strncat(pdiMSG, pdi[i].deckHash[j], DECK_HASH_LENGTH);
+                                    
+                                    if (j < pdi[i].deckCount - 1) {
+                                        strcat(pdiMSG, ", ");
+                                    }
+                                }
+                            }
+                        }
                         
                         if (players == 0) {                            
                             mg_http_reply(c,
@@ -887,6 +914,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<h1>%s</h1>\n"
                                           "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
+                                          "%s\n"
                                           "<a href=\"%s\">Github Repo</a> | Version v%d.%d\n"
                                           "</div>\n</div>\n</div>\n</body>\n</html>",
                                           PAGE_CSS,
@@ -897,6 +925,7 @@ static void eventHandler(struct mg_connection *c,
                                           PROG_NAME,
                                           gameID,
                                           api->config.cockatriceServer,
+                                          pdiMSG,
                                           GITHUB_REPO,
                                           VERSION_MAJOR,
                                           VERSION_MINOR);   
@@ -922,6 +951,7 @@ static void eventHandler(struct mg_connection *c,
                                         "<h3>Game %d is in progress on server '%s'.</h3>\n"
                                         "<h4>Current players are:</h4>\n"
                                         "<ol>\n%s\n</ol>\n"
+                                        "%s\n"
                                         "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
                                         "</div>\n</div>\n</div>\n</body>\n</html>",
                                         PAGE_CSS,
@@ -933,9 +963,14 @@ static void eventHandler(struct mg_connection *c,
                                         gameID,
                                         api->config.cockatriceServer,
                                         buff,
+                                        pdiMSG,
                                         GITHUB_REPO,
                                         VERSION_MAJOR,
                                         VERSION_MINOR);
+                        }
+                                                
+                        if (isPDI) {
+                            free(pdiMSG);
                         }
                         
                         free(buff);
