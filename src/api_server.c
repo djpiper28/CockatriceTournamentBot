@@ -409,13 +409,13 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                                     BUFFER_LENGTH) == 0) {
                             // 3 player names match
                             playerIndex = i;
-                            slotOccupied = pdi[i].playerUsingSlot == -1;
+                            slotOccupied = pdi[i].playerUsingSlot != -1;
                             exactMatch = 1;
                         } else if (strncmp("*",
                                            pdi[i].playerName,
                                            BUFFER_LENGTH) == 0) {
                             playerIndex = i;
-                            slotOccupied = pdi[i].playerUsingSlot == -1;
+                            slotOccupied = pdi[i].playerUsingSlot != -1;
                             ambiguousMatches++;
                         }
                     }
