@@ -385,7 +385,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
             * 0 -> Player not found (error case)
             * . -> Player has multiple slots
             * 1 | -> At least one slot is empty (use the first empty slot)
-            * 2 | -> No slots are empty
+            * 2 | -> No slots are empty - allow operation but show warning
             * 3 | | -> New player name matches the current player in the slot
             */
             pthread_mutex_lock(&s->api->triceBot->gameList.mutex);
@@ -397,34 +397,39 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                     // Find target in player deck info
                     int playerIndex = -1,
                         exactMatch = 0,
-                        ambiguousMatches = 0;
+                        ambiguousMatches = 0,
+                        slotOccupied = 0;
                     
                     for (int i = 0; (!exactMatch)
                         && ambiguousMatches < 2
                         && i < g->playerCount; i++) {
                         // 2 Only empty slots are treated as good
-                        if (pdi[i].playerUsingSlot == -1) {
-                            if (strncmp(pdi[i].playerName,
-                                oldPlayerName,
-                                BUFFER_LENGTH) == 0) {
-                                // 3 player names match
-                                playerIndex = i;
-                                exactMatch = 1;
-                            } else if (strncmp("*",
-                                        pdi[i].playerName,
-                                        BUFFER_LENGTH) == 0) {
-                                playerIndex = i;
-                                ambiguousMatches++;
-                            }
+                        if (strncmp(pdi[i].playerName,
+                                    oldPlayerName,
+                                    BUFFER_LENGTH) == 0) {
+                            // 3 player names match
+                            playerIndex = i;
+                            slotOccupied = pdi[i].playerUsingSlot == -1;
+                            exactMatch = 1;
+                        } else if (strncmp("*",
+                                           pdi[i].playerName,
+                                           BUFFER_LENGTH) == 0) {
+                            playerIndex = i;
+                            slotOccupied = pdi[i].playerUsingSlot == -1;
+                            ambiguousMatches++;
                         }
                     }
                     
                     if (playerIndex != -1 && (exactMatch || ambiguousMatches <= 1)) {
-                        // 1 if ambiguousMatches == 1
+                        // 1 if ambiguousMatches == 1s
                         strncpy(pdi[playerIndex].playerName,
                                 newPlayerName,
                                 PLAYER_NAME_LENGTH);
-                        mg_http_reply(c, 200, "", "success");
+                        if (slotOccupied) {
+                            mg_http_reply(c, 200, "", "success but occupied");
+                        } else {
+                            mg_http_reply(c, 200, "", "success");
+                        }
                     } else {
                         // 0 if playerIndex == -1
                         mg_http_reply(c, 200, "", "error player not found");

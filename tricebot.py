@@ -10,13 +10,6 @@ class GameMade:
         self.gameID = gameID
         self.replayName = replayName
 
-class ChangePlayerInfo:
-    def __init__(self, success: bool, playerFound: bool=True, gameFound: bool=True, error: bool=False):
-        self.success = success
-        self.playerFound = playerFound
-        self.gameFound = gameFound
-        self.error = error
-
 class TriceBot:
     # Set externURL to the domain address and apiURL to the loopback address in LAN configs
     def __init__(self, authToken: str, apiURL: str="https://0.0.0.0:8000", externURL: str=""):
@@ -91,8 +84,14 @@ class TriceBot:
             print(exc)
             return None
     
-    # Returns a ChangePlayerInfo object that contains the state of the request
-    def changePlayerInfo(self, gameID: int, oldPlayerName: str, newPlayerName: str) -> str:
+    # Returns:
+    # 1 if the operation was a success
+    # 2 if the slot was occupied (warns the admin that a player may need to be kicked)
+    
+    # 0 if a network error occurred
+    # -1 if the game was not found
+    # -2 if the player slot was not found
+    def changePlayerInfo(self, gameID: int, oldPlayerName: str, newPlayerName: str):
         body  = f'authtoken={self.authToken}\n'
         body += f'oldplayername={oldPlayerName}\n'
         body += f'newplayername={newPlayerName}\n'
@@ -107,13 +106,15 @@ class TriceBot:
             res = "network error"
             
         if res == "success":
-            return ChangePlayerInfo(True)
+            return 1
+        elif res == "success but occupied":
+            return 2
         elif res == "error game not found":
-            return ChangePlayerInfo(False, False, False)
+            return -1
         elif res == "error player not found":
-            return ChangePlayerInfo(False, False, True)
+            return -2
         else:
-            return ChangePlayerInfo(False, False, False, True)
+            return 0
     
     # 1 if success
     # 0 auth token is bad, error 404 or network issue
