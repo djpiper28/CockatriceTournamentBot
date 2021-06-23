@@ -752,7 +752,7 @@ void handleGameEvent(struct triceBot *b,
     struct game *currentGame = getGameWithIDNTS(&b->gameList, id);
     pthread_mutex_unlock(&b->gameList.mutex);
     
-    if (g.gameID != -1 && currentGame != NULL) {        
+    if (g.gameID != -1 && currentGame != NULL) {
         //Track state
         int size = gameEventContainer.event_list_size();
         
@@ -793,7 +793,7 @@ void handleGameEvent(struct triceBot *b,
             }
             
             //Add player to list
-            if (event.HasExtension(Event_Join::ext)) {
+            if (event.HasExtension(Event_Join::ext)) {                
                 Event_Join jEvent = event.GetExtension(Event_Join::ext);
                 
                 if (jEvent.has_player_properties()) {
@@ -835,6 +835,10 @@ void handleGameEvent(struct triceBot *b,
             
             //Remove player from list
             if (event.HasExtension(Event_Leave::ext)) {
+                // Call this before the player leaves
+                MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventLeave,
+                                                       Event_Leave)
+                
                 removePlayer(&b->gameList,
                              currentGame,
                              event.player_id());
@@ -881,8 +885,6 @@ void handleGameEvent(struct triceBot *b,
             //Game event call
             MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventJoin,
                                                    Event_Join)
-            else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventLeave,
-                                                        Event_Leave)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameClosed,
                                                         Event_GameClosed)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventHostChanged,

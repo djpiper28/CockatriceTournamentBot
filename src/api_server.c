@@ -419,7 +419,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                         }
                     }
                     
-                    if (playerIndex != -1 && ambiguousMatches <= 1) {
+                    if (playerIndex != -1 && (exactMatch || ambiguousMatches <= 1)) {
                         // 1 if ambiguousMatches == 1
                         strncpy(pdi[playerIndex].playerName,
                                 newPlayerName,
@@ -496,22 +496,21 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 }
                 free(property.value);
             } else if (strncmp(property.property, "deckHash", property.propLen) == 0) {
-                if (playerNames > 0) {
+                if (playerNames > 0 && playerNames <= MAX_PLAYERS) {
                     if (deckCount[playerNames - 1] == 0) {
                         deckHashes++;
                     }
                     
-                    if (deckHashes <= MAX_PLAYERS) {
-                        if (deckCount[playerNames - 1] < MAX_DECKS 
-                            && property.valueLen + 1 == DECK_HASH_LENGTH) {
-                            strncpy(deckHashBuffers[deckHashes - 1]
-                                                   [deckCount[playerNames - 1]],
-                                    property.value,
-                                    DECK_HASH_LENGTH - 1);
-                            deckCount[playerNames - 1]++;
-                        }
+                    if (deckCount[playerNames - 1] < MAX_DECKS 
+                        && property.valueLen + 1 == DECK_HASH_LENGTH) {
+                        strncpy(deckHashBuffers[deckHashes - 1]
+                                               [deckCount[playerNames - 1]],
+                                property.value,
+                                DECK_HASH_LENGTH);
+                        deckCount[playerNames - 1]++;
                     }
                 }
+                
                 free(property.value);
             } else {
                 //Check is number
@@ -870,7 +869,7 @@ static void eventHandler(struct mg_connection *c,
                         char *pdiMSG = "";
                         if (isPDI) {
                             struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-                            int len = (PLAYER_NAME_LENGTH + 25) * g.playerCount 
+                            int len = (PLAYER_NAME_LENGTH + 29) * g.playerCount 
                                     + (DECK_HASH_LENGTH + 2) * MAX_DECKS * g.playerCount + 1024;
                             pdiMSG = (char *) malloc(sizeof(char) * len);
                                                         
@@ -878,7 +877,7 @@ static void eventHandler(struct mg_connection *c,
                             "<h3>Expected Players are</h3>\n");
                             
                             for (int i = 0; i < g.playerCount; i++) {
-                                strcat(pdiMSG, "\t- ");
+                                strcat(pdiMSG, "<br>\t- ");
                                 strncat(pdiMSG, pdi[i].playerName, PLAYER_NAME_LENGTH);
                                 strcat(pdiMSG, " \n");
                                 strcat(pdiMSG, "\t\t Expected decks are: ");

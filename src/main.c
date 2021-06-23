@@ -235,7 +235,7 @@ void playerLeave(struct triceBot *b,
                  Event_Leave event,
                  int pid) {
     for (int i = 0; i < g.playerCount; i++) {
-        if(g.playerArr[i].playerName == NULL) {
+        if(g.playerArr[i].playerID == pid) {
             clearPlayerSlot(g.playerArr[i].playerID, g);
         }
     }

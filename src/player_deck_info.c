@@ -4,7 +4,8 @@
 #include "player_deck_info.h"
 
 struct playerDeckInfo *initPlayerDeckInfoArr(int length) {    
-    struct playerDeckInfo *pdi = (struct playerDeckInfo *) malloc(sizeof(struct playerDeckInfo) * length);
+    struct playerDeckInfo *pdi = (struct playerDeckInfo *) 
+        malloc(sizeof(struct playerDeckInfo) * length);
     return pdi;
 }
 
@@ -49,7 +50,7 @@ int isPlayerAllowed(char *playerName,
     // To lowercase fresh from stack overflow
     for (int i = 0; i < PLAYER_NAME_LENGTH && nameCp[i] != 0; i++) {
         nameCp[i] = nameCp[i] > 0x40 && nameCp[i] < 0x5b ? 
-            nameCp[i] | 0x60 : nameCp[i];
+                    nameCp[i] | 0x60 : nameCp[i];
     }
     
     if (g.gameData.gameDataPtr != NULL) {
@@ -71,7 +72,7 @@ int isPlayerAllowed(char *playerName,
                     // To lowercase fresh from stack overflow
                     for (int i = 0; i < PLAYER_NAME_LENGTH && pdiNameCp[i] != 0; i++) {
                         pdiNameCp[i] = pdiNameCp[i] > 0x40 && pdiNameCp[i] < 0x5b ? 
-                        pdiNameCp[i] | 0x60 : pdiNameCp[i];
+                                       pdiNameCp[i] | 0x60 : pdiNameCp[i];
                     }
                     
                     // If the playername matches the expected name exactly or;
