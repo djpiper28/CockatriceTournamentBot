@@ -1208,8 +1208,8 @@ static void botEventHandler(struct mg_connection *c,
 #endif
             
             /**
-            * Call handler is blocked by user code
-            */
+             * Call handler is blocked by user code
+             */
             if (messageType == RESPONSE) {
                 handleResponse(b, &newServerMessage);
             } else if (messageType == SESSION_EVENT) {
@@ -1355,7 +1355,7 @@ static void botEventHandler(struct mg_connection *c,
         // Signal that we're done
     }
     
-    //Close connection if the bot has been told to halt
+    // Close connection if the bot has been told to halt
     if (! b->running) {
         c->is_closing = 1;
     }

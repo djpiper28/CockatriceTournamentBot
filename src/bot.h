@@ -121,7 +121,6 @@ sendCreateGameCommand(struct triceBot *b,
                       struct gameData gameData,
                       void (*callbackFn)(struct gameCreateCallbackWaitParam *));
 
-
 /**
  * Calls the handler for each session event
  * CFLAGS for this method
