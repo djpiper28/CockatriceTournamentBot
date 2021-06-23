@@ -879,13 +879,13 @@ static void eventHandler(struct mg_connection *c,
                             pdiMSG = (char *) malloc(sizeof(char) * len);
                                                         
                             snprintf(pdiMSG, len, "<h2>Player deck info verification is enabled</h2>\n"
-                            "<h3>Expected Players are</h3>\n");
+                            "<h3>Expected Players are:</h3>\n");
                             
                             for (int i = 0; i < g.playerCount; i++) {
-                                strcat(pdiMSG, "<br>\t- ");
+                                strcat(pdiMSG, "\t- ");
                                 strncat(pdiMSG, pdi[i].playerName, PLAYER_NAME_LENGTH);
                                 strcat(pdiMSG, " \n");
-                                strcat(pdiMSG, "\t\t Expected decks are: ");
+                                strcat(pdiMSG, ",\t\t Expected decks are: ");
                                 
                                 for (int j = 0; j < pdi[i].deckCount; j++) {
                                     strncat(pdiMSG, pdi[i].deckHash[j], DECK_HASH_LENGTH);
@@ -894,6 +894,7 @@ static void eventHandler(struct mg_connection *c,
                                         strcat(pdiMSG, ", ");
                                     }
                                 }
+                                strcat(pdiMSG, "<br>");
                             }
                         }
                         
