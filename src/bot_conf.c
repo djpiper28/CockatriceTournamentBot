@@ -174,6 +174,8 @@ void makeNewFile(char *filename) {
         fprintf(configFile, "password=changeme\n"); // For auto login
         fprintf(configFile, "serveraddress=ws://server.cockatrice.us:4748\n");
         fprintf(configFile, "roomName=Magic\n"); //For auto room join
+        fprintf(configFile, "replayFolder=changeme\n");
+        fprintf(configFile, "ratelimit=5\n");
         
         //Tournament bot data TODO: move them elsewhere
         fprintf(configFile, "authtoken=%s\n", generatedAuthToken);
@@ -182,11 +184,9 @@ void makeNewFile(char *filename) {
         
         fprintf(configFile, "bindAddr=https://0.0.0.0:8000\n");
         fprintf(configFile, "clientID=changeme\n");
-        fprintf(configFile, "replayFolder=changeme\n");
-        fprintf(configFile, "ratelimit=5\n");
         
         free(generatedAuthToken);
-        fclose(configFile);     //close file like a good boy
+        fclose(configFile); //close file like a good boy
     } else {
         // Invalid permissions to make a new file
         printf("[ERROR]: Unable to create config.conf.\n");
@@ -251,8 +251,8 @@ int readConf(struct Config *config, char *filename) {
                              config);
             }
             
-            free(lineBuffer);       //free that bad boi
-            fclose(configFile);     //close file like a good boy
+            free(lineBuffer); //free that bad boi
+            fclose(configFile); //close file like a good boy
             return 1;
         } else {
             // Unreadable file
