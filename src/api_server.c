@@ -506,7 +506,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                         deckHashes++;
                     }
                     
-                    if (deckCount[playerNames - 1] < MAX_DECKS 
+                    if (deckCount[playerNames - 1] < MAX_DECKS - 1
                         && property.valueLen + 1 == DECK_HASH_LENGTH) {
                         strncpy(deckHashBuffers[deckHashes - 1]
                                                [deckCount[playerNames - 1]],
@@ -585,9 +585,9 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 }
                                 
                 // Add the player deck info to the data structure
-                for (int i = 0; i < playerNames && i < deckHashes; i++) {
+                for (int i = 0; i < playerNames && i < deckHashes && i < MAX_PLAYERS; i++) {
                     // Copy the deck hash to a string on the heap
-                    for (int j = 0; j < deckCount[i]; j++) {
+                    for (int j = 0; j < deckCount[i] && j < MAX_DECKS; j++) {
                         strncpy(tmpBuffer[j], deckHashBuffers[i][j], DECK_HASH_LENGTH);
                     }
                     
@@ -604,7 +604,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 free(tmpBuffer);
                 
                 // Fill the empty slots
-                for (int i = playerNames; i < playerCount; i++) {
+                for (int i = playerNames; i < playerCount && i < MAX_PLAYERS; i++) {
                     pdi[i] = initPlayerDeckInfo((char **) &"*",
                                                 1,
                                                 "*",
