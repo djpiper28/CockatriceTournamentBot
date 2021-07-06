@@ -233,13 +233,8 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
     }
     
     //Free the temp vars
-    if (playerName != NULL) {
-        free(playerName);
-    }
-    
-    if (authToken != NULL) {
-        free(authToken);
-    }
+    if (playerName != NULL) free(playerName);    
+    if (authToken != NULL) free(authToken);
 }
 
 
@@ -322,6 +317,8 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
         printf("[INFO]: Invalid update player info command.\n");
         send404(c);
     }
+    
+    if (authToken != NULL) free(authToken);
 }
 
 #define MAX_PLAYERS 25
@@ -421,10 +418,11 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                     }
                     
                     if (playerIndex != -1 && (exactMatch || ambiguousMatches <= 1)) {
-                        // 1 if ambiguousMatches == 1s
+                        // 1 if ambiguousMatches == 1
                         strncpy(pdi[playerIndex].playerName,
                                 newPlayerName,
                                 PLAYER_NAME_LENGTH);
+                        
                         if (slotOccupied) {
                             mg_http_reply(c, 200, "", "success but occupied");
                         } else {
@@ -449,6 +447,10 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
         printf("[INFO]: Invalid update player info command.\n");
         send404(c);
     }
+    
+    if (authToken != NULL) free(authToken);
+    if (oldPlayerName != NULL) free(oldPlayerName);
+    if (newPlayerName != NULL) free(newPlayerName);
 }
 
 static void serverCreateGameCommand(struct ServerConnection *s,
@@ -641,17 +643,9 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     }
     
     //Free the temp vars
-    if (gameName != NULL) {
-        free(gameName);
-    }
-    
-    if (authToken != NULL) {
-        free(authToken);
-    }
-    
-    if (password != NULL) {
-        free(password);
-    }
+    if (gameName != NULL) free(gameName);    
+    if (authToken != NULL) free(authToken);    
+    if (password != NULL) free(password);
 }
 
 static void ErrorCallback(struct gameCreateCallbackWaitParam *param) {
