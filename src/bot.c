@@ -617,7 +617,7 @@ void saveReplay(struct triceBot *b,
                 fputc(replayData[i], replayFile);
             }
             
-            fclose(replayFile);     //close file like a good boy
+            fclose(replayFile); //close file like a good boy
             
             printf("[INFO]: Replay %s saved.\n", fileName);
         } else {
@@ -658,15 +658,6 @@ void handleResponse(struct triceBot *b,
         
         if (response.HasExtension(Response_Login::ext)) {
             loginResponse(b, &response, NULL);
-        }
-        
-        if (response.HasExtension(Response_ReplayDownload::ext)) {
-#if DOWNLOAD_REPLAYS
-            replayResponseDownload(b,
-                                   response.GetExtension(Response_ReplayDownload::ext));
-#endif
-                                   
-            MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onReplayDownload)
         }
     }
 }
@@ -725,6 +716,36 @@ void handleRoomEvent(struct triceBot *b,
     }
 }
 
+void onReplayDownloadResponse(struct triceBot *b,
+                              const Response *resp,
+                              void *param) {
+    // If resp is NULL the request timed out.
+    if (resp == NULL) {
+        int replayID = *(int *) param;
+        printf("[ERROR]: Replay %d failed to download.\n",
+               replayID);
+        
+        Command_ReplayDownload replayDownload;
+        replayDownload.set_replay_id(replayID);
+        printf("[INFO]: Requested replay %d.\n",
+               replayID);
+        
+        CommandContainer cont;
+        SessionCommand *c = cont.add_session_command();
+        c->MutableExtension(Command_ReplayDownload::ext)->CopyFrom(replayDownload);
+        
+        struct pendingCommand *cmd = prepCmd(b, cont, -1, -1);
+        cmd->param = malloc(sizeof(int));
+        *(int *) cmd->param = replayID;
+        cmd->callbackFunction = &onReplayDownloadResponse;
+        enq(cmd, &b->sendQueue);
+    } else {
+        replayResponseDownload(b, resp->GetExtension(Response_ReplayDownload::ext));
+    }
+    
+    if (param != NULL) free(param); // Free the replay id
+}
+
 /**
  * Called when a replay is ready
  * Set DOWNLOAD_REPLAYS to 1 with -DDOWNLOAD_REPLAYS=1 to make this be
@@ -741,17 +762,21 @@ static void replayReady(struct triceBot *b,
     //Download all replays
     for (int i = 0; i < size; i++) {
         ServerInfo_Replay replay = replays.replay_list().Get(i);
+        int replayID = replay.replay_id();
         
         Command_ReplayDownload replayDownload;
-        replayDownload.set_replay_id(replay.replay_id());
+        replayDownload.set_replay_id(replayID);
         printf("[INFO]: Requested replay %d.\n",
-               replay.replay_id());
+               replayID);
         
         CommandContainer cont;
         SessionCommand *c = cont.add_session_command();
         c->MutableExtension(Command_ReplayDownload::ext)->CopyFrom(replayDownload);
         
         struct pendingCommand *cmd = prepCmd(b, cont, -1, -1);
+        cmd->param = malloc(sizeof(int));
+        *(int *) cmd->param = replayID;
+        cmd->callbackFunction = &onReplayDownloadResponse;
         enq(cmd, &b->sendQueue);
     }
 }
