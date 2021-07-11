@@ -720,7 +720,7 @@ void onReplayDownloadResponse(struct triceBot *b,
                               const Response *resp,
                               void *param) {
     // If resp is NULL the request timed out.
-    if (resp == NULL) {
+    if (resp == NULL || !resp->HasExtension(Response_ReplayDownload::ext)) {
         int replayID = *(int *) param;
         printf("[ERROR]: Replay %d failed to download.\n",
                replayID);

@@ -110,7 +110,7 @@ void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp) {
     }
 }
 
-//Not thread safe version
+// Not thread safe version
 static void freeGameListNodeNTS(struct gameListNode *gl) {
     if (gl != NULL) {
         if (gl->currentGame != NULL) {
