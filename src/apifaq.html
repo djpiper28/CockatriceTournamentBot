@@ -19,14 +19,37 @@
         <div class="content-inner">
             <h1>Marchesa Bot FAQ</h1>
 
-            This page is an FAQ on how to use Monarch Bot, possible problems and fixes; it will provide help for the <a href="https://github.com/TylerBloom/SquireBot">Squire Bot</a> integration.
+            This page is an FAQ on how to use Monarch Bot, possible problems and
+            fixes; it will provide help for the 
+            <a href="https://gitlab.com/monarch3/SquireBot/">Squire Bot</a> 
+            integration.
 
             <p id="top"/>
+            <h2 id="SquireBotIntegration">Squire Bot Integration</h2>            
+            This bot is integrated quite closely with Squire Bot, to enable trice
+            bot in your Squire Bot tournament you need to set the tricebot-enabled
+            property to true.
+            <blockquote>
+            !update-properties "Tournament Name" tricebot-enabled=true
+            </blockquote>
+            <br>
+            
+            If you want to use player deck verification then you need to set the
+            player-deck-verification property to true.
+            <blockquote>
+            !update-properties "Tournament Name" player-deck-verification=true
+            </blockquote>
+            <br>
+            
+            The cockatrice-name command will automatically update the data that
+            is sent to the trice bot on game creation. However the deck hashes
+            cannot be updated after a game is started.
             
             <h2 id="PlayerDeckVerificationIssues">Player Deck Verification Issues</h2>
             <h3 id="PlayersBeingKickedWrongly">Players Being Kicked Wrongly</h3>
             If a player is kicked the name that was sent to the API may be wrong
-            it can up updated via the <a href="/api#apiupdateplayerinfo">../api/updateplayerinfo</a> endpoint.
+            it can be updated via the <a href="/api#apiupdateplayerinfo">../api/updateplayerinfo</a>
+            endpoint.
             When a player is kicked it will tell you the names it was expecting,
             which can then be used to find the player name that was typed in wrongly.
             
@@ -73,21 +96,29 @@
             <a href="https://github.com/Cockatrice/Cockatrice/releases/tag/2021-05-28-Development-2.8.1-beta.2">2.8.1 beta 2</a>
             
             <h3 id="WrongGameFilter">Wrong Game Filter</h3>
-            You should have "Show password protected games" enabled, game type
-            filters should all be un-ticked and, the spectator filters should also
+            You should have "Show password protected games" enabled; game type
+            filters should all be un-ticked and; the spectator filters should also
             all be unticked. If these are your settings then it should show the games.
             You can use the "Creator Name" filter to find the game far faster,
             for Squire Bot the creator is called "Monarch Bot".
             
             <h2 id="ReplayCannotBeDownloaded">Replay Cannot Be Downloaded</h2>
             If the replay cannot be downloaded with a file not found message then
-            either: 
+            one of the following is the case:
             <ul>
                 <li>The game has ended and some players are still in the game or;</li>
-                <li>The replay link is broken.</li>
+                <li>The server is not responding to replay download requests or;</li>
+                <li>The server has not created a replay</li>
             </ul>
             If the game is still in progress then a webpage will appear showing
             which players are in the game.
+            
+            <h2 id="DownloadAllReplays">Download All Replays For A Tournament</h2>
+            To download all the replays for a Squire Bot tournament the download-replays
+            command can be used, which will return a ZIP file of the replays.
+            <blockquote>
+            !download-replays "Tournament Name"
+            </blockquote>
             
             <p id="bottom"/>
 

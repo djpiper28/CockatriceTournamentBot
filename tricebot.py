@@ -31,6 +31,26 @@ class TriceBot:
         if not abs:
             print(resp)
         return resp
+    
+    def reqBin(self, urlpostfix: str, data: str, abs: bool = False) -> str:
+        print(data)
+        url = urlpostfix
+        if not abs:
+            url = f'{self.apiURL}/{url}'
+        resp = requests.get(url, timeout=7.0, data=data,  verify=False).content
+        if not abs:
+            print(resp)
+        return resp
+    
+    def reqBin(self, urlpostfix: str, data: str, abs: bool = False) -> str:
+        print(data)
+        url = urlpostfix
+        if not abs:
+            url = f'{self.apiURL}/{url}'
+        resp = requests.get(url, timeout=7.0, data=data,  verify=False).content
+        if not abs:
+            print(resp)
+        return resp
         
     def checkauthkey(self):
         return self.req("api/checkauthkey", self.authToken) == "1"
@@ -45,21 +65,27 @@ class TriceBot:
         replayStrs = []
         replayNames = []
         
-        # Iterate over
+        # Iterate over each replay url
         for replayURL in replayURLs:
             try:
-                res = self.req(replayURL, "", abs=True)
+                res = self.reqBin(replayURL.replace(self.externURL, self.apiURL), "", abs=True)
                 split = replayURL.split("/")
                 name = urllib.parse.unquote(split[len(split) - 1])
-                if res == "error 404" or re.match("Not found \[.*\]", res) or re.match("<!DOCTYPE html>.*", res):
-                    # Error file not found
-                    replaysNotFound.append(name)
-                    #print(res == "error 404")
-                    #print(re.match("Not found \[.*\]", res))
-                    #print(re.match("<!DOCTYPE html>.*", res))
-                else:
-                    # Create a temp file and write the data                    
-                    replayStrs.append(res)                    
+                try:
+                    if res.decode() == "error 404" or re.match("Not found \[.*\]", res.decode()) or re.match("<!DOCTYPE html>.*", res.decode()) or re.match("<html>.*", res.decode()):
+                        # Error file not found
+                        replaysNotFound.append(name)
+                        #print(res == "error 404")
+                        #print(re.match("Not found \[.*\]", res))
+                        #print(re.match("<!DOCTYPE html>.*", res))
+                    else:
+                        # Create a temp file and write the data
+                        replayStrs.append(res)
+                        replayNames.append(name)
+                except UnicodeDecodeError as e:
+                    print(e) # This means we got binary :)
+                    # Create a temp file and write the data
+                    replayStrs.append(res)
                     replayNames.append(name)
             except OSError as exc:
                 # Network issues
@@ -72,7 +98,7 @@ class TriceBot:
                 return None
             tmpFile = tempfile.TemporaryFile(mode="wb+", suffix="tricebot.py", prefix="replaydownloads.zip")
             #tmpFile = open("I hate python.zip", "wb+")
-            zipf = zipfile.ZipFile(tmpFile, "w", zipfile.ZIP_STORED)
+            zipf = zipfile.ZipFile(tmpFile, "w", zipfile.ZIP_DEFLATED)
             for i in range(0, len(replayStrs)):
                 replayStr = replayStrs[i]
                 name = replayNames[i]            
@@ -171,7 +197,7 @@ class TriceBot:
             GameMade(False, -1, -1) # They must the same length dummy!
             
         body  = f'authtoken={self.authToken}\n'
-        body += f'gamename={gamename}\n'
+        body += f'gamename={gamename.replace(" ", "").replace("_", "")}\n'
         body += f'password={password}\n'
         body += f'playerCount={playercount}\n'        
         body += f'spectatorsAllowed={int(spectatorsallowed)}\n'            
