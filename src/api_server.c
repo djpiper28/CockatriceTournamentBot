@@ -55,6 +55,10 @@ void tb_initServer(struct tb_apiServer *server,
     server->running = 0;
     
     if (mg_url_is_ssl(server->config.bindAddr)) {
+        // Fix recommended from https://github.com/cesanta/mongoose/issues/1307
+        // to random crashing issues
+        memset(&server->opts, 0, sizeof(server->opts));
+        
         server->opts.cert = server->config.cert;
         server->opts.certkey = server->config.certkey;
         server->opts.ca = NULL;//server->config.cert;
