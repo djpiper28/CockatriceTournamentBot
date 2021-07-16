@@ -382,8 +382,11 @@ void botConnect(struct triceBot *b) {
 
 int main(int argc, char * args[]) {
     printf("[INFO]: %s\n-> by djpiper28 see %s for git repo.\n",
-           PROG_NAME, GITHUB_REPO);
-    printf("-> Version %d.%d\n", VERSION_MAJOR, VERSION_MINOR);
+           PROG_NAME,
+           GITHUB_REPO);
+    printf("-> Version %d.%d\n",
+           VERSION_MAJOR,
+           VERSION_MINOR);
     printf("-> Use the first argument for the mongoose debug level (0,1,2,3 or 4).\n");
     printf("[INFO]: Starting bot...\n");
     

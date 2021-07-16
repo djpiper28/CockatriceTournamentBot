@@ -84,17 +84,17 @@ static void send404(struct mg_connection *c) {
 }
 
 void tb_readNumberIfPropertiesMatch(int number,
-                                 int *dest,
-                                 const char *property,
-                                 char *readProperty) {
+                                    int *dest,
+                                    const char *property,
+                                    char *readProperty) {
     if (strncmp(property, readProperty, BUFFER_LENGTH) == 0) {
         *dest = number;
     }
 }
 
 struct tb_apiServerStr tb_readNextLine(const char *buffer,
-                        size_t *ptr,
-                        size_t len) {
+                                       size_t *ptr,
+                                       size_t len) {
     size_t i = 0;
     size_t tmp = *ptr;
     
@@ -163,7 +163,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
     //Read the buffer line by line
     size_t ptr = 0;
     
-    while (ptr < hm->body.len - 1) {
+    while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
                                                       &ptr,
                                                       hm->body.len);
@@ -251,7 +251,7 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
     //Read the buffer line by line
     size_t ptr = 0;
     
-    while (ptr < hm->body.len - 1) {
+    while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
                                                       &ptr,
                                                       hm->body.len);
@@ -337,7 +337,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
     //Read the buffer line by line
     size_t ptr = 0;
     
-    while (ptr < hm->body.len - 1) {
+    while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
                                                       &ptr,
                                                       hm->body.len);
@@ -479,7 +479,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     //Read the buffer line by line
     size_t ptr = 0;
     
-    while (ptr < hm->body.len - 1) {
+    while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
                                                       &ptr,
                                                       hm->body.len);
