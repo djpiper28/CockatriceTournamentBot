@@ -396,7 +396,7 @@ int main(int argc, char * args[]) {
     int valid = 1;
     
     // Check conf is valid
-    if (valid && status) {
+    if (status) {
         if (bot.config.cockatriceUsername == NULL) {
             valid = 0;
             printf("[ERROR]: Cockatrice username is not defined in config.conf.\n");
