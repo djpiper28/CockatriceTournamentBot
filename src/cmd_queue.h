@@ -25,11 +25,11 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue *queue,
 struct pendingCommand *cmdForCMDId(int CMDId,
                                    struct pendingCommandQueue *queue);
 
-/** 
- * Same as prepCMD but not thread safe, only use when the mutex for the queue 
+/**
+ * Same as prepCMD but not thread safe, only use when the mutex for the queue
  * is locked.
  * WARNING: Not thread safe!
- */ 
+ */
 struct pendingCommand *prepCmdNTS(struct triceBot *b,
                                   CommandContainer cont,
                                   int gameID,

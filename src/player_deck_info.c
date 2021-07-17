@@ -3,8 +3,8 @@
 
 #include "player_deck_info.h"
 
-struct playerDeckInfo *initPlayerDeckInfoArr(int length) {    
-    struct playerDeckInfo *pdi = (struct playerDeckInfo *) 
+struct playerDeckInfo *initPlayerDeckInfoArr(int length) {
+    struct playerDeckInfo *pdi = (struct playerDeckInfo *)
         malloc(sizeof(struct playerDeckInfo) * length);
     return pdi;
 }
@@ -13,16 +13,16 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
                                          int deckCount,
                                          char *playerName,
                                          int isEmptySlot) {
-    struct playerDeckInfo pdi;    
+    struct playerDeckInfo pdi;
     pdi.deckCount = deckCount;
     pdi.isEmptySlot = isEmptySlot;
     pdi.playerUsingSlot = -1;
-    
+
     for (int i = 0; i < deckCount; i++) {
         strncpy(pdi.deckHash[i], deckHash[i], DECK_HASH_LENGTH);
     }
     strncpy(pdi.playerName, playerName, PLAYER_NAME_LENGTH);
-    
+
     return pdi;
 }
 
@@ -46,57 +46,57 @@ int isPlayerAllowed(char *playerName,
     int index = -1;
     char nameCp[PLAYER_NAME_LENGTH];
     strncpy(nameCp, playerName, PLAYER_NAME_LENGTH);
-    
+
     // To lowercase fresh from stack overflow
     for (int i = 0; i < PLAYER_NAME_LENGTH && nameCp[i] != 0; i++) {
-        nameCp[i] = nameCp[i] > 0x40 && nameCp[i] < 0x5b ? 
+        nameCp[i] = nameCp[i] > 0x40 && nameCp[i] < 0x5b ?
                     nameCp[i] | 0x60 : nameCp[i];
     }
-    
+
     if (g.gameData.gameDataPtr != NULL) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-        
+
         // Iterate over the slots
         for (int i = 0; i < g.playerCount && !exactMatch; i++) {
             // Check if a player is not using the slot and it can joined by p
             if (pdi[i].playerUsingSlot == -1) {
                 int allowed;
-                
+
                 // Empty slots are slots with no expected player data
                 if (pdi[i].isEmptySlot) {
                     allowed = 1;
                 } else {
                     char pdiNameCp[PLAYER_NAME_LENGTH];
                     strncpy(pdiNameCp, pdi[i].playerName, PLAYER_NAME_LENGTH);
-                    
+
                     // To lowercase fresh from stack overflow
                     for (int i = 0; i < PLAYER_NAME_LENGTH && pdiNameCp[i] != 0; i++) {
-                        pdiNameCp[i] = pdiNameCp[i] > 0x40 && pdiNameCp[i] < 0x5b ? 
+                        pdiNameCp[i] = pdiNameCp[i] > 0x40 && pdiNameCp[i] < 0x5b ?
                                        pdiNameCp[i] | 0x60 : pdiNameCp[i];
                     }
-                    
+
                     // If the playername matches the expected name exactly or;
                     exactMatch = strncmp(pdiNameCp,
                                          nameCp,
                                          PLAYER_NAME_LENGTH) == 0;
-                    
+
                     // If the playerName is * then they can join
                     allowed = exactMatch || strncmp(pdi[i].playerName,
                                                     "*",
                                                     PLAYER_NAME_LENGTH) == 0;
                 }
-                
+
                 if (allowed) {
                     index = i;
                 }
             }
         }
-        
+
         if (index != -1) {
             pdi[index].playerUsingSlot = pid;
         }
     }
-    
+
     return index != -1;
 }
 
@@ -107,20 +107,20 @@ int isPlayerDeckAllowed(char *deckHash,
     int allowed = 0;
     if (g.gameData.gameDataPtr != NULL) {
         struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-        
+
         int index = -1;
         for (int i = 0; index == -1 && i < g.playerCount; i++) {
             if (pdi[i].playerUsingSlot == pid) {
                 index = i;
             }
         }
-        
+
         if (pdi[index].deckCount == 1) {
             allowed = strncmp(pdi[index].deckHash[0],
                               "*",
                               DECK_HASH_LENGTH) == 0;
         }
-        
+
         for (int i = 0; i < pdi[index].deckCount && i < MAX_DECKS && !allowed; i++) {
             // If the deckHash is * then they can join or;
             // If the deckHash matches the expected name

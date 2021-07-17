@@ -25,11 +25,11 @@ struct tournamentBot {
 
 void stopAll(struct tournamentBot *bot) {
     printf("[INFO]: Stopping bot\n");
-    
+
     bot->running = 0;
     tb_stopServer(&bot->server);
     stopBot(&bot->b);
-    
+
     tb_freeServer(&bot->server);
     freeBot(&bot->b);
 }
@@ -133,12 +133,12 @@ void addDebugFunctions(struct triceBot *b) {
     MACRO_DEBUG_FOR_EVENT_CALL(onEventGameJoined)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventNotifyUser)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventReplayAdded)
-    
+
     //Room events
     MACRO_DEBUG_FOR_EVENT_CALL(onEventJoinRoom)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventLeaveRoom)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventRoomSay)
-    
+
     //State changes
     MACRO_DEBUG_FOR_EVENT_CALL(onBotDisconnect)
     MACRO_DEBUG_FOR_EVENT_CALL(onBotConnect)
@@ -149,7 +149,7 @@ void addDebugFunctions(struct triceBot *b) {
 
 #endif
 
-int baseLen = strlen("Player @ was kicked, as they were not expected in this "                                 
+int baseLen = strlen("Player @ was kicked, as they were not expected in this "
 "game. This action was taken automatically. "
 "If you do not think you should have been kicked checked "
 "your cockatrice name was put into the bot correctly. "
@@ -167,66 +167,66 @@ void playerJoin(struct triceBot *b,
         ServerInfo_PlayerProperties pp = event.player_properties();
         if ((!(pp.spectator() || pp.judge())) && pp.has_user_info()) {
             ServerInfo_User user = pp.user_info();
-            
+
             // Check if player is allowed
             int allowed = isPlayerAllowed((char *) user.name().c_str(), pid, g);
-            
+
             // If they are not then kick them
             if (!allowed) {
-                char *messageBuffer = (char *) malloc(sizeof(char) * 
+                char *messageBuffer = (char *) malloc(sizeof(char) *
                     (baseLen + (1 + g.playerCount) * (PLAYER_NAME_LENGTH + 1)));
-                snprintf(messageBuffer, 
-                         512, 
-                         "Player @%s was kicked, as they were not expected in this "                                 
+                snprintf(messageBuffer,
+                         512,
+                         "Player @%s was kicked, as they were not expected in this "
                          "game. This action was taken automatically. "
                          "If you do not think you should have been kicked checked "
                          "your cockatrice name was put into the bot correctly. "
                          "Then contact your tournament organiser (they can disable "
                          "this check), finally if that doesn't help please raise an "
                          "issue at: %s if this was an error. Expected players: ",
-                         user.name().c_str(), 
+                         user.name().c_str(),
                          GITHUB_REPO);
                 printf("[INFO]: Player %s was kicked from game %d.\n",
                        user.name().c_str(),
                        g.gameID);
-                
+
                 for (int i = 0; i < g.playerCount; i++) {
                     strncat(messageBuffer, pdi[i].playerName, PLAYER_NAME_LENGTH);
                     strncat(messageBuffer, " ", 2);
                 }
-                
+
                 Command_GameSay gameSayCmd;
                 gameSayCmd.set_message(messageBuffer);
-                
+
                 CommandContainer cont;
                 GameCommand *gc = cont.add_game_command();
                 gc->MutableExtension(Command_GameSay::ext)
                     ->CopyFrom(gameSayCmd);
-                
+
                 struct pendingCommand *cmd = prepCmd(b,
                                                      cont,
                                                      g.gameID,
                                                      b->magicRoomID);
-                
+
                 enq(cmd, &b->sendQueue);
                 free(messageBuffer);
-                
+
                 Command_KickFromGame kickCommand;
                 kickCommand.set_player_id(pid);
-                
+
                 CommandContainer cont2;
                 GameCommand *gc2 = cont2.add_game_command();
                 gc2->MutableExtension(Command_KickFromGame::ext)
                     ->CopyFrom(kickCommand);
-                
+
                 cmd = prepCmd(b,
                               cont2,
                               g.gameID,
                               b->magicRoomID);
-                
+
                 enq(cmd, &b->sendQueue);
             }
-        }        
+        }
     }
 }
 
@@ -246,28 +246,28 @@ void playerPropertyChange(struct triceBot *b,
                           Event_PlayerPropertiesChanged event,
                           int pid) {
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
-    if (pdi != NULL && event.has_player_properties() && pid != -1) {        
+    if (pdi != NULL && event.has_player_properties() && pid != -1) {
         ServerInfo_PlayerProperties pp = event.player_properties();
         // Check if the deck has been changed
-        if (pp.has_deck_hash()) {            
+        if (pp.has_deck_hash()) {
             char *deckHash = (char *) pp.deck_hash().c_str();
             int allowed = isPlayerDeckAllowed(deckHash, pid, g);
-            
+
             int plrArrayIndex = -1;
             for (int i = 0; plrArrayIndex == -1 && i < g.playerCount; i++) {
                 if (g.playerArr[i].playerID == pid) {
                     plrArrayIndex = i;
                 }
             }
-            
-            int pdiIndex = -1;            
+
+            int pdiIndex = -1;
             for (int i = 0; pdiIndex == -1 && i < g.playerCount; i++) {
                 if (pdi[i].playerUsingSlot == pid) {
                     pdiIndex = i;
                 }
             }
-                
-            
+
+
             // If the hash is not allowed then tell the user
             if (plrArrayIndex != -1 && pdiIndex != -1 && !allowed) {
                 char *space = " ";
@@ -289,30 +289,30 @@ void playerPropertyChange(struct triceBot *b,
                             g.playerArr[plrArrayIndex].playerName,
                             deckHash);
                 }
-                
+
                 printf("[INFO]: Player %s loaded an invalid deck.\n",
                        g.playerArr[plrArrayIndex].playerName);
-                
+
                 for (int i = 0; i < pdi[pdiIndex].deckCount; i++) {
                     strncat(messageBuffer, pdi[pdiIndex].deckHash[i], DECK_HASH_LENGTH);
                     strncat(messageBuffer, space, spaceLen);
                 }
-                
+
                 Command_GameSay gameSayCmd;
                 gameSayCmd.set_message(messageBuffer);
-                
+
                 CommandContainer cont;
                 GameCommand *gc = cont.add_game_command();
                 gc->MutableExtension(Command_GameSay::ext)
                     ->CopyFrom(gameSayCmd);
-                
+
                 struct pendingCommand *cmd = prepCmd(b,
                                                      cont,
                                                      g.gameID,
                                                      b->magicRoomID);
-                
+
                 enq(cmd, &b->sendQueue);
-                
+
                 free(messageBuffer);
             }
         }
@@ -326,7 +326,7 @@ void gameEndCallback(struct triceBot *b,
     if (r->has_response_code()) {
         if (r->response_code() == Response::RespOk) {;
             pthread_mutex_lock(&b->gameList.mutex);
-                        
+
             struct game *g = NULL;
             struct gameListNode *current = b->gameList.gamesHead;
             while (current != NULL && g == NULL) {
@@ -335,18 +335,18 @@ void gameEndCallback(struct triceBot *b,
                         g = current->currentGame;
                     }
                 }
-                
+
                 current = current->nextGame;
             }
-            
+
             pthread_mutex_unlock(&b->gameList.mutex);
-                        
+
             if (g != NULL) {
                 removeGame(&b->gameList, g);
             }
         }
     }
-    
+
     free(param);
 }
 
@@ -355,19 +355,19 @@ void onGameEnd(struct triceBot *b,
     pthread_mutex_lock(&b->mutex);
     int ID = b->magicRoomID;
     pthread_mutex_unlock(&b->mutex);
-    
+
     Command_LeaveGame leaveGame;
     CommandContainer cont;
     GameCommand *gc = cont.add_game_command();
     gc->MutableExtension(Command_LeaveGame::ext)->CopyFrom(leaveGame);
-    
+
     //IDs are set in prepCMD
     struct pendingCommand *cmd = prepCmd(b, cont, g.gameID, ID);
     cmd->callbackFunction = &gameEndCallback;
     cmd->param = malloc(sizeof(int));
     int *id = (int *) cmd->param;
     *id = g.gameID;
-    
+
     enq(cmd, &b->sendQueue);
 }
 
@@ -389,57 +389,57 @@ int main(int argc, char * args[]) {
            VERSION_MINOR);
     printf("-> Use the first argument for the mongoose debug level (0,1,2,3 or 4).\n");
     printf("[INFO]: Starting bot...\n");
-    
+
     mg_log_set(argc > 1 ? args[1] : "0");
-    
+
     struct tournamentBot bot;
     bot.running = 1;
-    
+
     int status = readConf(&bot.config, "config.conf");
     int valid = 1;
-    
+
     // Check conf is valid
     if (status) {
         if (bot.config.cockatriceUsername == NULL) {
             valid = 0;
             printf("[ERROR]: Cockatrice username is not defined in config.conf.\n");
         }
-        
+
         if (bot.config.cockatricePassword == NULL) {
             valid = 0;
             printf("[ERROR]: Cockatrice password is not defined in config.conf.\n");
         }
-        
+
         if (bot.config.roomName == NULL) {
             valid = 0;
             printf("[ERROR]: Cockatrice room name is not defined in config.conf.\n");
         }
-        
+
         if (bot.config.cockatriceServer == NULL) {
             valid = 0;
             printf("[ERROR]: Cockatrice server address is not defined in config.conf.\n");
         }
-        
+
         if (bot.config.clientID == NULL) {
             valid = 0;
             printf("[ERROR]: Cockatrice client ID is not defined in config.conf.\n");
         }
-        
+
         if (bot.config.replayFolder == NULL) {
             valid = 0;
             printf("[ERROR]: Replay folder is not defined in config.conf.\n");
         }
-        
+
         if (bot.config.authToken == NULL) {
             valid = 0;
             printf("[ERROR]: Authentication token is not defined in config.conf.\n");
         }
-        
+
         if (bot.config.bindAddr == NULL) {
             valid = 0;
             printf("[ERROR]: API server bind address is not defined in config.conf.\n");
         }
-        
+
         // Check certs exist and are readable.
         if (bot.config.cert == NULL) {
             valid = 0;
@@ -451,11 +451,11 @@ int main(int argc, char * args[]) {
             } else {
                 if (access(bot.config.cert, R_OK) != 0) {
                     valid = 0;
-                    printf("[ERROR]: SSL certificate file defined in config.conf cannot be read.\n");                    
+                    printf("[ERROR]: SSL certificate file defined in config.conf cannot be read.\n");
                 }
             }
         }
-        
+
         if (bot.config.certkey == NULL) {
             valid = 0;
             printf("[ERROR]: SSL certificate key file is not defined in config.conf.\n");
@@ -470,7 +470,7 @@ int main(int argc, char * args[]) {
                 }
             }
         }
-        
+
         if (bot.config.maxMessagesPerSecond == -1) {
             valid = 0;
             printf("[ERROR]: Rate limit is not defined in config.conf.\n");
@@ -479,30 +479,30 @@ int main(int argc, char * args[]) {
             printf("[ERROR]: Rate limit is defined in config.conf but is an invalid value. "
                    "Make sure it is a value above 0.\n");
         }
-        
+
         if (valid) {
             printf("[INFO]: Config file read successfully.\n");
             initBot(&bot.b, bot.config);
             tb_initServer(&bot.server, &bot.b, bot.config);
-            
+
 #if DEBUG
             addDebugFunctions(&bot.b);
 #endif
-            
+
             set_onGameEnd(&onGameEnd, &bot.b);
             set_onBotConnect(&botConnect, &bot.b);
             set_onBotDisconnect(&botDisconnect, &bot.b);
             set_onGameEventJoin(&playerJoin, &bot.b);
             set_onGameEventLeave(&playerLeave, &bot.b);
             set_onGameEventPlayerPropertyChanged(&playerPropertyChange, &bot.b);
-            
+
             printf("[INFO]: Starting bot...\n");
-            
+
             startBot(&bot.b);
             tb_startServer(&bot.server);
-            
+
             printf("[INFO]: Bot started.\n");
-            
+
             for (;;) {
                 sleep(5);
             }

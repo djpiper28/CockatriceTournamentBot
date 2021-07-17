@@ -97,7 +97,7 @@ void (*fn) (struct triceBot *) = NULL;
 
 struct triceBot {
     struct Config config;
-    
+
     pthread_t pollingThreadBOT;
     pthread_mutex_t mutex;
     struct pendingCommandQueue sendQueue, callbackQueue;
@@ -111,7 +111,7 @@ struct triceBot {
     long lastGameWaitCheck,
          lastPingTime,
          lastSend;
-    
+
     //Event Function Pointers for session events
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventServerIdentifictaion,
                                     Event_ServerIdentification)
@@ -141,7 +141,7 @@ struct triceBot {
                                     Event_NotifyUser)
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventReplayAdded,
                                     Event_ReplayAdded)
-    
+
     //Event Function Pointers for room events
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventJoinRoom,
                                     Event_JoinRoom)
@@ -149,7 +149,7 @@ struct triceBot {
                                     Event_LeaveRoom)
     MACRO_CREATE_EVENT_FUNCTION_PTR(onEventRoomSay,
                                     Event_RoomSay)
-    
+
     //Game events
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventJoin,
                                          Event_Join)
@@ -211,11 +211,11 @@ struct triceBot {
                                          Event_ChangeZoneProperties)
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR(onGameEventReverseTurn,
                                          Event_ReverseTurn)
-    
+
     //Game state changes
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(onGameStart)
     MACRO_CREATE_GAME_EVENT_FUNCTION_PTR_1(onGameEnd)
-    
+
     //Bot state changes
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotDisconnect)
     MACRO_CREATE_EVENT_FUNCTION_PTR_1(onBotConnect)

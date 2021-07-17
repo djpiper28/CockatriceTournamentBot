@@ -28,25 +28,25 @@ int addPlayer(struct gameList *gl,
               int ping) {
     pthread_mutex_lock(&gl->mutex);
     int done = 0;
-    
+
     for (int i = 0; !done && i < g->playerCount; i++) {
         if (g->playerArr[i].playerName == NULL) {
             size_t nameLength = strlen(playerName) + 1; //NULL terminator
             char *playerNameCP = (char *) malloc(sizeof(char) * nameLength);
             strncpy(playerNameCP, playerName, nameLength);
-            
+
             struct player p = {playerID, ping, playerNameCP};
             g->playerArr[i] = p;
             done = 1;
-            
+
             printf("[INFO]: Player %s joined game %d.\n",
                    playerNameCP,
                    g->gameID);
         }
     }
-    
+
     pthread_mutex_unlock(&gl->mutex);
-    
+
     return done;
 }
 
@@ -60,22 +60,22 @@ int removePlayer(struct gameList *gl,
                  int playerID) {
     pthread_mutex_lock(&gl->mutex);
     int done = 0;
-    
+
     for (int i = 0; i < g->playerCount && !done; i++) {
         struct player *p = &g->playerArr[i];
-        
+
         if (p->playerName != NULL && p->playerID == playerID) {
             printf("[INFO]: Player %s left game %d.\n",
                    p->playerName,
                    g->gameID);
-                   
+
             free(p->playerName);
             p->playerName = NULL;
         }
     }
-    
+
     pthread_mutex_unlock(&gl->mutex);
-    
+
     return done;
 }
 
@@ -99,12 +99,12 @@ void freeGameCreateCallbackWaitParam(struct gameCreateCallbackWaitParam *gp) {
         if (gp->gameName != NULL) {
             free(gp->gameName);
         }
-        
+
         if (gp->gameData.gameDataPtr != NULL
             && gp->gameData.freeGameData != NULL) {
             gp->gameData.freeGameData(gp->gameData.gameDataPtr);
         }
-        
+
         pthread_mutex_destroy(&gp->mutex);
         free(gp);
     }
@@ -120,15 +120,15 @@ static void freeGameListNodeNTS(struct gameListNode *gl) {
                         free(gl->currentGame->playerArr[i].playerName);
                     }
                 }
-                
+
                 free(gl->currentGame->playerArr);
             }
-            
+
             if (gl->currentGame->gameData.gameDataPtr != NULL
                 && gl->currentGame->gameData.freeGameData != NULL) {
                 gl->currentGame->gameData.freeGameData(gl->currentGame->gameData.gameDataPtr);
             }
-            
+
             free(gl->currentGame->gameName);
             free(gl->currentGame);
         }
@@ -144,16 +144,16 @@ void freeGameListNode(struct gameList *g, struct gameListNode *gl) {
 
 void freeGameList(struct gameList *g) {
     pthread_mutex_lock(&g->mutex);
-    
+
     struct gameListNode *current = g->gamesHead;
-    
+
     while (current != NULL) {
-        struct gameListNode *tmp = current;            
+        struct gameListNode *tmp = current;
         current = current->nextGame;
-            
+
         freeGameListNodeNTS(tmp);
     }
-        
+
     pthread_mutex_unlock(&g->mutex);
     pthread_mutex_destroy(&g->mutex);
 }
@@ -161,42 +161,42 @@ void freeGameList(struct gameList *g) {
 struct game *getGameWithIDNTS(struct gameList *g, int gameID) {
     struct gameListNode *current = g->gamesHead;
     struct game *out = NULL;
-    
-    if (current != NULL) {        
+
+    if (current != NULL) {
         while (current->currentGame->gameID != gameID) {
             current = current->nextGame;
-            
+
             if (current == NULL) {
                 break;
             }
         }
-        
-        if (current != NULL) { 
+
+        if (current != NULL) {
             out = current->currentGame;
         }
     }
-    
+
     return out;
 }
 
 struct game *getGameWithID(struct gameList *g, int gameID) {
-    pthread_mutex_lock(&g->mutex);    
+    pthread_mutex_lock(&g->mutex);
     struct game *out = getGameWithIDNTS(g, gameID);
     pthread_mutex_unlock(&g->mutex);
     return out;
 }
 
-void freeGameCopy(struct game g) {    
+void freeGameCopy(struct game g) {
     if (g.playerArr == NULL) {
         return;
     }
-    
+
     for (int i = 0; i < g.playerCount; i++) {
         if (g.playerArr[i].playerName != NULL) {
             free(g.playerArr[i].playerName);
         }
     }
-    
+
     free(g.gameName);
     free(g.playerArr);
 }
@@ -213,11 +213,11 @@ struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
         int nameLen = strnlen(ga->gameName, 256);
         out.gameName = (char *) malloc(sizeof(char) * (nameLen + 1));
         strncpy(out.gameName, ga->gameName, nameLen + 1);
-        
+
         // Copy player array
-        struct player *playerArr = (struct player *) 
+        struct player *playerArr = (struct player *)
             malloc(sizeof(struct player) * out.playerCount);
-        
+
         for (int i = 0; i < out.playerCount; i++) {
             playerArr[i].playerID = out.playerArr[i].playerID;
             if (out.playerArr[i].playerName != NULL) {
@@ -228,10 +228,10 @@ struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
                 playerArr[i].playerName = NULL;
             }
         }
-        
+
         out.playerArr = playerArr;
     } else {
-        out.gameID = -1; 
+        out.gameID = -1;
         out.playerArr = NULL;
     }
     return out;
@@ -239,7 +239,7 @@ struct game getGameWithIDNotRefNTS(struct gameList *g, int gameID) {
 
 struct game getGameWithIDNotRef(struct gameList *g, int gameID) {
     pthread_mutex_lock(&g->mutex);
-    struct game ga = getGameWithIDNotRefNTS(g, gameID);   
+    struct game ga = getGameWithIDNotRefNTS(g, gameID);
     pthread_mutex_unlock(&g->mutex);
     return ga;
 }
@@ -248,11 +248,11 @@ struct game getGameWithIDNotRef(struct gameList *g, int gameID) {
 int getPlayerIDForGameIDAndName(struct gameList *gl, int gameID, char *playerName) {
     pthread_mutex_lock(&gl->mutex);
     int playerID = -1;
-    
+
     // Linear search over games list
     struct game *g = getGameWithIDNTS(gl, gameID);
-    
-    if (g != NULL) {        
+
+    if (g != NULL) {
         /**
          * Iterate until a player with matching name is found or there are no
          * players left to check.
@@ -266,9 +266,9 @@ int getPlayerIDForGameIDAndName(struct gameList *gl, int gameID, char *playerNam
             }
         }
     }
-    
+
     pthread_mutex_unlock(&gl->mutex);
-    
+
     return playerID;
 }
 
@@ -282,55 +282,55 @@ struct game *createGame(int gameID,
     g->startTime = -1;
     g->creationTime = time(NULL);
     g->gameData = gameData;
-    
+
     // Copy game name
     int nameLen = strnlen(gameName, 256);
     g->gameName = (char *) malloc(sizeof(char) * (nameLen + 1));
     strncpy(g->gameName, gameName, nameLen + 1);
-    
+
     g->playerCount = playerCount;
     g->playerArr = (struct player *) malloc(sizeof(struct player) * playerCount);
-    
+
     for (int i = 0; i < playerCount; i++) {
         g->playerArr[i].playerName = NULL;
     }
-    
+
     return g;
 }
-    
-void addGame(struct gameList *g, struct game *gamePointer) {    
+
+void addGame(struct gameList *g, struct game *gamePointer) {
     if (g == NULL || gamePointer == NULL) {
         return;
     }
-    
+
     pthread_mutex_lock(&g->mutex);
     if (getGameWithIDNTS(g, gamePointer->gameID) != NULL) {
         pthread_mutex_unlock(&g->mutex);
         return;
     }
-    
+
     if (g->gamesHead == NULL) {
         struct gameListNode *next = (struct gameListNode *) malloc(sizeof(struct gameListNode));
         next->currentGame = gamePointer;
         next->nextGame = NULL;
-        
+
         g->gamesHead = next;
     } else {
         struct gameListNode *current = g->gamesHead;
-        
+
         while (current->nextGame != NULL) {
             current = current->nextGame;
         }
-        
-        struct gameListNode *next = (struct gameListNode *) malloc(sizeof(struct gameListNode));        
-        
-        next->currentGame = gamePointer;        
-        next->nextGame = NULL;        
+
+        struct gameListNode *next = (struct gameListNode *) malloc(sizeof(struct gameListNode));
+
+        next->currentGame = gamePointer;
+        next->nextGame = NULL;
         current->nextGame = next;
-        
+
         printf("[INFO]: Joined game %d.\n", gamePointer->gameID);
     }
-    
+
     pthread_mutex_unlock(&g->mutex);
 }
 
@@ -338,24 +338,24 @@ void removeGame(struct gameList *g, struct game *gamePointer) {
     if (g == NULL) {
         return;
     }
-    
-    pthread_mutex_lock(&g->mutex);    
+
+    pthread_mutex_lock(&g->mutex);
     struct gameListNode *current = g->gamesHead;
     if (current != NULL) {
         // Edge case - game is the head of the list
         if (current->currentGame == gamePointer) {
             struct gameListNode *next = current->nextGame;
             freeGameListNodeNTS(current);
-            
+
             g->gamesHead = next;
         } else {
             int found = 0;
-            
+
             while (current->nextGame != NULL && !found) {
                 if (current->nextGame->currentGame == gamePointer && gamePointer != NULL) {
                     // Remove the target. Set the current pointer to next's next.
                     struct gameListNode *target = current->nextGame;
-                    
+
                     current->nextGame = current->nextGame->nextGame;
                     freeGameListNodeNTS(target);
                     found = 1;
@@ -365,7 +365,7 @@ void removeGame(struct gameList *g, struct game *gamePointer) {
             }
         }
     }
-    
+
     pthread_mutex_unlock(&g->mutex);
 }
 

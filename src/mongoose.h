@@ -755,7 +755,7 @@ struct mg_http_header {
 struct mg_http_message {
     //        GET /foo/bar/baz?aa=b&cc=ddd HTTP/1.1
     // method |-| |----uri---| |--query--| |proto-|
-    
+
     struct mg_str method, uri, query, proto;             // Request/response line
     struct mg_http_header headers[MG_MAX_HTTP_HEADERS];  // Headers
     struct mg_str body;                                  // Body

@@ -10,7 +10,7 @@ struct Config {
     char *cockatriceUsername,
          *cockatricePassword;
 #endif
-         
+
 #if JOIN_ROOM_AUTOMATICALLY
     char *roomName;
 #endif
@@ -18,7 +18,7 @@ struct Config {
     char *cockatriceServer,
          *clientID,
          *replayFolder,
-         
+
          //Tournament bot data TODO: move them elsewhere
          *cert,
          *certkey,
@@ -43,7 +43,7 @@ int readConf(struct Config *config, char *filename);
 /**
  * Frees the config file, requires all the structs to
  * be malloced, which is done in readConf
- */ 
+ */
 void freeConf(struct Config *config);
 
 #endif
