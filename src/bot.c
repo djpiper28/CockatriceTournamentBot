@@ -691,8 +691,31 @@ static void roomsListed(struct triceBot *b,
                 enq(cmd, &b->sendQueue);
 
                 found = 1;
-                printf("[INFO]: Automatic room join being sent.\n");
+                printf("[INFO]: Automatic room join being sent for %s.\n",
+                       roomName);
             }
+        }
+
+        if (!found && size > 0) {
+            ServerInfo_Room room = listRooms.room_list().Get(0);
+            const char *roomName = room.name().c_str();
+
+            //Send room join cmd
+            Command_JoinRoom roomJoin;
+            roomJoin.set_room_id(room.room_id());
+            b->magicRoomID = room.room_id();
+
+            CommandContainer cont;
+            SessionCommand *c = cont.add_session_command();
+            c->MutableExtension(Command_JoinRoom::ext)->CopyFrom(roomJoin);
+
+            struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);
+            enq(cmd, &b->sendQueue);
+
+            found = 1;
+            printf("[INFO]: Automatic room join being sent for %s, as %s was not found.\n",
+                   roomName,
+                   b->config.roomName);
         }
     }
 
