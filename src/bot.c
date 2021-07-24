@@ -474,7 +474,7 @@ char *getReplayFileName(int gameID,
                     printf("[ERROR]: Unable to free temp folder name.\n");
                 }
 
-                tempFolderName = (char *) malloc(sizeof(char) * (i + 1));
+                tempFolderName = (char *) malloc(sizeof(char) * (tempFolderBaseLength + i + 2));
                 snprintf(tempFolderName,
                          tempFolderBaseLength + i + 1, /* reads up to the current char in gameNameCP */
                          "%s/%s",
