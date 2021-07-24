@@ -1509,7 +1509,11 @@ static void *botThread(void *in) {
     pthread_mutex_lock(&b->mutex);
     freeGameList(&b->gameList);
     freePendingCommandQueue(&b->sendQueue);
-    freePendingCommandQueue(&b->callbackQueue);
+    freePendingCommandQueue(&b->callbackQueue);        
+    if (b->roomName != NULL) {
+        free(b->roomName);
+    }
+    
     pthread_mutex_unlock(&b->mutex);
 
     mg_mgr_free(&mgr);
@@ -1533,10 +1537,6 @@ void stopBot(struct triceBot *b) {
 
     if (flag) {
         pthread_join(b->pollingThreadBOT, NULL);
-    }
-    
-    if (b->roomName != NULL) {
-        free(b->roomName);
     }
 }
 
