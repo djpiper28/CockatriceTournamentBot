@@ -415,7 +415,7 @@ char *getReplayFileName(int gameID,
     }
 
     char *tempFolderName = (char *) malloc(sizeof(char)
-                         * (tempFolderBaseLength + length + 1));
+                         * (tempFolderBaseLength + length + 2));
 
     int lastSlash = -1;
 
@@ -1512,6 +1512,7 @@ static void *botThread(void *in) {
     freePendingCommandQueue(&b->callbackQueue);        
     if (b->roomName != NULL) {
         free(b->roomName);
+        b->roomName = NULL;
     }
     
     pthread_mutex_unlock(&b->mutex);
