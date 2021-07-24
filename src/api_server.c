@@ -925,7 +925,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<div class=\"content\">\n"
                                           "<div class=\"content-inner\">\n"
                                           "<h1>%s</h1>\n"
-                                          "<h3>Game %d is in progress on server '%s'.</h3>\n"
+                                          "<h3>Game %d is in progress on server '%s (%s)'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
                                           "%s\n<br>\n"
                                           "<a href=\"%s\">Github Repo</a> | Version v%d.%d\n"
@@ -938,6 +938,7 @@ static void eventHandler(struct mg_connection *c,
                                           PROG_NAME,
                                           gameID,
                                           api->config.cockatriceServer,
+                                          api->triceBot->roomName,
                                           pdiMSG,
                                           GITHUB_REPO,
                                           VERSION_MAJOR,
@@ -961,7 +962,7 @@ static void eventHandler(struct mg_connection *c,
                                         "<div class=\"content\">"
                                         "<div class=\"content-inner\">"
                                         "<h1>%s</h1>\n"
-                                        "<h3>Game %d is in progress on server '%s'.</h3>\n"
+                                        "<h3>Game %d is in progress on server '%s (%s)'.</h3>\n"
                                         "<h4>Current players are:</h4>\n"
                                         "<ol>\n%s\n</ol>\n"
                                         "%s\n<br>\n"
@@ -975,6 +976,7 @@ static void eventHandler(struct mg_connection *c,
                                         PROG_NAME,
                                         gameID,
                                         api->config.cockatriceServer,
+                                        api->triceBot->roomName,
                                         buff,
                                         pdiMSG,
                                         GITHUB_REPO,
@@ -1001,6 +1003,13 @@ static void eventHandler(struct mg_connection *c,
                     };
 
                     mg_http_serve_dir(c, hm, &opts);
+                }
+            } else if (mg_http_match_uri(hm, "/favicon.png")) {
+                // Serve the favicon if it is present.
+                if (access(FAVICON_NAME, F_OK) == 0) {
+                    mg_http_serve_file(c, hm, FAVICON_NAME, "image/png", "\r\n");
+                } else {
+                    send404(c);
                 }
             } else {
                 send404(c);

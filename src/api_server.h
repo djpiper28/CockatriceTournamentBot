@@ -4,6 +4,8 @@
 #include "trice_structs.h"
 #include "bot_conf.h"
 
+#define FAVICON_NAME "favicon.png"
+
 struct tb_apiServerStr {
     const char *ptr;
     size_t len;
