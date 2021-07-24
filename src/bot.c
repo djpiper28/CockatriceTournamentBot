@@ -346,7 +346,7 @@ static int cleanUpStringInput(char *str, int length) {
     }
 
     //Sanity check - double check the null terminator at the end is there
-    str[length] = 0;
+    str[length - 1] = 0;
 
     return cleaned;
 }
