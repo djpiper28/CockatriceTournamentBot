@@ -102,6 +102,7 @@ struct triceBot {
     pthread_mutex_t mutex;
     struct pendingCommandQueue sendQueue, callbackQueue;
     struct gameList gameList;
+    char *roomName;
     int loggedIn,
         magicRoomID,
         roomRequested,

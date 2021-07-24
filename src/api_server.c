@@ -735,6 +735,16 @@ static void eventHandler(struct mg_connection *c,
             } else if (mg_http_match_uri(hm, "/faq/")
                        || mg_http_match_uri(hm, "/faq")) {
                 mg_http_reply(c, 200, "", "%s", FAQ);
+            } else if (mg_http_match_uri(hm, "/status/")
+                       || mg_http_match_uri(hm, "/status")) {
+                pthread_mutex_lock(&api->triceBot->mutex);
+                mg_http_reply(c, 200, "", "serverIp=%s\n"
+                              "roomName=%s\n"
+                              "connected=%d",
+                              api->triceBot->config.cockatriceServer,
+                              api->triceBot->roomName == NULL ? "n/a": api->triceBot->roomName,
+                              api->triceBot->running);
+                pthread_mutex_unlock(&api->triceBot->mutex);
             } else if (mg_http_match_uri(hm, api->replayFolerWildcard)) {
                 int gameFinished = 0;
                 int gameID = -1;

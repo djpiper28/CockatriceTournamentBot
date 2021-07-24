@@ -125,6 +125,8 @@ void initBot(struct triceBot *b,
              struct Config config) {
     b->mutex = PTHREAD_MUTEX_INITIALIZER;
     b->config = config;
+    
+    b->roomName = NULL;
 
     b->magicRoomID = -1;
     b->lastPingTime = 0;
@@ -682,6 +684,14 @@ static void roomsListed(struct triceBot *b,
                 Command_JoinRoom roomJoin;
                 roomJoin.set_room_id(room.room_id());
                 b->magicRoomID = room.room_id();
+                
+                if (b->roomName != NULL) {
+                    free(b->roomName);
+                }
+                
+                int len = strnlen(roomName, BUFFER_LENGTH) + 1;
+                b->roomName = (char *) malloc(sizeof(char) * len);
+                strncpy(b->roomName, roomName, len);
 
                 CommandContainer cont;
                 SessionCommand *c = cont.add_session_command();
@@ -696,7 +706,7 @@ static void roomsListed(struct triceBot *b,
             }
         }
 
-        if (!found && size > 0) {
+        if ((!found) && size > 0) {
             ServerInfo_Room room = listRooms.room_list().Get(0);
             const char *roomName = room.name().c_str();
 
@@ -704,6 +714,14 @@ static void roomsListed(struct triceBot *b,
             Command_JoinRoom roomJoin;
             roomJoin.set_room_id(room.room_id());
             b->magicRoomID = room.room_id();
+            
+            if (b->roomName != NULL) {
+                free(b->roomName);
+            }
+            
+            int len = strnlen(roomName, BUFFER_LENGTH) + 1;
+            b->roomName = (char *) malloc(sizeof(char) * len);
+            strncpy(b->roomName, roomName, len);
 
             CommandContainer cont;
             SessionCommand *c = cont.add_session_command();
@@ -1516,6 +1534,10 @@ void stopBot(struct triceBot *b) {
     if (flag) {
         pthread_join(b->pollingThreadBOT, NULL);
     }
+    
+    if (b->roomName != NULL) {
+        free(b->roomName);
+    }
 }
 
 /**
@@ -1543,6 +1565,7 @@ void freeBot(struct triceBot *b) {
 int startBot(struct triceBot *b) {
     pthread_mutex_lock(&b->mutex);
     b->running = 1;
+    b->roomName = NULL;
     pthread_mutex_unlock(&b->mutex);
 
     return pthread_create(&b->pollingThreadBOT, NULL, botThread, (void *) b);
