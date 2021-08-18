@@ -914,6 +914,9 @@ static void eventHandler(struct mg_connection *c,
                                           "<html>\n"
                                           "<head>\n"
                                           "<meta charset=\"UTF-8\">\n"
+                                          "<meta property=\"og:type\" content=\"website\">\n"
+                                          "<meta property=\"og:title\" content=\"%s\">\n"
+                                          "<meta property=\"og:description\" content=\"A %d player cockatrice game.\">\n"
                                           "%s\n"
                                           "<title>Game %d (%d/%d)</title>\n"
                                           "</head>\n"
@@ -930,6 +933,8 @@ static void eventHandler(struct mg_connection *c,
                                           "%s\n<br>\n"
                                           "<a href=\"%s\">Github Repo</a> | Version v%d.%d\n"
                                           "</div>\n</div>\n</div>\n</body>\n</html>",
+                                          g.gameName,
+                                          g.playerCount,
                                           PAGE_CSS,
                                           gameID,
                                           players,
@@ -951,6 +956,9 @@ static void eventHandler(struct mg_connection *c,
                                         "<html>\n"
                                         "<head>\n"
                                         "<meta charset=\"UTF-8\">\n"
+                                        "<meta property=\"og:type\" content=\"website\">\n"
+                                        "<meta property=\"og:title\" content=\"%s\">\n"
+                                        "<meta property=\"og:description\" content=\"A %d player cockatrice game.\">\n"
                                         "%s\n"
                                         "<title>Game %d (%d/%d)</title>\n"
                                         "</head>\n"
@@ -968,6 +976,8 @@ static void eventHandler(struct mg_connection *c,
                                         "%s\n<br>\n"
                                         "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
                                         "</div>\n</div>\n</div>\n</body>\n</html>",
+                                        g.gameName,
+                                        g.playerCount,
                                         PAGE_CSS,
                                         gameID,
                                         players,
