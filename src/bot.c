@@ -123,9 +123,11 @@ if (event.HasExtension(type::ext)) {\
  */
 void initBot(struct triceBot *b,
              struct Config config) {
+    memset(b, NULL, sizeof(struct triceBot));
+    
     b->mutex = PTHREAD_MUTEX_INITIALIZER;
     b->config = config;
-    
+
     b->roomName = NULL;
 
     b->magicRoomID = -1;

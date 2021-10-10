@@ -49,6 +49,8 @@ static void initServerConnection(struct ServerConnection *s,
 void tb_initServer(struct tb_apiServer *server,
                    struct triceBot *triceBot,
                    struct Config config) {
+    memset(server, NULL, sizeof(struct tb_apiServer));
+    
     server->bottleneck = PTHREAD_MUTEX_INITIALIZER;
     server->config = config;
     server->triceBot = triceBot;
