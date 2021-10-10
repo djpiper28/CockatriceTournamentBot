@@ -1505,8 +1505,6 @@ static void *botThread(void *in) {
         }
     }
 
-    MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
-
     //Free data
     pthread_mutex_lock(&b->mutex);
     freeGameList(&b->gameList);
@@ -1520,6 +1518,8 @@ static void *botThread(void *in) {
     pthread_mutex_unlock(&b->mutex);
 
     mg_mgr_free(&mgr);
+    
+    MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
 
     pthread_exit(NULL);
 }
