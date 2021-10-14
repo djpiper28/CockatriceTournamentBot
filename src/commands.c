@@ -93,6 +93,7 @@ NULL, NULL, &userMsgDiscordLink}
 NULL, NULL, &userMsgGithubLink}
 #define COMMAND_HELP {"help", "Shows this help message.",\
 NULL, NULL, &userMsgHelp}
+
 static struct bot_command commands[COMMAND_COUNT];
 static struct bot_command_list list = {'!',
     NULL,
@@ -165,6 +166,7 @@ void initCommandList(struct triceBot* b) {
         len += strnlen(tmpBuffer, TMP_BUFFER_LENGTH);
         strncat(helpMessage, tmpBuffer, BUFFER_LENGTH - len);
     }
+    list.helpMessage = helpMessage;
 
     set_onGameEventGameSay(&execGameSayCommand, b);
     set_onEventRoomSay(&execRoomSayCommand, b);
