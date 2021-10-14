@@ -71,6 +71,7 @@ set(SRC_FILES
     src/game_struct.c
     src/trice_structs.c
     src/player_deck_info.c
+    src/commands.c
     )
 add_executable(CockatriceTournamentBot ${SRC_FILES} ${MAIN})
 target_include_directories(CockatriceTournamentBot PUBLIC
@@ -94,6 +95,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "TEST")
         tests/testGameStruct.cpp
         tests/testApiServer.cpp
         tests/testPlayerDeckInfo.cpp
+        tests/testCommands.cpp
         )
     add_executable(CockatriceTournamentBotTests ${TEST_FILES})
     target_include_directories(CockatriceTournamentBotTests PUBLIC 
