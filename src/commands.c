@@ -106,7 +106,7 @@ void roomMsgHelp(struct triceBot *b, Event_RoomSay event) {
     RoomCommand *c = cont.add_room_command();
     c->MutableExtension(Command_RoomSay::ext)->CopyFrom(cmdMsg);
 
-    struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);
+    struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, b->magicRoomID);
     enq(cmd, &b->sendQueue);
 
     pthread_mutex_unlock(&b->mutex);
