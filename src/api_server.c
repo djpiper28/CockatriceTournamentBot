@@ -691,7 +691,8 @@ static void eventHandler(struct mg_connection *c,
                 || mg_http_match_uri(hm, "/index/")
                 || mg_http_match_uri(hm, "/")) {
             mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL="
-                          "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\" />",
+                          "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\"/>\n"
+                          "<h1>Redirecting to discord.com...</h1>",
                           api->config.clientID);
         } else
 #endif
