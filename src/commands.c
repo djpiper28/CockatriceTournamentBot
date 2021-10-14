@@ -24,6 +24,17 @@ struct bot_command_list {
     size_t commandsLength;
 };
 
+// WARNING: the commands are hard coded and the COMMAND_COUNT needs to be set by hand.
+#define COMMAND_COUNT 3
+#define COMMAND_DISCORD {"discord", "Shows the squirebot invite link (PMs only).",\
+NULL, NULL, &userMsgDiscordLink}
+#define COMMAND_GITHUB {"github", "Shows the link to the github repo (PMs only).",\
+NULL, NULL, &userMsgGithubLink}
+#define COMMAND_HELP {"help", "Shows this help message.",\
+NULL, NULL, &userMsgHelp}
+static struct bot_command commands[COMMAND_COUNT];
+static struct bot_command_list list;
+
 static void userMsgDiscordLink(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_lock(&b->mutex);
 
@@ -51,7 +62,7 @@ static void userMsgGithubLink(struct triceBot *b, Event_UserMessage event) {
 
     char msg[BUFFER_LENGTH];
     snprintf(msg, BUFFER_LENGTH,
-             "You can find the sourcecode for tricebot at: %s",
+             "You can find the source code for tricebot at: %s",
              GITHUB_REPO);
 
     Command_Message cmdMsg;
@@ -84,22 +95,6 @@ void userMsgHelp(struct triceBot *b, Event_UserMessage event) {
     
     pthread_mutex_unlock(&b->mutex);
 }
-
-// WARNING: the commands are hard coded and the COMMAND_COUNT needs to be set by hand.
-#define COMMAND_COUNT 3
-#define COMMAND_DISCORD {"discord", "Shows the squirebot invite link (PMs only).",\
-NULL, NULL, &userMsgDiscordLink}
-#define COMMAND_GITHUB {"github", "Shows the link to the github repo (PMs only).",\
-NULL, NULL, &userMsgGithubLink}
-#define COMMAND_HELP {"help", "Shows this help message.",\
-NULL, NULL, &userMsgHelp}
-
-static struct bot_command commands[COMMAND_COUNT];
-static struct bot_command_list list = {'!',
-    NULL,
-    commands,
-    COMMAND_COUNT
-};
 
 static void execGameSayCommand(struct triceBot *b, struct game g, Event_GameSay event, int gameid) {
     const char *msg = event.message().c_str();
@@ -142,6 +137,13 @@ static void execUserMsgCommand(struct triceBot *b, Event_UserMessage event) {
 
 #define TMP_BUFFER_LENGTH 1024
 void initCommandList(struct triceBot* b) {
+    struct bot_command_list l = {'!',
+        NULL,
+        commands,
+        COMMAND_COUNT
+    };
+    list = l;
+    
     // Init commands
     commands[0] = COMMAND_DISCORD;
     commands[1] = COMMAND_GITHUB;
