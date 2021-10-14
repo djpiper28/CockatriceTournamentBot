@@ -13,6 +13,7 @@ TestApiServer::TestApiServer () : CppUnit::TestCase("api_server.h tests") {
         "sasdsad",
         "client id",
         "replays",
+        "url",
         "cert",
         "certkey",
         AUTH_TOKEN,

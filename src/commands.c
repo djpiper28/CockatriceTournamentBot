@@ -31,7 +31,7 @@ NULL, NULL, &userMsgDiscordLink}
 #define COMMAND_GITHUB {"github", "Shows the link to the github repo (PMs only).",\
 NULL, NULL, &userMsgGithubLink}
 #define COMMAND_HELP {"help", "Shows this help message.",\
-NULL, NULL, &userMsgHelp}
+&roomMsgHelp, NULL, &userMsgHelp}
 static struct bot_command commands[COMMAND_COUNT];
 static struct bot_command_list list;
 
@@ -89,6 +89,22 @@ void userMsgHelp(struct triceBot *b, Event_UserMessage event) {
     CommandContainer cont;
     SessionCommand *c = cont.add_session_command();
     c->MutableExtension(Command_Message::ext)->CopyFrom(cmdMsg);
+
+    struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);
+    enq(cmd, &b->sendQueue);
+
+    pthread_mutex_unlock(&b->mutex);
+}
+
+void roomMsgHelp(struct triceBot *b, Event_RoomSay event) {
+    pthread_mutex_lock(&b->mutex);
+
+    Command_RoomSay cmdMsg;
+    cmdMsg.set_message(list.helpMessage);
+
+    CommandContainer cont;
+    RoomCommand *c = cont.add_room_command();
+    c->MutableExtension(Command_RoomSay::ext)->CopyFrom(cmdMsg);
 
     struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);
     enq(cmd, &b->sendQueue);
