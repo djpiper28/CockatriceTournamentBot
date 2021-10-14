@@ -1021,13 +1021,6 @@ static void eventHandler(struct mg_connection *c,
 
                     mg_http_serve_dir(c, hm, &opts);
                 }
-            } else if (mg_http_match_uri(hm, "/favicon.png")) {
-                // Serve the favicon if it is present.
-                if (access(FAVICON_NAME, F_OK) == 0) {
-                    mg_http_serve_file(c, hm, FAVICON_NAME, "image/png", "\r\n");
-                } else {
-                    send404(c);
-                }
             } else {
                 send404(c);
             }
