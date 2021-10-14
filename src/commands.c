@@ -9,6 +9,21 @@
 #include "cmd_queue.h"
 #include "game_struct.h"
 
+struct bot_command {
+    char *commandName,
+    *commandDescription;
+    void (*fnRoomSay) (struct triceBot *, Event_RoomSay);
+    void (*fnGameSay) (struct triceBot *, struct game, Event_GameSay, int);
+    void (*fnUserMsg) (struct triceBot *, Event_UserMessage);
+};
+
+struct bot_command_list {
+    char commandPrefix;
+    char *helpMessage;
+    struct bot_command *commands;
+    size_t commandsLength;
+};
+
 static void userMsgDiscordLink(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_lock(&b->mutex);
 
@@ -53,29 +68,31 @@ static void userMsgGithubLink(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_unlock(&b->mutex);
 }
 
+void userMsgHelp(struct triceBot *b, Event_UserMessage event) {    
+    pthread_mutex_lock(&b->mutex);
+    
+    Command_Message cmdMsg;
+    cmdMsg.set_user_name(event.sender_name());
+    cmdMsg.set_message(list.helpMessage);
+    
+    CommandContainer cont;
+    SessionCommand *c = cont.add_session_command();
+    c->MutableExtension(Command_Message::ext)->CopyFrom(cmdMsg);
+    
+    struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);
+    enq(cmd, &b->sendQueue);
+    
+    pthread_mutex_unlock(&b->mutex);
+}
+
 // WARNING: the commands are hard coded and the COMMAND_COUNT needs to be set by hand.
 #define COMMAND_COUNT 3
 #define COMMAND_DISCORD {"discord", "Shows the squirebot invite link (PMs only).",\
 NULL, NULL, &userMsgDiscordLink}
 #define COMMAND_GITHUB {"github", "Shows the link to the github repo (PMs only).",\
 NULL, NULL, &userMsgGithubLink}
-#define COMMAND_HELP {"help", "Shows this help message."}
-
-struct bot_command {
-    char *commandName,
-    *commandDescription;
-    void (*fnRoomSay) (struct triceBot *, Event_RoomSay);
-    void (*fnGameSay) (struct triceBot *, struct game, Event_GameSay, int);
-    void (*fnUserMsg) (struct triceBot *, Event_UserMessage);
-};
-
-struct bot_command_list {
-    char commandPrefix;
-    char *helpMessage;
-    struct bot_command *commands;
-    size_t commandsLength;
-};
-
+#define COMMAND_HELP {"help", "Shows this help message.",\
+NULL, NULL, &userMsgHelp}
 static struct bot_command commands[COMMAND_COUNT];
 static struct bot_command_list list = {'!',
     NULL,
