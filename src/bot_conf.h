@@ -18,6 +18,7 @@ struct Config {
     char *cockatriceServer,
          *clientID,
          *replayFolder,
+         *externURL,
 
          //Tournament bot data TODO: move them elsewhere
          *cert,

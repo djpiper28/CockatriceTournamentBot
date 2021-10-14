@@ -79,20 +79,20 @@ static void userMsgGithubLink(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_unlock(&b->mutex);
 }
 
-void userMsgHelp(struct triceBot *b, Event_UserMessage event) {    
+void userMsgHelp(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_lock(&b->mutex);
-    
+
     Command_Message cmdMsg;
     cmdMsg.set_user_name(event.sender_name());
     cmdMsg.set_message(list.helpMessage);
-    
+
     CommandContainer cont;
     SessionCommand *c = cont.add_session_command();
     c->MutableExtension(Command_Message::ext)->CopyFrom(cmdMsg);
-    
+
     struct pendingCommand *cmd = prepCmdNTS(b, cont, -1, -1);
     enq(cmd, &b->sendQueue);
-    
+
     pthread_mutex_unlock(&b->mutex);
 }
 
@@ -143,16 +143,20 @@ void initCommandList(struct triceBot* b) {
         COMMAND_COUNT
     };
     list = l;
-    
+
     // Init commands
     commands[0] = COMMAND_DISCORD;
     commands[1] = COMMAND_GITHUB;
     commands[2] = COMMAND_HELP;
-    
+
     // Init help message
     char *helpMessage = (char *) malloc(sizeof(char) * BUFFER_LENGTH);
     helpMessage[BUFFER_LENGTH - 1] = 0;
-    snprintf(helpMessage, BUFFER_LENGTH, "Help for %s:\n", PROG_NAME);
+    snprintf(helpMessage,
+             BUFFER_LENGTH,
+             "Help for %s:\n\t(More information is available at %s)\n",
+             PROG_NAME,
+             b->config.externURL);
 
     // Add commands to help message
     size_t len = strnlen(helpMessage, BUFFER_LENGTH) + 1;

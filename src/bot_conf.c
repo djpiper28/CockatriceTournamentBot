@@ -126,6 +126,8 @@ static void readProperty(char *line, int length, struct Config *config) {
     } else if (strncmp("bindAddr", propertyStr, length) == 0) {
         if (config->bindAddr != NULL) free(config->bindAddr);
         config->bindAddr = valueStr;
+    } else if (strncmp("externURL", propertyStr, length) == 0) {
+        config->externURL = valueStr;
     }
 
     //Free string if not used
@@ -184,6 +186,7 @@ void makeNewFile(char *filename) {
 
         fprintf(configFile, "bindAddr=https://0.0.0.0:8000\n");
         fprintf(configFile, "clientID=changeme\n");
+        fprintf(configFile, "externURL=https://0.0.0.0:8000\n");
 
         free(generatedAuthToken);
         fclose(configFile); //close file like a good boy
@@ -204,7 +207,8 @@ config->cert = NULL;\
 config->certkey = NULL;\
 config->authToken = NULL;\
 config->bindAddr = NULL;\
-config->maxMessagesPerSecond = -1;
+config->maxMessagesPerSecond = -1;\
+config->externURL = NULL;
 
 // Reads the configuration from a buffer: char *data, of length: int length
 void readConfFromBuffer(struct Config *config, char *data, int length) {

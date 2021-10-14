@@ -1,5 +1,10 @@
 # Marchesa Bot (or the boring name of CockatriceTournamentBot)
 
+Marchesa Bot (aka tricebot) is a FOSS to make hosting tournaments on cocaktrice
+easier for tournament organisers. It can create games, save replays and has an
+integration with [Squire Bot](https://gitalb.com/monarch3). It currently requires
+players to use cockatrice beta to see the games that it makes.
+
 ## Build status
 [![CodeQL - Build and Test (Ubuntu)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
 [![codecov](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graph/badge.svg?token=EFPY6BDV96)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
@@ -52,6 +57,8 @@ roomName=Magic
 replayFolder=replays
 #Rate limit in max messages per second
 ratelimit=5
+#Base of the external URL
+externURL=https://tricebot.co.uk
 ```
 Change the data for what you want. (is whitespace sensitive)
 For duplicate property tags, the last line of the tag is used i.e:

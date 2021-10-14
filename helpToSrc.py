@@ -86,3 +86,4 @@ def genFile(outputName, defineName, inputName):
 
 genFile("help_page.h", "API_HELP", "apihelp.html")
 genFile("faq_page.h", "FAQ", "apifaq.html")
+genFile("index.h", "INDEX", "index.html")

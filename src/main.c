@@ -441,6 +441,11 @@ int main(int argc, char * args[]) {
             printf("[ERROR]: API server bind address is not defined in config.conf.\n");
         }
 
+        if (bot.config.externURL == NULL) {
+            valid = 0;
+            printf("[ERROR]: API externURL is not defined in config.conf.\n");
+        }
+
         // Check certs exist and are readable.
         if (bot.config.cert == NULL) {
             valid = 0;

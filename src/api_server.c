@@ -11,6 +11,7 @@
 #include "version.h"
 #include "help_page.h"
 #include "faq_page.h"
+#include "index.h"
 #include "page_css.h"
 #include "trice_structs.h"
 #include "bot.h"
@@ -690,6 +691,9 @@ static void eventHandler(struct mg_connection *c,
         if (mg_http_match_uri(hm, "/index")
                 || mg_http_match_uri(hm, "/index/")
                 || mg_http_match_uri(hm, "/")) {
+            mg_http_reply(c, 200, "", "%s", INDEX);
+        } else if (mg_http_match_uri(hm, "/discord/")
+                || mg_http_match_uri(hm, "/discord")) {
             mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL="
                           "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\"/>\n"
                           "<h1>Redirecting to discord.com...</h1>",
