@@ -17,6 +17,7 @@
 #include "testGameStruct.h"
 #include "testApiServer.h"
 #include "testPlayerDeckInfo.h"
+#include "testCommands.h"
 
 #define XMLOUT
 
@@ -27,6 +28,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestCmdQueue, "test cmd_queue.h");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestGameStruct, "test game_struct.h");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestApiServer, "test api_server.h");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestPlayerDeckInfo, "test player_deck_info.h");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestCommands, "test commands.h");
 
 // register test suite
 CppUnit::Test *suite() {

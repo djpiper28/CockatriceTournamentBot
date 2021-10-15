@@ -12,6 +12,7 @@
 #include "command_leave_game.pb.h"
 #include "room_commands.pb.h"
 #include "player_deck_info.h"
+#include "commands.h"
 
 #include "command_kick_from_game.pb.h"
 #include "command_game_say.pb.h"
@@ -440,6 +441,11 @@ int main(int argc, char * args[]) {
             printf("[ERROR]: API server bind address is not defined in config.conf.\n");
         }
 
+        if (bot.config.externURL == NULL) {
+            valid = 0;
+            printf("[ERROR]: API externURL is not defined in config.conf.\n");
+        }
+
         // Check certs exist and are readable.
         if (bot.config.cert == NULL) {
             valid = 0;
@@ -498,6 +504,7 @@ int main(int argc, char * args[]) {
 
             printf("[INFO]: Starting bot...\n");
 
+            initCommandList(&bot.b);
             startBot(&bot.b);
             tb_startServer(&bot.server);
 
@@ -506,6 +513,8 @@ int main(int argc, char * args[]) {
             for (;;) {
                 sleep(5);
             }
+
+            //freeCommandList();
         } else {
             printf("[ERROR]: Missing properties in config file, see README.md at "
                    "%s/blob/main/README.md.\n",

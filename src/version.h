@@ -2,7 +2,7 @@
 #define VERSION_
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 10
+#define VERSION_MINOR 11
 #define PROG_NAME "Marchesa - A Cockatrice Tournament Bot"
 #define GITHUB_REPO "https://github.com/djpiper28/CockatriceTournamentBot"
 

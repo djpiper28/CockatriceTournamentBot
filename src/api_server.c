@@ -11,6 +11,7 @@
 #include "version.h"
 #include "help_page.h"
 #include "faq_page.h"
+#include "index.h"
 #include "page_css.h"
 #include "trice_structs.h"
 #include "bot.h"
@@ -50,7 +51,7 @@ void tb_initServer(struct tb_apiServer *server,
                    struct triceBot *triceBot,
                    struct Config config) {
     memset(server, NULL, sizeof(struct tb_apiServer));
-    
+
     server->bottleneck = PTHREAD_MUTEX_INITIALIZER;
     server->config = config;
     server->triceBot = triceBot;
@@ -690,6 +691,9 @@ static void eventHandler(struct mg_connection *c,
         if (mg_http_match_uri(hm, "/index")
                 || mg_http_match_uri(hm, "/index/")
                 || mg_http_match_uri(hm, "/")) {
+            mg_http_reply(c, 200, "", "%s", INDEX);
+        } else if (mg_http_match_uri(hm, "/discord/")
+                || mg_http_match_uri(hm, "/discord")) {
             mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL="
                           "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\"/>\n"
                           "<h1>Redirecting to discord.com...</h1>",
@@ -1016,13 +1020,6 @@ static void eventHandler(struct mg_connection *c,
                     };
 
                     mg_http_serve_dir(c, hm, &opts);
-                }
-            } else if (mg_http_match_uri(hm, "/favicon.png")) {
-                // Serve the favicon if it is present.
-                if (access(FAVICON_NAME, F_OK) == 0) {
-                    mg_http_serve_file(c, hm, FAVICON_NAME, "image/png", "\r\n");
-                } else {
-                    send404(c);
                 }
             } else {
                 send404(c);

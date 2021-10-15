@@ -22,6 +22,7 @@ struct Config testConfig = {\
     "sasdsad",\
     "client id",\
     "replay folder",\
+    "url",\
     NULL,\
     NULL,\
     NULL,\

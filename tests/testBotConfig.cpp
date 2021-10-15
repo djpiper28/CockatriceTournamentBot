@@ -29,7 +29,8 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "ratelimit=10\n"\
-"replayFolder=test"
+"replayFolder=test\n"\
+"externURL=test"
 
 #define TEST_TWO_CONTENT \
 "username=test\n"\
@@ -42,7 +43,8 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "ratelimit=10\n"\
-"replayFolder=test\n"
+"replayFolder=test\n"\
+"externURL=test\n"
 
 #define TEST_THREE_CONTENT \
 "username=abc\n"\
@@ -66,7 +68,8 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "replayFolder=abc\n"\
 "ratelimit=69\n"\
 "ratelimit=10\n"\
-"replayFolder=test"
+"replayFolder=test\n"\
+"externURL=test"
 
 #define TEST_FOUR_CONTENT \
 "username=test\n"\
@@ -81,6 +84,7 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "clientID=test\n"\
 "replayFolder=test\n"\
 "ratelimit=10\n"\
+"externURL=test\n"\
 "#Another test comment"
 
 #define TEST_FIVE_CONTENT \
@@ -96,7 +100,8 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "ratelimit=10\n"\
-"replayFolder=test"
+"replayFolder=test\n"\
+"externURL=test"
 
 #define TEST_SIX_CONTENT \
 "username=test\n"\
@@ -111,7 +116,8 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "ratelimit=10\n"\
-"replayFolder=/tmp/test"
+"replayFolder=/tmp/test\n"\
+"externURL=test"
 
 #define TEST_SEVEN_CONTENT \
 "username=test\n"\
@@ -124,7 +130,8 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "bindAddr=test\n"\
 "clientID=test\n"\
 "ratelimit=10\n"\
-"replayFolder=test///////"
+"replayFolder=test///////\n"\
+"externURL=test"
 
 #define TEST_NINE_CONTENT \
 "username=test\n"\
@@ -138,7 +145,8 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "clientID=test\n"\
 "ratelimit=10\n"\
 "replayFolder=test\n"\
-"test="
+"test=\n"\
+"externURL=test"
 
 static void writeConfigFile(char *filename, char *data) {
     FILE *f = fopen(filename, "w+");
@@ -163,6 +171,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
@@ -179,6 +188,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
@@ -196,6 +206,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
@@ -212,6 +223,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
@@ -229,6 +241,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
@@ -245,6 +258,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 
@@ -261,6 +275,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
         
@@ -277,6 +292,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.certkey, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.authToken, TEST) == 0);
     CPPUNIT_ASSERT(strcmp(config.bindAddr, TEST) == 0);
+    CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
 }
@@ -300,6 +316,7 @@ void TestBotConfig::testMakeNewConfFile() {
     CPPUNIT_ASSERT(config.certkey != NULL);
     CPPUNIT_ASSERT(config.authToken != NULL);
     CPPUNIT_ASSERT(config.bindAddr != NULL);
+    CPPUNIT_ASSERT(config.externURL != NULL);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
 
     freeConf(&config);

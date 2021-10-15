@@ -124,7 +124,7 @@ if (event.HasExtension(type::ext)) {\
 void initBot(struct triceBot *b,
              struct Config config) {
     memset(b, NULL, sizeof(struct triceBot));
-    
+
     b->mutex = PTHREAD_MUTEX_INITIALIZER;
     b->config = config;
 
@@ -686,11 +686,11 @@ static void roomsListed(struct triceBot *b,
                 Command_JoinRoom roomJoin;
                 roomJoin.set_room_id(room.room_id());
                 b->magicRoomID = room.room_id();
-                
+
                 if (b->roomName != NULL) {
                     free(b->roomName);
                 }
-                
+
                 int len = strnlen(roomName, BUFFER_LENGTH) + 1;
                 b->roomName = (char *) malloc(sizeof(char) * len);
                 strncpy(b->roomName, roomName, len);
@@ -716,11 +716,11 @@ static void roomsListed(struct triceBot *b,
             Command_JoinRoom roomJoin;
             roomJoin.set_room_id(room.room_id());
             b->magicRoomID = room.room_id();
-            
+
             if (b->roomName != NULL) {
                 free(b->roomName);
             }
-            
+
             int len = strnlen(roomName, BUFFER_LENGTH) + 1;
             b->roomName = (char *) malloc(sizeof(char) * len);
             strncpy(b->roomName, roomName, len);
@@ -1509,16 +1509,16 @@ static void *botThread(void *in) {
     pthread_mutex_lock(&b->mutex);
     freeGameList(&b->gameList);
     freePendingCommandQueue(&b->sendQueue);
-    freePendingCommandQueue(&b->callbackQueue);        
+    freePendingCommandQueue(&b->callbackQueue);
     if (b->roomName != NULL) {
         free(b->roomName);
         b->roomName = NULL;
     }
-    
+
     pthread_mutex_unlock(&b->mutex);
 
     mg_mgr_free(&mgr);
-    
+
     MACRO_CALL_FUNCTION_PTR_FOR_BOT_STATE_CHANGE(onBotDisconnect)
 
     pthread_exit(NULL);
