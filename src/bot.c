@@ -1514,6 +1514,13 @@ static void *botThread(void *in) {
         free(b->roomName);
         b->roomName = NULL;
     }
+    
+    //Reset lists  
+    b->gameList.gamesHead = NULL;
+    b->sendQueue.head = NULL;
+    b->sendQueue.tail = NULL;
+    b->callbackQueue.head = NULL;
+    b->callbackQueue.tail = NULL;
 
     pthread_mutex_unlock(&b->mutex);
 
