@@ -44,10 +44,9 @@ def genFile(outputName, defineName, inputName):
     with open(sourcePath) as fp:
         for line in fp:
             line = line[:-1] # remove newline
-            if line == "{CSS}":
-                line = css
+            line = line.replace("{CSS}", css)
             
-            if line == "{INDEX}":
+            if "{INDEX}" in line:
                 indexLocation = len(genSource)
                 genSource.append("")
                 continue
