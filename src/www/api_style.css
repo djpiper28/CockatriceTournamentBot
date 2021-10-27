@@ -1,7 +1,3 @@
-<link rel="icon" 
-      type="image/png" 
-      href="favicon.png" />
-<style>
 .grid-container {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -69,10 +65,13 @@ body {
 }
 
 blockquote {
-    padding-left: 10px;
+    padding: 10px;
+    margin-left: 15px;
     background-color: rgb(35, 35, 35);
     color: rgb(240, 240, 240);
     font-family: mono;
+    text-align: left;
+    white-space: pre-line;
 }
 
 a {
@@ -89,4 +88,9 @@ h3, h4, h6 {
     color: white;
     font-family: sans;
 }
-</style>
+
+ul, li {
+    margin-left: 15px; 
+    padding-left: 0;
+    list-style-type: "-> ";
+}

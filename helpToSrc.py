@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
-def genCssFile(outputName, defineName, inputName):
-    import os
-    import re
+import os
+import re
 
+# For pretty printing
+index_ident_level = 5
+ident_string = "    "
+
+def genCssFile(outputName, defineName, inputName):
     thisDir = os.path.dirname(os.path.abspath(__file__))
     sourcePath = os.path.join(thisDir, "src", inputName)
 
@@ -24,12 +28,9 @@ def genCssFile(outputName, defineName, inputName):
         fp.write(genSourceContents)
     return cssStr
 
-css = genCssFile("page_css.h", "PAGE_CSS", "apistyle.css")
+css = genCssFile("page_css.h", "PAGE_CSS", "www/api_style.css")
 
 def genFile(outputName, defineName, inputName):
-    import os
-    import re
-
     thisDir = os.path.dirname(os.path.abspath(__file__))
     sourcePath = os.path.join(thisDir, "src", inputName)
     headerNameRegex = re.compile(r'(.*<)([a-zA-Z0-9]+)(.*id=")(.*)(">.*)')
@@ -44,9 +45,14 @@ def genFile(outputName, defineName, inputName):
     with open(sourcePath) as fp:
         for line in fp:
             line = line[:-1] # remove newline
-            line = line.replace("{CSS}", css)
-            
-            if "{INDEX}" in line:
+
+            # Using in to ignore indenting.
+            # And comments, so they don't get picked up
+            # in the documentation randomly.
+            if "/* {CSS} */" in line:
+                line = css
+
+            if "<!-- {INDEX} -->" in line: 
                 indexLocation = len(genSource)
                 genSource.append("")
                 continue
@@ -60,7 +66,7 @@ def genFile(outputName, defineName, inputName):
                     
                 escaped = escapesString(name)
                 anchorPointsProcessed.append(
-                    f'<{indexTag}><a href=\\"#{escaped}\\">{name}</a></{indexTag}>'
+                    (index_ident_level * ident_string) + f'<{indexTag}><a href=\\"#{escaped}\\">{name}</a></{indexTag}>'
                 )
                 #line = "".join((first, escaped, rest))
 
@@ -83,6 +89,6 @@ def genFile(outputName, defineName, inputName):
     with open(outputName, "w+") as fp:
         fp.write(genSourceContents)
 
-genFile("help_page.h", "API_HELP", "apihelp.html")
-genFile("faq_page.h", "FAQ", "apifaq.html")
-genFile("index.h", "INDEX", "index.html")
+genFile("help_page.h", "API_HELP", "www/api_help.html")
+genFile("faq_page.h", "FAQ", "www/api_faq.html")
+genFile("index.h", "INDEX", "www/index.html")
