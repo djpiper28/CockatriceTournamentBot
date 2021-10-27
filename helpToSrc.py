@@ -28,7 +28,7 @@ def genCssFile(outputName, defineName, inputName):
         fp.write(genSourceContents)
     return cssStr
 
-css = genCssFile("page_css.h", "PAGE_CSS", "apistyle.css")
+css = genCssFile("page_css.h", "PAGE_CSS", "www/api_style.css")
 
 def genFile(outputName, defineName, inputName):
     thisDir = os.path.dirname(os.path.abspath(__file__))
@@ -89,6 +89,6 @@ def genFile(outputName, defineName, inputName):
     with open(outputName, "w+") as fp:
         fp.write(genSourceContents)
 
-genFile("help_page.h", "API_HELP", "apihelp.html")
-genFile("faq_page.h", "FAQ", "apifaq.html")
-genFile("index.h", "INDEX", "index.html")
+genFile("help_page.h", "API_HELP", "www/api_help.html")
+genFile("faq_page.h", "FAQ", "www/api_faq.html")
+genFile("index.h", "INDEX", "www/index.html")
