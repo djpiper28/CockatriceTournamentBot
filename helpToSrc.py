@@ -12,13 +12,18 @@ def genCssFile(outputName, defineName, inputName):
     sourcePath = os.path.join(thisDir, "src", inputName)
 
     cssStr = ""
-    genSource = []
+    genSource = ["""
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <style type="text/css">
+        """.replace('"', '\\"')]
     with open(sourcePath) as fp:
         for line in fp:
             line = line[:-1] # remove newline
             genSource.append(line.replace('"', '\\"'))
             cssStr += line
 
+    genSource.append("</style>")
     genSourceString = "\\n\\\n".join(genSource)
     genSourceContents = f"""#ifndef {defineName}
     #define {defineName} "{genSourceString}"
