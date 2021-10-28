@@ -74,6 +74,9 @@ set(SRC_FILES
     src/commands.c
     )
 add_executable(CockatriceTournamentBot ${SRC_FILES} ${MAIN})
+
+configure_file("src/www/favicon.ico" "${CMAKE_BINARY_DIR}/favicon.ico" COPYONLY)
+
 target_include_directories(CockatriceTournamentBot PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})
 target_link_libraries(CockatriceTournamentBot
