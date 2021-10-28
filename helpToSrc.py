@@ -16,7 +16,7 @@ def genCssFile(outputName, defineName, inputName):
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <style type="text/css">
-        """.replace('"', '\\"')]
+        """.replace('"', '\\"').replace("\n", "")]
     with open(sourcePath) as fp:
         for line in fp:
             line = line[:-1] # remove newline
