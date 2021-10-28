@@ -698,10 +698,16 @@ static void eventHandler(struct mg_connection *c,
                           "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\"/>\n"
                           "<h1>Redirecting to discord.com...</h1>",
                           api->config.clientID);
-        } else
+        }
+        
 #endif
-
-            if (mg_http_match_uri(hm, "/github")) {
+            else if (mg_http_match_uri(hm, "/favicon.ico"))
+            {
+                struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+                struct mg_http_serve_opts opts = {.mime_types = "ico=image/x-icon"};
+                mg_http_serve_file(c, hm, "favicon.ico", &opts);  // Send file
+            }
+            else if (mg_http_match_uri(hm, "/github")) {
                 mg_http_reply(c, 301, "",
                               "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />",
                               GITHUB_REPO);
