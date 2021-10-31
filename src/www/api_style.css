@@ -94,3 +94,17 @@ ul, li {
     padding-left: 0;
     list-style-type: "-> ";
 }
+
+.header span {
+    font-size: 2em;
+    font-weight: bold;
+    color: rgb(200, 200, 0);
+    font-family: sans;
+}
+
+.header img {
+    width: 128px;
+    height: 128px;
+    float: right;
+    padding: 10px;
+}

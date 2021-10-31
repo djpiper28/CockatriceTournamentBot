@@ -75,7 +75,12 @@ set(SRC_FILES
     )
 add_executable(CockatriceTournamentBot ${SRC_FILES} ${MAIN})
 
-configure_file("src/www/favicon.ico" "${CMAKE_BINARY_DIR}/favicon.ico" COPYONLY)
+# Copy static content (images, favicon, etc.)
+file(GLOB STATIC_IMG
+  "src/www/img/**"
+)
+file(COPY "src/www/favicon.ico" DESTINATION "${CMAKE_BINARY_DIR}/static/")
+file(COPY ${STATIC_IMG} DESTINATION "${CMAKE_BINARY_DIR}/static/img/")
 
 target_include_directories(CockatriceTournamentBot PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})

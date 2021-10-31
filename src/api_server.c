@@ -702,9 +702,11 @@ static void eventHandler(struct mg_connection *c,
         
 #endif
             if (mg_http_match_uri(hm, "/favicon.ico")) {
-                struct mg_http_message *hm = (struct mg_http_message *) ev_data;
                 struct mg_http_serve_opts opts = {.mime_types = "ico=image/x-icon"};
-                mg_http_serve_file(c, hm, "favicon.ico", &opts);  // Send file
+                mg_http_serve_file(c, hm, "static/favicon.ico", &opts);  // Send file
+            } else if (mg_http_match_uri(hm, "/img/**")) {
+                struct mg_http_serve_opts opts = {.root_dir = "static"};   // Serve the static directory
+                mg_http_serve_dir(c, hm, &opts);
             } else if (mg_http_match_uri(hm, "/github")) {
                 mg_http_reply(c, 301, "",
                               "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />",
