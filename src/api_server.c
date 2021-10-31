@@ -918,11 +918,12 @@ static void eventHandler(struct mg_connection *c,
                                 strcat(pdiMSG, "<br>");
                             }
                         }
-
+                        
+                        char url[BUFFER_LENGTH];
+                        memset(url, 0, BUFFER_LENGTH);
+                        strncpy(url, hm->uri.ptr, min(BUFFER_LENGTH, hm->uri.len));
+                        
                         if (players == 0) {
-                            char url[BUFFER_LENGTH];
-                            memset(url, 0, BUFFER_LENGTH);
-                            strncpy(url, hm->uri.ptr, min(BUFFER_LENGTH, hm->uri.len));
                             mg_http_reply(c,
                                           200,
                                           "",
@@ -930,12 +931,12 @@ static void eventHandler(struct mg_connection *c,
                                           "<html>\n"
                                           "<head>\n"
                                           "<meta charset=\"UTF-8\">\n"
-                                          "<meta property=\"og:type\" content=\"website\">\n"
-                                          "<meta property=\"og:title\" content=\"%s\">\n"
-                                          "<meta property=\"og:description\" content=\"A %d player cockatrice game.\">\n"
+                                          "<meta property=\"og:type\" content=\"website\" />\n"
+                                          "<meta property=\"og:title\" content=\"%s\" />\n"
+                                          "<meta property=\"og:description\" content=\"A %d player cockatrice game.\" />\n"
                                           "<meta property=\"og:image\" content=\"%s/img/logo.png\" />"
                                           "<meta property=\"og:url\" content=\"%s%s\" />"
-                                          "<meta name=\"theme-color\" content=\"#004B4B\">"
+                                          "<meta name=\"theme-color\" content=\"#004B4B\" />"
                                           "%s\n"
                                           "<title>Game %d (%d/%d)</title>\n"
                                           "</head>\n"
@@ -977,10 +978,13 @@ static void eventHandler(struct mg_connection *c,
                                         "<!DOCTYPE html>"
                                         "<html>\n"
                                         "<head>\n"
-                                        "<meta charset=\"UTF-8\">\n"
-                                        "<meta property=\"og:type\" content=\"website\">\n"
-                                        "<meta property=\"og:title\" content=\"%s\">\n"
-                                        "<meta property=\"og:description\" content=\"A %d player cockatrice game.\">\n"
+                                        "<meta charset=\"UTF-8\" />\n"
+                                        "<meta property=\"og:type\" content=\"website\" />\n"
+                                        "<meta property=\"og:title\" content=\"%s\" />\n"
+                                        "<meta property=\"og:description\" content=\"A %d player cockatrice game.\" />\n"
+                                        "<meta property=\"og:image\" content=\"%s/img/logo.png\" />"
+                                        "<meta property=\"og:url\" content=\"%s%s\" />"
+                                        "<meta name=\"theme-color\" content=\"#004B4B\" />"
                                         "%s\n"
                                         "<title>Game %d (%d/%d)</title>\n"
                                         "</head>\n"
@@ -1000,6 +1004,9 @@ static void eventHandler(struct mg_connection *c,
                                         "</div>\n</div>\n</div>\n</body>\n</html>",
                                         g.gameName,
                                         g.playerCount,
+                                        api->config.externURL,
+                                        api->config.externURL,
+                                        url,
                                         PAGE_CSS,
                                         gameID,
                                         players,
