@@ -703,7 +703,10 @@ static void eventHandler(struct mg_connection *c,
 #endif
             if (mg_http_match_uri(hm, "/favicon.ico")) {
                 struct mg_http_serve_opts opts = {.mime_types = "ico=image/x-icon"};
-                mg_http_serve_file(c, hm, "static/favicon.ico", &opts);  // Send file
+                mg_http_serve_file(c, hm, "static/favicon.ico", &opts);  // Send favicon
+            } else if (mg_http_match_uri(hm, "/robots.txt")) {
+                struct mg_http_serve_opts opts = {.mime_types = "txt=text/plain"};
+                mg_http_serve_file(c, hm, "static/robots.txt", &opts);  // Send robots
             } else if (mg_http_match_uri(hm, "/img/**")) {
                 struct mg_http_serve_opts opts = {.root_dir = "static"};   // Serve the static directory
                 mg_http_serve_dir(c, hm, &opts);
