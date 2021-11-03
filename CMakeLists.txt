@@ -80,6 +80,7 @@ file(GLOB STATIC_IMG
   "src/www/img/**"
 )
 file(COPY "src/www/favicon.ico" DESTINATION "${CMAKE_BINARY_DIR}/static/")
+file(COPY "src/www/robots.txt" DESTINATION "${CMAKE_BINARY_DIR}/static/")
 file(COPY ${STATIC_IMG} DESTINATION "${CMAKE_BINARY_DIR}/static/img/")
 
 target_include_directories(CockatriceTournamentBot PUBLIC
