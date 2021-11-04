@@ -49,7 +49,6 @@ int main(int argc, char* argv[]) {
     // Add the top suite to the test runner
     CppUnit::TestRunner runner;
     runner.addTest(CppUnit::TestFactoryRegistry::getRegistry().makeTest());
-    runner.addTest(suite());
     
     try {
         std::cout << std::endl;
