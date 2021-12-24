@@ -55,8 +55,9 @@ jobs:
         echo "$PRIV_KEY" > privkey.pem
 
         echo wc -l config.conf fullchain.pem privkey.pem
-        ctest --rerun-failed --output-on-failure
-    
+        make coverage
+        make coverage_sys
+        
     - uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
