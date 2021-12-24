@@ -53,7 +53,7 @@ jobs:
         echo $CONFIG_FILE > config.conf
         echo $FULL_CHAIN > fullchain.pem
         echo $PRIV_KEY > privkey.pem
-        ctest
+        ctest --rerun-failed --output-on-failure
     
     - uses: codecov/codecov-action@v1
       with:
