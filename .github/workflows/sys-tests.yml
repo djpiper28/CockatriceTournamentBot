@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: "Unit and System Tests"
 
 on:
   push:
