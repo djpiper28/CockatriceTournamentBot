@@ -44,7 +44,7 @@ jobs:
       env:
         CONFIG_FILE: ${{ secrets.CONFIG_FILE }}
         FULL_CHAIN: ${{ secrets.FULL_CHAIN }}
-        PRIV_KEY: ${{secrets.PRIV_KEY }}
+        PRIV_KEY: ${{ secrets.PRIV_KEY }}
       run : |
         mkdir -p build
         cd build
@@ -53,6 +53,8 @@ jobs:
         echo $CONFIG_FILE > config.conf
         echo $FULL_CHAIN > fullchain.pem
         echo $PRIV_KEY > privkey.pem
+
+        echo wc -l config.conf fullchain.pem privkey.pem
         ctest --rerun-failed --output-on-failure
     
     - uses: codecov/codecov-action@v1

@@ -227,6 +227,7 @@ int main(int argc, char **argv) {
 		struct Config config;
     status |= !readConf(&config, "config.conf");
     if (status) fail("Cannot read config.conf");
+    if (config.bindAddr == NULL) fail("NULL bind address");
 
     std::string base_url = config.bindAddr;
 		
