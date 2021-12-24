@@ -209,6 +209,7 @@ void *start_src_main(void *args_in) {
 }
 
 #define ERROR "error 404"
+#define WAIT 5
 
 int main(int argc, char **argv) {
     struct args_struct args_in = {argc, argv};
@@ -216,8 +217,9 @@ int main(int argc, char **argv) {
 	  pthread_create(&main_thread, NULL, start_src_main, (void *) &args_in);
 
 		// Wait for startup to complete
-	  for (int i = 0; i < 10; i++) {
-	  	  fprintf(stderr, "%d\n", 10 - i);
+		fprintf(stderr, "Waiting %d to start system tests\n", WAIT);
+	  for (int i = 0; i < WAIT; i++) {
+	  	  fprintf(stderr, "%d...\n", WAIT - i);
 	  	  sleep(1);
 	  }
 
@@ -256,7 +258,29 @@ int main(int argc, char **argv) {
     status = ERROR == getRequest(base_url + "/discord/");
     if (status) fail("Cannot get /discord/");
 
+    // Test robots
+    status = ERROR == getRequest(base_url + "/robots.txt");
+    if (status) fail("Cannot get /robots.txt");
 
+    // Test status
+    status = ERROR == getRequest(base_url + "/status");
+    if (status) fail("Cannot get /status");
+
+    status = ERROR == getRequest(base_url + "/status/");
+    if (status) fail("Cannot get /status/");
+
+    // Test version
+    status = ERROR == getRequest(base_url + "/api/version");
+    if (status) fail("Cannot get /api/version");
+
+    status = ERROR == getRequest(base_url + "/api/version/");
+    if (status) fail("Cannot get /api/version/");
+
+		std::string token = std::string(config.authToken);
+
+    // Check auth key
+    status = "valid=1" != sendRequest(base_url + "/api/checkauthkey", token);
+    if (status) fail("Cannot checkauthkey");
 
 		// Do not free anything as I am lazy
 	  return status;
