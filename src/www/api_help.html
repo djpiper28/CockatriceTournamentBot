@@ -179,21 +179,20 @@
                         
                         <li>At the moment the response from servatrice is ignored.</li>
                     </ul>
-										<h2 id="endgame">../api/endgame</h2>
-										<h4>Ends a game that the bot started</h4>
-										<ul>
-														<li>Request body should be in this format:</li>
-														<blockquote>authtoken=token
-												    gameid=gameid</blockquote>
+			<h2 id="apiendgame">../api/endgame</h2>
+			<h4>Ends a game that the bot started</h4>
+			<ul>
+				<li>Request body should be in this format:</li>
+				<blockquote>authtoken=token
+					gameid=gameid</blockquote>
+				<li>Response will be success if the bot issued the command.</li>
+				<blockquote>success</blockquote>
 
-														<li>Response will be success if the bot issued the command.</li>
-														<blockquote>success</blockquote>
-																		
-														<li>If the game was not found then an error message is returned</li>
-														<blockquote>error not found</blockquote>
-
-														<li>At the moment the response from servatrice is ignored.</li>
-										</ul>
+				<li>If the game was not found then an error message is returned</li>
+				<blockquote>error not found</blockquote>
+				
+				<li>At the moment the response from servatrice is ignored.</li>
+			</ul>
                     <h2 id="ReplayDownloads">Replay Downloads</h2>
                     <h3>../replay-%s-%d.cor</h3>
                     <h3>../${REPLAY_FOLDER}/**/*%s-%d.cor</h3>
