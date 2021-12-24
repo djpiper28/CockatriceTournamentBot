@@ -8,7 +8,8 @@ players to use cockatrice beta to see the games that it makes.
 ## Build status
 [![CodeQL - Build and Test (Ubuntu)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
 [![codecov](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graph/badge.svg?token=EFPY6BDV96)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
-(Linux only due to pthread and unistd dependancies)
+### System Test Status
+[![System Tests](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/sys-tests.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/sys-tests.yml)
 
 ## Features
  - Automatic game creation
@@ -20,7 +21,7 @@ players to use cockatrice beta to see the games that it makes.
 This is when the bot can automatically kick players who are not welcome and tell
 playeres when they load the wrong deck. Both are entirely optional. The bot gets
 sent the list of players and decks from the api client, (i.e:
-[Squire Bot](https://github.com/TylerBloom/SquireBot)) and then when a player who
+[Squire Bot](https://github.com/MonarchDevelopment/SquireBot)) and then when a player who
 is not meant to be in the game joins they can be kicked automatically by the bot.
 
 ## Interfacing with the bot
@@ -93,7 +94,7 @@ bot running on the same machine as the program that uses it.
 
 ## Compiling
 Install dependencies (ubuntu package names):
-`cmake g++ or clang++ libmbedtls-dev libprotobuf-dev protobuf-compiler libcppunit-dev`
+`cmake g++ gcc libmbedtls-dev libprotobuf-dev protobuf-compiler libcppunit-dev build-essentials curl libcurl4-openssl-dev`
 The tests use `cppunit` and `gcovr`.
 
 Create build directory and use cmake:
@@ -101,7 +102,7 @@ Create build directory and use cmake:
 mkdir build
 cd build
 cmake .. # -DCMAKE_BUILD_TYPE=Debug
-cmake --build . # -j x
+cmake --build . # -j
 ```
 
 ### Tests
@@ -111,7 +112,7 @@ it with `make coverage` or gcov to get coverage if you want.
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=TEST
-cmake --build . # -j x
+cmake --build . # -j
 ./CockatriceTournamentBotTests #runs tests
 make coverage #runs tests and gets coverage
 ```
@@ -126,7 +127,7 @@ Compile a debug build with
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
-cmake --build . # -j x
+cmake --build . # -j
 ```
 Please copy and paste the logs from before the crash/hangand put them in your 
 issue, then (optional) run with a debugger and get the full backtrace of the 

@@ -11,7 +11,8 @@ on:
 
 jobs:
   analyze:
-    name: Analyse, Compile.
+    environment: live
+    name: Run system tests
     runs-on: ubuntu-latest
 
     strategy:
@@ -35,15 +36,32 @@ jobs:
         
     - name: install libs
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake libcppunit-dev gcovr
         
-    - name: make release
+    - name: make tests and coverage
       shell: bash
+      env:
+        CONFIG_FILE: ${{ secrets.CONFIG_FILE }}
+        FULL_CHAIN: ${{ secrets.FULL_CHAIN }}
+        PRIV_KEY: ${{secrets.PRIV_KEY }}
       run : |
         mkdir -p build
         cd build
-        cmake ..
+        cmake .. -DCMAKE_BUILD_TYPE=TEST
         cmake --build .
+        cat $CONFIG_FILE > config.conf
+        cat $FULL_CHAIN > fullchain.pem
+        cat $PRIV_KEY > privkey.pem
+        ctest
+    
+    - uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        files: build/coverage.xml # optional
+        flags: unittests # optional
+        name: codecov-umbrella # optional
+        fail_ci_if_error: false # optional (default = false)
+        verbose: true # optional (default = false)
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1

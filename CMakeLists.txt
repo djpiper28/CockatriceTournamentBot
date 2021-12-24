@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # compiler flags
-set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wno-unused-parameter -Wno-writable-strings -DDEBUG=1")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wno-unused-parameter -DDEBUG=1")
 set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 # -fsanitize=address,undefined ???
 set(CMAKE_C_FLAGS_RELEASE "-O2 -Wno-unused-parameter -Wno-writable-strings")
@@ -19,19 +19,23 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
 if (CMAKE_BUILD_TYPE STREQUAL "TEST")
     include(CodeCoverage)
-    
+
     # Setup coverage
     set(CMAKE_C_COMPILER gcc)
     set(CMAKE_CXX_COMPILER g++)
-    
+
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG} -DMEGA_DEBUG=1")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -DMEGA_DEBUG=1")
-    
+
     append_coverage_compiler_flags()
     #setup_target_for_coverage_gcovr_html
     setup_target_for_coverage_gcovr_xml(NAME coverage
         EXECUTABLE CockatriceTournamentBotTests
         EXCLUDE "build/*" "tests/*" "src/mongoose.c" "src/mongoose.h" "src/main.c")
+
+    setup_target_for_coverage_gcovr_xml(NAME coverage_sys
+    		EXECUTABLE CockatriceTournamentBotSysTests
+				EXCLUDE "build/*" "tests/*" "src/mongoose.c" "src/mongoose.c")
 endif()
 
 # gendocs generates doc source files from html with helpToSrc.py
@@ -90,7 +94,7 @@ target_link_libraries(CockatriceTournamentBot
 add_dependencies(CockatriceTournamentBot gendocs)
 
 if (CMAKE_BUILD_TYPE STREQUAL "TEST")
-    # tests, set the flags manually
+		# Add the unit tests
     set(CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_DEBUG})
     set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_DEBUG})
 
@@ -107,12 +111,27 @@ if (CMAKE_BUILD_TYPE STREQUAL "TEST")
         tests/testCommands.cpp
         )
     add_executable(CockatriceTournamentBotTests ${TEST_FILES})
-    target_include_directories(CockatriceTournamentBotTests PUBLIC 
+    target_include_directories(CockatriceTournamentBotTests PUBLIC
         ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})
     target_link_libraries(CockatriceTournamentBotTests
         proto mongoose cppunit ${Protobuf_LIBRARIES} ${MBEDTLS_LIBS})
     add_dependencies(CockatriceTournamentBotTests gendocs)
     add_test(NAME CockatriceTournamentBotTests COMMAND CockatriceTournamentBotTests)
+
+		# Add system tests
+		set (SYS_TEST_FILES
+				${SRC_FILES}
+				tests/sys_tests.cpp
+				)
+    add_executable(CockatriceTournamentBotSysTests ${SYS_TEST_FILES})
+    target_include_directories(CockatriceTournamentBotSysTests PUBLIC
+        ${CMAKE_CURRENT_BINARY_DIR} ${PB_DIR})
+    target_link_libraries(CockatriceTournamentBotSysTests
+        curl proto mongoose ${Protobuf_LIBRARIES} ${MBEDTLS_LIBS})
+    add_dependencies(CockatriceTournamentBotSysTests gendocs)
+	  add_test(NAME CockatriceTournamentBotSysTests COMMAND CockatriceTournamentBotSysTests)
+
+    enable_testing()
 endif()
 
 # packaging?

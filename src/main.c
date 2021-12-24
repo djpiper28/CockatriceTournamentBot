@@ -381,7 +381,11 @@ void botConnect(struct triceBot *b) {
     printf("[INFO]: The bot has successfully connected to the server and will finish starting.\n");
 }
 
-int main(int argc, char * args[]) {
+// This is a nice hack to let me rename this for my system tests
+#ifndef MAIN_FUNC
+#define MAIN_FUNC main
+#endif
+int MAIN_FUNC(int argc, char * args[]) {
     printf("[INFO]: %s\n-> by djpiper28 see %s for git repo.\n",
            PROG_NAME,
            GITHUB_REPO);
@@ -526,4 +530,6 @@ int main(int argc, char * args[]) {
         printf("[ERROR]: No config file exists, a new one was made. "
                "Please edit it then restart the bot.\n");
     }
+
+    return status;
 }
