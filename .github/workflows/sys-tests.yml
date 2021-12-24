@@ -36,8 +36,9 @@ jobs:
         
     - name: install libs
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake libcppunit-dev gcovr
-        
+      run:  |
+        export DEPS="curl libcurl4-openssl-dev libncurses5-dev libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake libcppunit-dev gcovr"
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends $DEPS        
     - name: make tests and coverage
       shell: bash
       env:
