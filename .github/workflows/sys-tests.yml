@@ -50,9 +50,9 @@ jobs:
         cd build
         cmake .. -DCMAKE_BUILD_TYPE=TEST
         cmake --build .
-        cat $CONFIG_FILE > config.conf
-        cat $FULL_CHAIN > fullchain.pem
-        cat $PRIV_KEY > privkey.pem
+        echo $CONFIG_FILE > config.conf
+        echo $FULL_CHAIN > fullchain.pem
+        echo $PRIV_KEY > privkey.pem
         ctest
     
     - uses: codecov/codecov-action@v1
