@@ -2,7 +2,7 @@ name: "Unit and System Tests"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, cont-sys-testing ]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ main ]
@@ -61,7 +61,7 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: build/coverage.xml,build/coverage_sys.xml # optional
+        files: ./build/coverage.xml,./build/coverage_sys.xml
         flags: unittests # optional
         name: codecov-umbrella # optional
         fail_ci_if_error: false # optional (default = false)
