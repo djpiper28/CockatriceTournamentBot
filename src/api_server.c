@@ -22,6 +22,7 @@
 
 #include "command_kick_from_game.pb.h"
 #include "commands.pb.h"
+#include "command_leave_game.pb.h"
 #include "game_commands.pb.h"
 #include "get_pb_extension.h"
 #include "response.pb.h"
@@ -460,6 +461,88 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
     if (newPlayerName != NULL) free(newPlayerName);
 }
 
+static void serverEndGame(struct ServerConnection *s,
+								          struct mg_connection *c,
+								          struct mg_http_message *hm) {
+    char *authToken = NULL;
+    int gameId = -1;
+    
+		// Read the buffer line by line
+    size_t ptr = 0;
+ 
+    while (ptr <= hm->body.len) {
+        struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
+                                                      &ptr,
+                                                      hm->body.len);
+        struct tb_apiServerPropety property = tb_readProperty(line);
+        //Error case - no prop len or, value len
+        if (property.propLen > 0 && property.valueLen > 0) {
+            if (MAX_PROP_LEN < property.propLen) {
+                property.propLen = MAX_PROP_LEN;
+            }
+
+            if (strncmp(property.property, "authtoken", property.propLen) == 0) {
+                authToken = property.value;
+            } else if (strncmp(property.property, "gameid", property.propLen) == 0) {
+            		gameId = atoi(property.value);
+            		free(property.value);
+						} else {
+            	 free(property.value);
+            }
+
+            free(property.property);
+				}
+		}
+
+		int valid = gameId != -1 && authToken != NULL;
+    if (valid) {
+        //Check authtoken
+        if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
+            //Find the game
+            pthread_mutex_lock(&s->api->triceBot->gameList.mutex);
+            struct game *g = getGameWithIDNTS(&s->api->triceBot->gameList,
+            							                         gameId);
+
+            if (g == NULL) {
+            	  mg_http_reply(c, 200, "", "error not found");
+            } else {
+                Command_LeaveGame leaveCommand;
+
+                CommandContainer cont;
+                GameCommand *gc = cont.add_game_command();
+                gc->MutableExtension(Command_LeaveGame::ext)->CopyFrom(leaveCommand);
+
+                struct pendingCommand *cmd = prepCmd(s->api->triceBot,
+                                                     cont,
+                                                     gameId,
+                                                     s->api->triceBot->magicRoomID);
+
+                printf("[INFO]: Leaving game %s - %d after api request.\n",
+                       g->gameName,
+                       gameId);
+
+                enq(cmd, &s->api->triceBot->sendQueue);
+
+                mg_http_reply(c, 200, "", "success");
+                pthread_mutex_unlock(&s->api->triceBot->gameList.mutex);
+                removeGame(&s->api->triceBot->gameList, g);
+                g = NULL;
+            }
+            
+            if (g != NULL) {
+                pthread_mutex_unlock(&s->api->triceBot->gameList.mutex);
+						}
+				} else {
+            sendInvalidAuthTokenResponse(c);
+				}
+		} else {
+			  printf("[Error]: Invalid end game command.\n");
+			  send404(c);
+		}
+		
+		if (authToken != NULL) free(authToken);
+}
+
 static void serverCreateGameCommand(struct ServerConnection *s,
                                     struct mg_connection *c,
                                     struct mg_http_message *hm) {
@@ -745,13 +828,20 @@ static void eventHandler(struct mg_connection *c,
             } else if (mg_http_match_uri(hm, "/api/kickplayer/")
                        || mg_http_match_uri(hm, "/api/kickplayer")) {
                 serverKickPlayerCommand(s, c, hm);
-            } else if (mg_http_match_uri(hm, "/api/")
+            } else if (mg_http_match_uri(hm, "/api/endgame/")
+            					 || mg_http_match_uri(hm, "/api/endgame")) {
+                serverEndGame(s, c, hm);
+						}
+
+            else if (mg_http_match_uri(hm, "/api/")
                        || mg_http_match_uri(hm, "/api")) {
                 mg_http_reply(c, 200, "", "%s", API_HELP);
             } else if (mg_http_match_uri(hm, "/faq/")
                        || mg_http_match_uri(hm, "/faq")) {
                 mg_http_reply(c, 200, "", "%s", FAQ);
-            } else if (mg_http_match_uri(hm, "/status/")
+            }
+
+            else if (mg_http_match_uri(hm, "/status/")
                        || mg_http_match_uri(hm, "/status")) {
                 pthread_mutex_lock(&api->triceBot->mutex);
                 mg_http_reply(c, 200, "", "serverIp=%s\n"
