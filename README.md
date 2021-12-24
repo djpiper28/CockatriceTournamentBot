@@ -8,7 +8,6 @@ players to use cockatrice beta to see the games that it makes.
 ## Build status
 [![CodeQL - Build and Test (Ubuntu)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/codeql-analysis.yml)
 [![codecov](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graph/badge.svg?token=EFPY6BDV96)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
-### System Test Status
 [![System Tests](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/sys-tests.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/sys-tests.yml)
 
 ## Features
