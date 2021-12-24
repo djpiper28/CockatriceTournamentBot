@@ -5,7 +5,7 @@
 // This software is dual-licensed: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 2 as
 // published by the Free Software Foundation. For the terms of this
-// license, see <http://www.gnu.org/licenses/>.
+// license, see http://www.gnu.org/licenses/
 //
 // You are free to use this software under the terms of the GNU General
 // Public License, but WITHOUT ANY WARRANTY; without even the implied
@@ -13,18 +13,14 @@
 // See the GNU General Public License for more details.
 //
 // Alternatively, you can license this software under a commercial
-// license, as set out in <https://www.cesanta.com/license>.
+// license, as set out in https://www.mongoose.ws/licensing/
 
 #include "mongoose.h"
 
 #ifdef MG_ENABLE_LINES
-#line 1 "src/private.h"
-#endif
-void mg_connect_resolved(struct mg_connection *);
-
-#ifdef MG_ENABLE_LINES
 #line 1 "src/base64.c"
 #endif
+
 #include <string.h>
 
 static int mg_b64idx(int c) {
@@ -118,11 +114,10 @@ int mg_base64_decode(const char *src, int n, char *dst) {
 
 
 
-
 struct dns_data {
   struct dns_data *next;
   struct mg_connection *c;
-  unsigned long expire;
+  int64_t expire;
   uint16_t txnid;
 };
 
@@ -177,8 +172,8 @@ static size_t mg_dns_parse_name_depth(const uint8_t *s, size_t len, size_t ofs,
   return i;
 }
 
-size_t mg_dns_parse_name(const uint8_t *s, size_t n, size_t ofs, char *dst,
-                         size_t dstlen) {
+static size_t mg_dns_parse_name(const uint8_t *s, size_t n, size_t ofs,
+                                char *dst, size_t dstlen) {
   return mg_dns_parse_name_depth(s, n, ofs, dst, dstlen, 0);
 }
 
@@ -188,22 +183,22 @@ size_t mg_dns_parse_rr(const uint8_t *buf, size_t len, size_t ofs,
 
   memset(rr, 0, sizeof(*rr));
   if (len < sizeof(struct mg_dns_header)) return 0;  // Too small
-  if (len > 512) return 0;         //  Too large, we don't expect that
-  if (s >= e) return 0;            //  Overflow
+  if (len > 512) return 0;  //  Too large, we don't expect that
+  if (s >= e) return 0;     //  Overflow
 
   if ((rr->nlen = (uint16_t) mg_dns_parse_name(buf, len, ofs, NULL, 0)) == 0)
     return 0;
   s += rr->nlen + 4;
   if (s > e) return 0;
-  rr->atype = (uint16_t)(((uint16_t) s[-4] << 8) | s[-3]);
-  rr->aclass = (uint16_t)(((uint16_t) s[-2] << 8) | s[-1]);
-  if (is_question) return (size_t)(rr->nlen + 4);
+  rr->atype = (uint16_t) (((uint16_t) s[-4] << 8) | s[-3]);
+  rr->aclass = (uint16_t) (((uint16_t) s[-2] << 8) | s[-1]);
+  if (is_question) return (size_t) (rr->nlen + 4);
 
   s += 6;
   if (s > e) return 0;
-  rr->alen = (uint16_t)(((uint16_t) s[-2] << 8) | s[-1]);
+  rr->alen = (uint16_t) (((uint16_t) s[-2] << 8) | s[-1]);
   if (s + rr->alen > e) return 0;
-  return (size_t)(rr->nlen + rr->alen + 10);
+  return (size_t) (rr->nlen + rr->alen + 10);
 }
 
 bool mg_dns_parse(const uint8_t *buf, size_t len, struct mg_dns_message *dm) {
@@ -247,7 +242,7 @@ static void dns_cb(struct mg_connection *c, int ev, void *ev_data,
                    void *fn_data) {
   struct dns_data *d, *tmp;
   if (ev == MG_EV_POLL) {
-    unsigned long now = *(unsigned long *) ev_data;
+    int64_t now = *(int64_t *) ev_data;
     for (d = s_reqs; d != NULL; d = tmp) {
       tmp = d->next;
       // LOG(LL_DEBUG, ("%lu %lu dns poll", d->expire, now));
@@ -303,8 +298,8 @@ static void dns_cb(struct mg_connection *c, int ev, void *ev_data,
   (void) fn_data;
 }
 
-void mg_dns_send(struct mg_connection *c, const struct mg_str *name,
-                 uint16_t txnid, bool ipv6) {
+static void mg_dns_send(struct mg_connection *c, const struct mg_str *name,
+                        uint16_t txnid, bool ipv6) {
   struct {
     struct mg_dns_header header;
     uint8_t data[256];
@@ -316,7 +311,7 @@ void mg_dns_send(struct mg_connection *c, const struct mg_str *name,
   pkt.header.num_questions = mg_htons(1);
   for (i = n = 0; i < sizeof(pkt.data) - 5; i++) {
     if (name->ptr[i] == '.' || i >= name->len) {
-      pkt.data[n] = (uint8_t)(i - n);
+      pkt.data[n] = (uint8_t) (i - n);
       memcpy(&pkt.data[n + 1], name->ptr + n, i - n);
       n = i + 1;
     }
@@ -358,10 +353,10 @@ static void mg_sendnsreq(struct mg_connection *c, struct mg_str *name, int ms,
 #if MG_ENABLE_LOG
     char buf[100];
 #endif
-    d->txnid = s_reqs ? (uint16_t)(s_reqs->txnid + 1) : 1;
+    d->txnid = s_reqs ? (uint16_t) (s_reqs->txnid + 1) : 1;
     d->next = s_reqs;
     s_reqs = d;
-    d->expire = mg_millis() + (unsigned long) ms;
+    d->expire = mg_millis() + (int64_t) ms;
     d->c = c;
     c->is_resolving = 1;
     LOG(LL_VERBOSE_DEBUG,
@@ -390,8 +385,11 @@ void mg_resolve(struct mg_connection *c, struct mg_str *name, int ms) {
 
 
 void mg_call(struct mg_connection *c, int ev, void *ev_data) {
-  if (c->pfn != NULL) c->pfn(c, ev, ev_data, c->pfn_data);
+  // Run user-defined handler first, in order to give it an ability
+  // to intercept processing (e.g. clean input buffer) before the
+  // protocol handler kicks in
   if (c->fn != NULL) c->fn(c, ev, ev_data, c->fn_data);
+  if (c->pfn != NULL) c->pfn(c, ev, ev_data, c->pfn_data);
 }
 
 void mg_error(struct mg_connection *c, const char *fmt, ...) {
@@ -401,9 +399,9 @@ void mg_error(struct mg_connection *c, const char *fmt, ...) {
   mg_vasprintf(&buf, sizeof(mem), fmt, ap);
   va_end(ap);
   LOG(LL_ERROR, ("%lu %s", c->id, buf));
-  mg_call(c, MG_EV_ERROR, buf);
+  c->is_closing = 1;             // Set is_closing before sending MG_EV_CALL
+  mg_call(c, MG_EV_ERROR, buf);  // Let user handler to override it
   if (buf != mem) free(buf);
-  c->is_closing = 1;
 }
 
 #ifdef MG_ENABLE_LINES
@@ -517,9 +515,13 @@ struct mg_fs mg_fs_packed = {packed_stat,  packed_list, packed_open,
 #endif
 
 
-#if defined(FOPEN_MAX)
+#if MG_ENABLE_FILE
 static int p_stat(const char *path, size_t *size, time_t *mtime) {
-#ifdef _WIN32
+#if !defined(S_ISDIR)
+  LOG(LL_ERROR, ("stat() API is not supported. %p %p %p", path, size, mtime));
+  return 0;
+#else
+#if defined(_WIN32)
   struct _stati64 st;
   wchar_t tmp[PATH_MAX];
   MultiByteToWideChar(CP_UTF8, 0, path, -1, tmp, sizeof(tmp) / sizeof(tmp[0]));
@@ -531,6 +533,7 @@ static int p_stat(const char *path, size_t *size, time_t *mtime) {
   if (size) *size = (size_t) st.st_size;
   if (mtime) *mtime = st.st_mtime;
   return MG_FS_READ | MG_FS_WRITE | (S_ISDIR(st.st_mode) ? MG_FS_DIR : 0);
+#endif
 }
 
 #ifdef _WIN32
@@ -693,19 +696,17 @@ static size_t p_write(void *fp, const void *buf, size_t len) {
 }
 
 static size_t p_seek(void *fp, size_t offset) {
-#if _FILE_OFFSET_BITS == 64 || _POSIX_C_SOURCE >= 200112L || \
-    _XOPEN_SOURCE >= 600
+#if (defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64) ||  \
+    (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || \
+    (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
   fseeko((FILE *) fp, (off_t) offset, SEEK_SET);
 #else
   fseek((FILE *) fp, (long) offset, SEEK_SET);
 #endif
   return (size_t) ftell((FILE *) fp);
 }
+
 #else
-static char *p_realpath(const char *path, char *resolved_path) {
-  (void) path, (void) resolved_path;
-  return NULL;
-}
 
 static int p_stat(const char *path, size_t *size, time_t *mtime) {
   (void) path, (void) size, (void) mtime;
@@ -748,7 +749,6 @@ struct mg_fs mg_fs_posix = {p_stat, p_list,  p_open, p_close,
 #ifdef MG_ENABLE_LINES
 #line 1 "src/http.c"
 #endif
-
 
 
 
@@ -922,8 +922,8 @@ struct mg_str *mg_http_get_header(struct mg_http_message *h, const char *name) {
   return NULL;
 }
 
-void mg_http_parse_headers(const char *s, const char *end,
-                           struct mg_http_header *h, int max_headers) {
+static void mg_http_parse_headers(const char *s, const char *end,
+                                  struct mg_http_header *h, int max_headers) {
   int i;
   for (i = 0; i < max_headers; i++) {
     struct mg_str k, v, tmp;
@@ -1122,12 +1122,14 @@ static void restore_http_cb(struct mg_connection *c) {
   c->pfn = http_cb;
 }
 
+char *mg_http_etag(char *buf, size_t len, size_t size, time_t mtime);
 char *mg_http_etag(char *buf, size_t len, size_t size, time_t mtime) {
   snprintf(buf, len, "\"%lx." MG_INT64_FMT "\"", (unsigned long) mtime,
            (int64_t) size);
   return buf;
 }
 
+#if MG_ENABLE_FILE
 int mg_http_upload(struct mg_connection *c, struct mg_http_message *hm,
                    const char *dir) {
   char offset[40] = "", name[200] = "", path[256];
@@ -1153,6 +1155,7 @@ int mg_http_upload(struct mg_connection *c, struct mg_http_message *hm,
     }
   }
 }
+#endif
 
 static void static_cb(struct mg_connection *c, int ev, void *ev_data,
                       void *fn_data) {
@@ -1184,50 +1187,30 @@ static struct mg_str guess_content_type(struct mg_str path, const char *extra) {
       MIME_ENTRY("js", "text/javascript; charset=utf-8"),
       MIME_ENTRY("gif", "image/gif"),
       MIME_ENTRY("png", "image/png"),
+      MIME_ENTRY("jpg", "image/jpeg"),
+      MIME_ENTRY("jpeg", "image/jpeg"),
       MIME_ENTRY("woff", "font/woff"),
       MIME_ENTRY("ttf", "font/ttf"),
-      MIME_ENTRY("aac", "audio/aac"),
+      MIME_ENTRY("svg", "image/svg+xml"),
+      MIME_ENTRY("txt", "text/plain; charset=utf-8"),
       MIME_ENTRY("avi", "video/x-msvideo"),
-      MIME_ENTRY("azw", "application/vnd.amazon.ebook"),
-      MIME_ENTRY("bin", "application/octet-stream"),
-      MIME_ENTRY("bmp", "image/bmp"),
-      MIME_ENTRY("bz", "application/x-bzip"),
-      MIME_ENTRY("bz2", "application/x-bzip2"),
       MIME_ENTRY("csv", "text/csv"),
       MIME_ENTRY("doc", "application/msword"),
-      MIME_ENTRY("epub", "application/epub+zip"),
       MIME_ENTRY("exe", "application/octet-stream"),
       MIME_ENTRY("gz", "application/gzip"),
       MIME_ENTRY("ico", "image/x-icon"),
       MIME_ENTRY("json", "application/json"),
-      MIME_ENTRY("mid", "audio/mid"),
-      MIME_ENTRY("mjs", "text/javascript"),
       MIME_ENTRY("mov", "video/quicktime"),
       MIME_ENTRY("mp3", "audio/mpeg"),
       MIME_ENTRY("mp4", "video/mp4"),
       MIME_ENTRY("mpeg", "video/mpeg"),
-      MIME_ENTRY("mpg", "video/mpeg"),
-      MIME_ENTRY("ogg", "application/ogg"),
       MIME_ENTRY("pdf", "application/pdf"),
-      MIME_ENTRY("rar", "application/rar"),
-      MIME_ENTRY("rtf", "application/rtf"),
       MIME_ENTRY("shtml", "text/html; charset=utf-8"),
-      MIME_ENTRY("svg", "image/svg+xml"),
-      MIME_ENTRY("tar", "application/tar"),
       MIME_ENTRY("tgz", "application/tar-gz"),
-      MIME_ENTRY("txt", "text/plain; charset=utf-8"),
-      MIME_ENTRY("wasm", "application/wasm"),
       MIME_ENTRY("wav", "audio/wav"),
-      MIME_ENTRY("weba", "audio/webm"),
-      MIME_ENTRY("webm", "video/webm"),
       MIME_ENTRY("webp", "image/webp"),
-      MIME_ENTRY("xls", "application/excel"),
-      MIME_ENTRY("xml", "application/xml"),
-      MIME_ENTRY("xsl", "application/xml"),
       MIME_ENTRY("zip", "application/zip"),
       MIME_ENTRY("3gp", "video/3gpp"),
-      MIME_ENTRY("7z", "application/x-7z-compressed"),
-      MIME_ENTRY("7z", "application/x-7z-compressed"),
       {{0, 0}, {0, 0}},
   };
   size_t i = 0;
@@ -1343,18 +1326,18 @@ static void printdirentry(const char *name, void *userdata) {
   struct printdirentrydata *d = (struct printdirentrydata *) userdata;
   struct mg_fs *fs = d->opts->fs == NULL ? &mg_fs_posix : d->opts->fs;
   size_t size = 0;
-  time_t mtime = 0;
+  time_t t = 0;
   char path[MG_PATH_MAX], sz[64], mod[64];
   int flags, n = 0;
 
   // LOG(LL_DEBUG, ("[%s] [%s]", d->dir, name));
   if (snprintf(path, sizeof(path), "%s%c%s", d->dir, '/', name) < 0) {
     LOG(LL_ERROR, ("%s truncated", name));
-  } else if ((flags = fs->stat(path, &size, &mtime)) == 0) {
+  } else if ((flags = fs->stat(path, &size, &t)) == 0) {
     LOG(LL_ERROR, ("%lu stat(%s): %d", d->c->id, path, errno));
   } else {
     const char *slash = flags & MG_FS_DIR ? "/" : "";
-    struct tm t;
+    struct tm tm;
     if (flags & MG_FS_DIR) {
       snprintf(sz, sizeof(sz), "%s", "[DIR]");
     } else if (size < 1024) {
@@ -1366,12 +1349,13 @@ static void printdirentry(const char *name, void *userdata) {
     } else {
       snprintf(sz, sizeof(sz), "%.1fG", (double) size / 1073741824);
     }
-    strftime(mod, sizeof(mod), "%d-%b-%Y %H:%M", localtime_r(&mtime, &t));
+    strftime(mod, sizeof(mod), "%d-%b-%Y %H:%M", localtime_r(&t, &tm));
     n = (int) mg_url_encode(name, strlen(name), path, sizeof(path));
     mg_printf(d->c,
               "  <tr><td><a href=\"%.*s%s\">%s%s</a></td>"
-              "<td>%s</td><td>%s</td></tr>\n",
-              n, path, slash, name, slash, mod, sz);
+              "<td name=%lu>%s</td><td name=" MG_INT64_FMT ">%s</td></tr>\n",
+              n, path, slash, name, slash, (unsigned long) t, mod,
+              flags & MG_FS_DIR ? (int64_t) -1 : (int64_t) size, sz);
   }
 }
 
@@ -1402,8 +1386,10 @@ static void listdir(struct mg_connection *c, struct mg_http_message *hm,
       "</script>";
   struct mg_fs *fs = opts->fs == NULL ? &mg_fs_posix : opts->fs;
   struct printdirentrydata d = {c, hm, opts, dir};
-  char tmp[10];
+  char tmp[10], buf[MG_PATH_MAX];
   size_t off, n;
+  int len = mg_url_decode(hm->uri.ptr, hm->uri.len, buf, sizeof(buf), 0);
+  struct mg_str uri = len > 0 ? mg_str_n(buf, (size_t) len) : hm->uri;
 
   mg_printf(c,
             "HTTP/1.1 200 OK\r\n"
@@ -1423,8 +1409,8 @@ static void listdir(struct mg_connection *c, struct mg_http_message *hm,
             "<tr><td colspan=\"3\"><hr></td></tr>"
             "</thead>"
             "<tbody id=\"tb\">\n",
-            (int) hm->uri.len, hm->uri.ptr, sort_js_code, sort_js_code2,
-            (int) hm->uri.len, hm->uri.ptr);
+            (int) uri.len, uri.ptr, sort_js_code, sort_js_code2, (int) uri.len,
+            uri.ptr);
 
   fs->list(dir, printdirentry, &d);
   mg_printf(c,
@@ -1445,7 +1431,8 @@ static void remove_double_dots(char *s) {
       while (s[0] != '\0') {
         if (s[0] == '/' || s[0] == '\\') {
           s++;
-        } else if (s[0] == '.' && s[1] == '.') {
+        } else if (s[0] == '.' && s[1] == '.' &&
+                   (s[2] == '/' || s[2] == '\\')) {
           s += 2;
         } else {
           break;
@@ -1475,13 +1462,23 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
     path[path_size - 1] = '\0';  // Double-check
     remove_double_dots(path);
     n = strlen(path);
-    LOG(LL_DEBUG, ("--> %s", path));
+    LOG(LL_VERBOSE_DEBUG,
+        ("%lu %.*s -> %s", c->id, (int) hm->uri.len, hm->uri.ptr, path));
     while (n > 0 && path[n - 1] == '/') path[--n] = 0;  // Trim trailing slashes
     flags = fs->stat(path, NULL, NULL);                 // Does it exist?
     if (flags == 0) {
       mg_http_reply(c, 404, "", "Not found\n");  // Does not exist, doh
+    } else if ((flags & MG_FS_DIR) && hm->uri.len > 0 &&
+               hm->uri.ptr[hm->uri.len - 1] != '/') {
+      mg_printf(c,
+                "HTTP/1.1 301 Moved\r\n"
+                "Location: %.*s/\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n",
+                (int) hm->uri.len, hm->uri.ptr);
+      flags = 0;
     } else if (flags & MG_FS_DIR) {
-      if (((snprintf(path + n, path_size - n, "/index.html") > 0 &&
+      if (((snprintf(path + n, path_size - n, "/" MG_HTTP_INDEX) > 0 &&
             (tmp = fs->stat(path, NULL, NULL)) != 0) ||
            (snprintf(path + n, path_size - n, "/index.shtml") > 0 &&
             (tmp = fs->stat(path, NULL, NULL)) != 0))) {
@@ -1514,7 +1511,8 @@ void mg_http_serve_dir(struct mg_connection *c, struct mg_http_message *hm,
   const char *sp = opts->ssi_pattern;
   int flags = uri_to_path(c, hm, opts, path, sizeof(path));
   if (flags == 0) return;
-  LOG(LL_DEBUG, ("%.*s %s %d", (int) hm->uri.len, hm->uri.ptr, path, flags));
+  LOG(LL_VERBOSE_DEBUG,
+      ("%.*s %s %d", (int) hm->uri.len, hm->uri.ptr, path, flags));
   if (flags & MG_FS_DIR) {
     listdir(c, hm, opts, path);
   } else if (sp != NULL && mg_globmatch(sp, strlen(sp), path, strlen(path))) {
@@ -1575,11 +1573,13 @@ static struct mg_str stripquotes(struct mg_str s) {
 
 struct mg_str mg_http_get_header_var(struct mg_str s, struct mg_str v) {
   size_t i;
-  for (i = 0; i + v.len + 2 < s.len; i++) {
+  for (i = 0; v.len > 0 && i + v.len + 2 < s.len; i++) {
     if (s.ptr[i + v.len] == '=' && memcmp(&s.ptr[i], v.ptr, v.len) == 0) {
       const char *p = &s.ptr[i + v.len + 1], *b = p, *x = &s.ptr[s.len];
       int q = p < x && *p == '"' ? 1 : 0;
-      while (p < x && (q ? p == b || *p != '"' : *p != ';' && *p != ' ')) p++;
+      while (p < x &&
+             (q ? p == b || *p != '"' : *p != ';' && *p != ' ' && *p != ','))
+        p++;
       // LOG(LL_INFO, ("[%.*s] [%.*s] [%.*s]", (int) s.len, s.ptr, (int) v.len,
       // v.ptr, (int) (p - b), b));
       return stripquotes(mg_str_n(b, (size_t) (p - b + q)));
@@ -1800,7 +1800,9 @@ void mg_iobuf_free(struct mg_iobuf *io) {
 #if MG_ENABLE_LOG
 static void mg_log_stdout(const void *buf, size_t len, void *userdata) {
   (void) userdata;
+#if MG_ENABLE_FILE
   fwrite(buf, 1, len, stdout);
+#endif
 }
 
 static const char *s_spec = "2";
@@ -1870,7 +1872,7 @@ void mg_log_set_callback(void (*fn)(const void *, size_t, void *), void *fnd) {
 #include <string.h>
 
 
-#if MG_ENABLE_MD5
+#if defined(MG_ENABLE_MD5) && MG_ENABLE_MD5
 #if !defined(BYTE_ORDER) && defined(__BYTE_ORDER)
 #define BYTE_ORDER __BYTE_ORDER
 #ifndef LITTLE_ENDIAN
@@ -2077,14 +2079,11 @@ void mg_md5_final(mg_md5_ctx *ctx, unsigned char digest[16]) {
 
 
 
-
 #define MQTT_CLEAN_SESSION 0x02
 #define MQTT_HAS_WILL 0x04
 #define MQTT_WILL_RETAIN 0x20
 #define MQTT_HAS_PASSWORD 0x40
 #define MQTT_HAS_USER_NAME 0x80
-#define MQTT_GET_WILL_QOS(flags) (((flags) &0x18) >> 3)
-#define MQTT_SET_WILL_QOS(flags, qos) (flags) = ((flags) & ~0x18) | ((qos) << 3)
 
 enum { MQTT_OK, MQTT_INCOMPLETE, MQTT_MALFORMED };
 
@@ -2105,50 +2104,56 @@ static void mg_send_u16(struct mg_connection *c, uint16_t value) {
   mg_send(c, &value, sizeof(value));
 }
 
-void mg_mqtt_login(struct mg_connection *c, const char *url,
-                   struct mg_mqtt_opts *opts) {
+void mg_mqtt_login(struct mg_connection *c, struct mg_mqtt_opts *opts) {
+  char rnd[9], client_id[16];
+  struct mg_str cid = opts->client_id;
   uint32_t total_len = 7 + 1 + 2 + 2;
-  uint16_t flags = (uint16_t) (((uint16_t) opts->qos & 3) << 3);
-  struct mg_str user = mg_url_user(url);
-  struct mg_str pass = mg_url_pass(url);
+  uint8_t connflag = (uint8_t) ((opts->will_qos & 3) << 3);
 
-  if (user.len > 0) {
-    total_len += 2 + (uint32_t) user.len;
-    flags |= MQTT_HAS_USER_NAME;
+  if (cid.len == 0) {
+    mg_random(rnd, sizeof(rnd));
+    mg_base64_encode((unsigned char *) rnd, sizeof(rnd), client_id);
+    client_id[sizeof(client_id) - 1] = '\0';
+    cid = mg_str(client_id);
   }
-  if (pass.len > 0) {
-    total_len += 2 + (uint32_t) pass.len;
-    flags |= MQTT_HAS_PASSWORD;
+
+  if (opts->user.len > 0) {
+    total_len += 2 + (uint32_t) opts->user.len;
+    connflag |= MQTT_HAS_USER_NAME;
+  }
+  if (opts->pass.len > 0) {
+    total_len += 2 + (uint32_t) opts->pass.len;
+    connflag |= MQTT_HAS_PASSWORD;
   }
   if (opts->will_topic.len > 0 && opts->will_message.len > 0) {
     total_len +=
         4 + (uint32_t) opts->will_topic.len + (uint32_t) opts->will_message.len;
-    flags |= MQTT_HAS_WILL;
+    connflag |= MQTT_HAS_WILL;
   }
-  if (opts->clean || opts->client_id.len == 0) flags |= MQTT_CLEAN_SESSION;
-  if (opts->will_retain) flags |= MQTT_WILL_RETAIN;
-  total_len += (uint32_t) opts->client_id.len;
+  if (opts->clean || cid.len == 0) connflag |= MQTT_CLEAN_SESSION;
+  if (opts->will_retain) connflag |= MQTT_WILL_RETAIN;
+  total_len += (uint32_t) cid.len;
 
   mg_mqtt_send_header(c, MQTT_CMD_CONNECT, 0, total_len);
   mg_send(c, "\00\04MQTT\04", 7);
-  mg_send(c, &flags, 1);
+  mg_send(c, &connflag, sizeof(connflag));
   // keepalive == 0 means "do not disconnect us!"
   mg_send_u16(c, mg_htons((uint16_t) opts->keepalive));
-  mg_send_u16(c, mg_htons((uint16_t) opts->client_id.len));
-  mg_send(c, opts->client_id.ptr, opts->client_id.len);
-  if (flags & MQTT_HAS_WILL) {
+  mg_send_u16(c, mg_htons((uint16_t) cid.len));
+  mg_send(c, cid.ptr, cid.len);
+  if (connflag & MQTT_HAS_WILL) {
     mg_send_u16(c, mg_htons((uint16_t) opts->will_topic.len));
     mg_send(c, opts->will_topic.ptr, opts->will_topic.len);
     mg_send_u16(c, mg_htons((uint16_t) opts->will_message.len));
     mg_send(c, opts->will_message.ptr, opts->will_message.len);
   }
-  if (user.len > 0) {
-    mg_send_u16(c, mg_htons((uint16_t) user.len));
-    mg_send(c, user.ptr, user.len);
+  if (opts->user.len > 0) {
+    mg_send_u16(c, mg_htons((uint16_t) opts->user.len));
+    mg_send(c, opts->user.ptr, opts->user.len);
   }
-  if (pass.len > 0) {
-    mg_send_u16(c, mg_htons((uint16_t) pass.len));
-    mg_send(c, pass.ptr, pass.len);
+  if (opts->pass.len > 0) {
+    mg_send_u16(c, mg_htons((uint16_t) opts->pass.len));
+    mg_send(c, opts->pass.ptr, opts->pass.len);
   }
 }
 
@@ -2158,11 +2163,11 @@ void mg_mqtt_pub(struct mg_connection *c, struct mg_str *topic,
   uint32_t total_len = 2 + (uint32_t) topic->len + (uint32_t) data->len;
   LOG(LL_DEBUG, ("%lu [%.*s] -> [%.*s]", c->id, (int) topic->len,
                  (char *) topic->ptr, (int) data->len, (char *) data->ptr));
-  if (MQTT_GET_QOS(flags) > 0) total_len += 2;
+  if (qos > 0) total_len += 2;
   mg_mqtt_send_header(c, MQTT_CMD_PUBLISH, flags, total_len);
   mg_send_u16(c, mg_htons((uint16_t) topic->len));
   mg_send(c, topic->ptr, topic->len);
-  if (MQTT_GET_QOS(flags) > 0) {
+  if (qos > 0) {
     static uint16_t s_id;
     if (++s_id == 0) s_id++;
     mg_send_u16(c, mg_htons(s_id));
@@ -2174,8 +2179,7 @@ void mg_mqtt_sub(struct mg_connection *c, struct mg_str *topic, int qos) {
   static uint16_t s_id;
   uint8_t qos_ = qos & 3;
   uint32_t total_len = 2 + (uint32_t) topic->len + 2 + 1;
-  mg_mqtt_send_header(c, MQTT_CMD_SUBSCRIBE, (uint8_t) MQTT_QOS(qos_),
-                      total_len);
+  mg_mqtt_send_header(c, MQTT_CMD_SUBSCRIBE, 2, total_len);
   if (++s_id == 0) ++s_id;
   mg_send_u16(c, mg_htons(s_id));
   mg_send_u16(c, mg_htons((uint16_t) topic->len));
@@ -2334,7 +2338,7 @@ struct mg_connection *mg_mqtt_connect(struct mg_mgr *mgr, const char *url,
   if (c != NULL) {
     struct mg_mqtt_opts empty;
     memset(&empty, 0, sizeof(empty));
-    mg_mqtt_login(c, url, opts == NULL ? &empty : opts);
+    mg_mqtt_login(c, opts == NULL ? &empty : opts);
     c->pfn = mqtt_cb;
   }
   return c;
@@ -2397,6 +2401,13 @@ char *mg_ntoa(const struct mg_addr *addr, char *buf, size_t len) {
 static bool mg_atonl(struct mg_str str, struct mg_addr *addr) {
   if (mg_vcasecmp(&str, "localhost") != 0) return false;
   addr->ip = mg_htonl(0x7f000001);
+  addr->is_ip6 = false;
+  return true;
+}
+
+static bool mg_atone(struct mg_str str, struct mg_addr *addr) {
+  if (str.len > 0) return false;
+  addr->ip = 0;
   addr->is_ip6 = false;
   return true;
 }
@@ -2477,7 +2488,8 @@ static bool mg_aton6(struct mg_str str, struct mg_addr *addr) {
 
 bool mg_aton(struct mg_str str, struct mg_addr *addr) {
   // LOG(LL_INFO, ("[%.*s]", (int) str.len, str.ptr));
-  return mg_atonl(str, addr) || mg_aton4(str, addr) || mg_aton6(str, addr);
+  return mg_atone(str, addr) || mg_atonl(str, addr) || mg_aton4(str, addr) ||
+         mg_aton6(str, addr);
 }
 
 void mg_mgr_free(struct mg_mgr *mgr) {
@@ -2575,7 +2587,7 @@ static uint32_t blk0(union char64long16 *block, int i) {
   z += (w ^ x ^ y) + blk(i) + 0xCA62C1D6 + rol(v, 5); \
   w = rol(w, 30);
 
-void mg_sha1_transform(uint32_t state[5], const unsigned char buffer[64]) {
+static void mg_sha1_transform(uint32_t state[5], const unsigned char buffer[64]) {
   uint32_t a, b, c, d, e;
   union char64long16 block[1];
 
@@ -2778,13 +2790,14 @@ void mg_hmac_sha1(const unsigned char *key, size_t keylen,
 
 
 
-#define SNTP_INTERVAL_SEC (3600)
+#define SNTP_INTERVAL_SEC 3600
 #define SNTP_TIME_OFFSET 2208988800UL
 
 static unsigned long s_sntmp_next;
 
-int mg_sntp_parse(const unsigned char *buf, size_t len, struct timeval *tv) {
-  int mode = len > 0 ? buf[0] & 7 : 0, res = -1;
+int64_t mg_sntp_parse(const unsigned char *buf, size_t len) {
+  int64_t res = -1;
+  int mode = len > 0 ? buf[0] & 7 : 0;
   if (len < 48) {
     LOG(LL_ERROR, ("%s", "corrupt packet"));
   } else if ((buf[0] & 0x38) >> 3 != 4) {
@@ -2795,21 +2808,22 @@ int mg_sntp_parse(const unsigned char *buf, size_t len, struct timeval *tv) {
     LOG(LL_ERROR, ("%s", "server sent a kiss of death"));
   } else {
     uint32_t *data = (uint32_t *) &buf[40];
-    tv->tv_sec = (time_t) (mg_ntohl(data[0]) - SNTP_TIME_OFFSET);
-    tv->tv_usec = (suseconds_t) mg_ntohl(data[1]);
-    s_sntmp_next = (unsigned long) (tv->tv_sec + SNTP_INTERVAL_SEC);
-    res = 0;
+    unsigned long seconds = mg_ntohl(data[0]) - SNTP_TIME_OFFSET;
+    unsigned long useconds = mg_ntohl(data[1]);
+    // LOG(LL_DEBUG, ("%lu %lu %lu", time(0), seconds, useconds));
+    res = ((int64_t) seconds) * 1000 + (int64_t) ((useconds / 1000) % 1000);
+    s_sntmp_next = seconds + SNTP_INTERVAL_SEC;
   }
   return res;
 }
 
 static void sntp_cb(struct mg_connection *c, int ev, void *evd, void *fnd) {
   if (ev == MG_EV_READ) {
-    struct timeval tv = {0, 0};
-    if (mg_sntp_parse(c->recv.buf, c->recv.len, &tv) == 0) {
-      mg_call(c, MG_EV_SNTP_TIME, &tv);
-      LOG(LL_DEBUG, ("%u.%u, next at %lu", (unsigned) tv.tv_sec,
-                     (unsigned) tv.tv_usec, s_sntmp_next));
+    int64_t milliseconds = mg_sntp_parse(c->recv.buf, c->recv.len);
+    if (milliseconds > 0) {
+      mg_call(c, MG_EV_SNTP_TIME, &milliseconds);
+      LOG(LL_DEBUG, ("%u.%u, next at %lu", (unsigned) (milliseconds / 1000),
+                     (unsigned) (milliseconds % 1000), s_sntmp_next));
     }
     c->recv.len = 0;  // Clear receive buffer
   } else if (ev == MG_EV_CONNECT) {
@@ -2826,10 +2840,9 @@ void mg_sntp_send(struct mg_connection *c, unsigned long utc) {
   } else if (utc > s_sntmp_next) {
     uint8_t buf[48] = {0};
     s_sntmp_next = utc + SNTP_INTERVAL_SEC;
-    buf[0] = (3 << 6) | (4 << 3) | 3;
+    buf[0] = (0 << 6) | (4 << 3) | 3;
     mg_send(c, buf, sizeof(buf));
-    LOG(LL_DEBUG,
-        ("%p request sent, ct %lu, next at %lu", c->fd, utc, s_sntmp_next));
+    LOG(LL_DEBUG, ("%lu ct %lu, next at %lu", c->id, utc, s_sntmp_next));
   }
 }
 
@@ -2844,7 +2857,6 @@ struct mg_connection *mg_sntp_connect(struct mg_mgr *mgr, const char *url,
 #ifdef MG_ENABLE_LINES
 #line 1 "src/sock.c"
 #endif
-
 
 
 
@@ -2947,7 +2959,19 @@ static struct mg_connection *alloc_conn(struct mg_mgr *mgr, bool is_client,
 }
 
 static long mg_sock_send(struct mg_connection *c, const void *buf, size_t len) {
-  long n = send(FD(c), (char *) buf, len, MSG_NONBLOCKING);
+  long n;
+#if !defined(__APPLE__)
+  // See #1338, #1382. On Windows, UDP send() can fail despite connected.
+  // Use sendto() instead. But not on Mac - we'll get EISCONN
+  if (c->is_udp) {
+    union usa usa;
+    socklen_t slen = tousa(&c->peer, &usa);
+    n = sendto(FD(c), (char *) buf, len, 0, &usa.sa, slen);
+  } else
+#endif
+  {
+    n = send(FD(c), (char *) buf, len, MSG_NONBLOCKING);
+  }
   return n == 0 ? -1 : n < 0 && mg_sock_would_block() ? 0 : n;
 }
 
@@ -2969,11 +2993,12 @@ static void mg_set_non_blocking_mode(SOCKET fd) {
 #elif MG_ARCH == MG_ARCH_AZURERTOS
   fcntl(fd, F_SETFL, O_NONBLOCK);
 #else
-  fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK, FD_CLOEXEC);
+  fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);  // Set non-blocking mode
+  fcntl(fd, F_SETFD, FD_CLOEXEC);                       // Set close-on-exec
 #endif
 }
 
-SOCKET mg_open_listener(const char *url, struct mg_addr *addr) {
+static SOCKET mg_open_listener(const char *url, struct mg_addr *addr) {
   SOCKET fd = INVALID_SOCKET;
   int s_err = 0;  // Memoized socket error, in case closesocket() overrides it
   memset(addr, 0, sizeof(*addr));
@@ -3051,7 +3076,8 @@ static long mg_sock_recv(struct mg_connection *c, void *buf, size_t len) {
 
 // NOTE(lsm): do only one iteration of reads, cause some systems
 // (e.g. FreeRTOS stack) return 0 instead of -1/EWOULDBLOCK when no data
-static void read_conn(struct mg_connection *c) {
+static long read_conn(struct mg_connection *c) {
+  long n = -1;
   if (c->recv.len >= MG_MAX_RECV_BUF_SIZE) {
     mg_error(c, "max_recv_buf_size reached");
   } else if (c->recv.size - c->recv.len < MG_IO_SIZE &&
@@ -3060,7 +3086,7 @@ static void read_conn(struct mg_connection *c) {
   } else {
     char *buf = (char *) &c->recv.buf[c->recv.len];
     size_t len = c->recv.size - c->recv.len;
-    long n = c->is_tls ? mg_tls_recv(c, buf, len) : mg_sock_recv(c, buf, len);
+    n = c->is_tls ? mg_tls_recv(c, buf, len) : mg_sock_recv(c, buf, len);
     LOG(n > 0 ? LL_VERBOSE_DEBUG : LL_DEBUG,
         ("%-3lu %d%d%d%d%d%d%d%d%d%d%d%d%d%d %7ld %ld/%ld err %d", c->id,
          c->is_listening, c->is_client, c->is_accepted, c->is_resolving,
@@ -3082,6 +3108,7 @@ static void read_conn(struct mg_connection *c) {
       mg_call(c, MG_EV_READ, &evd);
     }
   }
+  return n;
 }
 
 static void write_conn(struct mg_connection *c) {
@@ -3150,7 +3177,8 @@ static void setsockopts(struct mg_connection *c) {
   setsockopt(FD(c), SOL_TCP, TCP_QUICKACK, (char *) &on, sizeof(on));
 #endif
   setsockopt(FD(c), SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on));
-#if ESP32 || ESP8266 || defined(__linux__)
+#if (defined(ESP32) && ESP32) || (defined(ESP8266) && ESP8266) || \
+    defined(__linux__)
   int idle = 60;
   setsockopt(FD(c), IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
 #endif
@@ -3201,6 +3229,7 @@ struct mg_connection *mg_connect(struct mg_mgr *mgr, const char *url,
     c->fn = fn;
     c->fn_data = fn_data;
     LOG(LL_DEBUG, ("%lu -> %s", c->id, url));
+    mg_call(c, MG_EV_OPEN, NULL);
     mg_resolve(c, &host, mgr->dnstimeout);
   }
   return c;
@@ -3213,12 +3242,12 @@ static void accept_conn(struct mg_mgr *mgr, struct mg_connection *lsn) {
   SOCKET fd = accept(FD(lsn), &usa.sa, &sa_len);
   if (fd == INVALID_SOCKET) {
 #if MG_ARCH == MG_ARCH_AZURERTOS
-  // AzureRTOS, in non-block socket mode can mark listening socket readable
-  // even it is not. See comment for 'select' func implementation in nx_bsd.c
-  // That's not an error, just should try later
-	if (MG_SOCK_ERRNO != EAGAIN)
+    // AzureRTOS, in non-block socket mode can mark listening socket readable
+    // even it is not. See comment for 'select' func implementation in nx_bsd.c
+    // That's not an error, just should try later
+    if (MG_SOCK_ERRNO != EAGAIN)
 #endif
-    LOG(LL_ERROR, ("%lu accept failed, errno %d", lsn->id, MG_SOCK_ERRNO));
+      LOG(LL_ERROR, ("%lu accept failed, errno %d", lsn->id, MG_SOCK_ERRNO));
 #if (!defined(_WIN32) && (MG_ARCH != MG_ARCH_FREERTOS_TCP))
   } else if ((long) fd >= FD_SETSIZE) {
     LOG(LL_ERROR, ("%ld > %ld", (long) fd, (long) FD_SETSIZE));
@@ -3241,6 +3270,7 @@ static void accept_conn(struct mg_mgr *mgr, struct mg_connection *lsn) {
     c->pfn_data = lsn->pfn_data;
     c->fn = lsn->fn;
     c->fn_data = lsn->fn_data;
+    mg_call(c, MG_EV_OPEN, NULL);
     mg_call(c, MG_EV_ACCEPT, NULL);
   }
 }
@@ -3301,6 +3331,7 @@ struct mg_connection *mg_mkpipe(struct mg_mgr *mgr, mg_event_handler_t fn,
     c->pfn_data = (void *) (size_t) sp[0];
     c->fn = fn;
     c->fn_data = fn_data;
+    mg_call(c, MG_EV_OPEN, NULL);
     LIST_ADD_HEAD(struct mg_connection, &mgr->conns, c);
   }
   return c;
@@ -3325,7 +3356,8 @@ struct mg_connection *mg_listen(struct mg_mgr *mgr, const char *url,
     LIST_ADD_HEAD(struct mg_connection, &mgr->conns, c);
     c->fn = fn;
     c->fn_data = fn_data;
-    LOG(LL_INFO,
+    mg_call(c, MG_EV_OPEN, NULL);
+    LOG(LL_DEBUG,
         ("%lu accepting on %s (port %u)", c->id, url, mg_ntohs(c->peer.port)));
   }
   return c;
@@ -3374,9 +3406,7 @@ static void mg_iotest(struct mg_mgr *mgr, int ms) {
 
   for (c = mgr->conns; c != NULL; c = c->next) {
     // TLS might have stuff buffered, so dig everything
-    c->is_readable = c->is_tls && c->is_readable
-                         ? 1
-                         : FD(c) != INVALID_SOCKET && FD_ISSET(FD(c), &rset);
+    c->is_readable = FD(c) != INVALID_SOCKET && FD_ISSET(FD(c), &rset);
     c->is_writable = FD(c) != INVALID_SOCKET && FD_ISSET(FD(c), &wset);
   }
 #endif
@@ -3401,7 +3431,7 @@ static void connect_conn(struct mg_connection *c) {
 
 void mg_mgr_poll(struct mg_mgr *mgr, int ms) {
   struct mg_connection *c, *tmp;
-  unsigned long now;
+  int64_t now;
 
   mg_iotest(mgr, ms);
   now = mg_millis();
@@ -3426,6 +3456,7 @@ void mg_mgr_poll(struct mg_mgr *mgr, int ms) {
     } else {
       if (c->is_readable) read_conn(c);
       if (c->is_writable) write_conn(c);
+      while (c->is_tls && read_conn(c) > 0) (void) 0;  // Read buffered TLS data
     }
 
     if (c->is_draining && c->send.len == 0) c->is_closing = 1;
@@ -3633,9 +3664,9 @@ struct mg_str mg_strstrip(struct mg_str s) {
 
 struct mg_timer *g_timers;
 
-void mg_timer_init(struct mg_timer *t, unsigned long ms, unsigned flags,
+void mg_timer_init(struct mg_timer *t, int64_t ms, unsigned flags,
                    void (*fn)(void *), void *arg) {
-  struct mg_timer tmp = {ms, flags, fn, arg, 0UL, g_timers};
+  struct mg_timer tmp = {ms, 0UL, flags, fn, arg, g_timers};
   *t = tmp;
   g_timers = t;
   if (flags & MG_TIMER_RUN_NOW) fn(arg);
@@ -3647,11 +3678,11 @@ void mg_timer_free(struct mg_timer *t) {
   if (*head) *head = t->next;
 }
 
-void mg_timer_poll(unsigned long now_ms) {
+void mg_timer_poll(int64_t now_ms) {
   // If time goes back (wrapped around), reset timers
   struct mg_timer *t, *tmp;
-  static unsigned long oldnow;  // Timestamp in a previous invocation
-  if (oldnow > now_ms) {        // If it is wrapped, reset timers
+  static int64_t oldnow;  // Timestamp in a previous invocation
+  if (oldnow > now_ms) {  // If it is wrapped, reset timers
     for (t = g_timers; t != NULL; t = t->next) t->expire = 0;
   }
   oldnow = now_ms;
@@ -3663,53 +3694,42 @@ void mg_timer_poll(unsigned long now_ms) {
     t->fn(t->arg);
     // Try to tick timers with the given period as accurate as possible,
     // even if this polling function is called with some random period.
-    t->expire = now_ms - t->expire > (unsigned long) t->period_ms
-                    ? now_ms + t->period_ms
-                    : t->expire + t->period_ms;
+    t->expire = now_ms - t->expire > t->period_ms ? now_ms + t->period_ms
+                                                  : t->expire + t->period_ms;
     if (!(t->flags & MG_TIMER_REPEAT)) mg_timer_free(t);
   }
 }
 
 #ifdef MG_ENABLE_LINES
-#line 1 "src/tls.c"
+#line 1 "src/tls_dummy.c"
 #endif
 
 
-#if MG_ENABLE_MBEDTLS  ///////////////////////////////////////// MBEDTLS
-
-
-
-
-#include <mbedtls/debug.h>
-#include <mbedtls/ssl.h>
-
-#ifndef EXTERN_C
-#ifdef __cplusplus
-#define EXTERN_C extern "C"
-#else
-#define EXTERN_C
-#endif
-#endif
-
-#if MBEDTLS_VERSION_NUMBER >= 0x03000000
-#define RNG , rng_get, NULL
-#else
-#define RNG
+#if !MG_ENABLE_MBEDTLS && !MG_ENABLE_OPENSSL && !MG_ENABLE_CUSTOM_TLS
+void mg_tls_init(struct mg_connection *c, struct mg_tls_opts *opts) {
+  (void) opts;
+  mg_error(c, "TLS is not enabled");
+}
+void mg_tls_handshake(struct mg_connection *c) {
+  (void) c;
+}
+void mg_tls_free(struct mg_connection *c) {
+  (void) c;
+}
+long mg_tls_recv(struct mg_connection *c, void *buf, size_t len) {
+  return c == NULL || buf == NULL || len == 0 ? 0 : -1;
+}
+long mg_tls_send(struct mg_connection *c, const void *buf, size_t len) {
+  return c == NULL || buf == NULL || len == 0 ? 0 : -1;
+}
 #endif
 
-// Different versions have those in different files, so declare here
-EXTERN_C int mbedtls_net_recv(void *, unsigned char *, size_t);
-EXTERN_C int mbedtls_net_send(void *, const unsigned char *, size_t);
+#ifdef MG_ENABLE_LINES
+#line 1 "src/tls_mbed.c"
+#endif
 
-struct mg_tls {
-  char *cafile;             // CA certificate path
-  mbedtls_x509_crt ca;      // Parsed CA certificate
-  mbedtls_x509_crt cert;    // Parsed certificate
-  mbedtls_ssl_context ssl;  // SSL/TLS context
-  mbedtls_ssl_config conf;  // SSL-TLS config
-  mbedtls_pk_context pk;    // Private key context
-};
 
+#if MG_ENABLE_MBEDTLS
 void mg_tls_handshake(struct mg_connection *c) {
   struct mg_tls *tls = (struct mg_tls *) c->tls;
   int rc;
@@ -3741,7 +3761,7 @@ static void debug_cb(void *c, int lev, const char *s, int n, const char *s2) {
   (void) lev;
 }
 
-#if MBEDTLS_VERSION_NUMBER >= 0x03000000
+#if defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER >= 0x03000000
 static int rng_get(void *p_rng, unsigned char *buf, size_t len) {
   (void) p_rng;
   mg_random(buf, len);
@@ -3755,6 +3775,9 @@ void mg_tls_init(struct mg_connection *c, struct mg_tls_opts *opts) {
   const char *ca = opts->ca == NULL     ? "-"
                    : opts->ca[0] == '-' ? "(emb)"
                                         : opts->ca;
+  const char *crl = opts->crl == NULL     ? "-"
+                    : opts->crl[0] == '-' ? "(emb)"
+                                          : opts->crl;
   const char *cert = opts->cert == NULL     ? "-"
                      : opts->cert[0] == '-' ? "(emb)"
                                             : opts->cert;
@@ -3765,11 +3788,12 @@ void mg_tls_init(struct mg_connection *c, struct mg_tls_opts *opts) {
     mg_error(c, "TLS OOM");
     goto fail;
   }
-  LOG(LL_DEBUG,
-      ("%lu Setting TLS, CA: %s, cert: %s, key: %s", c->id, ca, cert, certkey));
+  LOG(LL_DEBUG, ("%lu Setting TLS, CA: %s, CRL: %s, cert: %s, key: %s", c->id,
+                 ca, crl, cert, certkey));
   mbedtls_ssl_init(&tls->ssl);
   mbedtls_ssl_config_init(&tls->conf);
   mbedtls_x509_crt_init(&tls->ca);
+  mbedtls_x509_crl_init(&tls->crl);
   mbedtls_x509_crt_init(&tls->cert);
   mbedtls_pk_init(&tls->pk);
   mbedtls_ssl_conf_dbg(&tls->conf, debug_cb, c);
@@ -3788,9 +3812,19 @@ void mg_tls_init(struct mg_connection *c, struct mg_tls_opts *opts) {
     mbedtls_ssl_conf_authmode(&tls->conf, MBEDTLS_SSL_VERIFY_NONE);
   }
   if (opts->ca != NULL && opts->ca[0] != '\0') {
+    if (opts->crl != NULL && opts->crl[0] != '\0') {
+      rc = opts->crl[0] == '-'
+               ? mbedtls_x509_crl_parse(&tls->crl, (uint8_t *) opts->crl,
+                                        strlen(opts->crl) + 1)
+               : mbedtls_x509_crl_parse_file(&tls->crl, opts->crl);
+      if (rc != 0) {
+        mg_error(c, "parse(%s) err %#x", crl, -rc);
+        goto fail;
+      }
+    }
 #if defined(MBEDTLS_X509_CA_CHAIN_ON_DISK)
     tls->cafile = strdup(opts->ca);
-    rc = mbedtls_ssl_conf_ca_chain_file(&tls->conf, tls->cafile, NULL);
+    rc = mbedtls_ssl_conf_ca_chain_file(&tls->conf, tls->cafile, &tls->crl);
     if (rc != 0) {
       mg_error(c, "parse on-disk chain(%s) err %#x", ca, -rc);
       goto fail;
@@ -3804,7 +3838,7 @@ void mg_tls_init(struct mg_connection *c, struct mg_tls_opts *opts) {
       mg_error(c, "parse(%s) err %#x", ca, -rc);
       goto fail;
     }
-    mbedtls_ssl_conf_ca_chain(&tls->conf, &tls->ca, NULL);
+    mbedtls_ssl_conf_ca_chain(&tls->conf, &tls->ca, &tls->crl);
 #endif
     if (opts->srvname.len > 0) {
       char mem[128], *buf = mem;
@@ -3877,21 +3911,20 @@ void mg_tls_free(struct mg_connection *c) {
   mbedtls_ssl_free(&tls->ssl);
   mbedtls_pk_free(&tls->pk);
   mbedtls_x509_crt_free(&tls->ca);
+  mbedtls_x509_crl_free(&tls->crl);
   mbedtls_x509_crt_free(&tls->cert);
   mbedtls_ssl_config_free(&tls->conf);
   free(tls);
   c->tls = NULL;
 }
-#elif MG_ENABLE_OPENSSL  ///////////////////////////////////////// OPENSSL
+#endif
 
-#include <openssl/err.h>
-#include <openssl/ssl.h>
+#ifdef MG_ENABLE_LINES
+#line 1 "src/tls_openssl.c"
+#endif
 
-struct mg_tls {
-  SSL_CTX *ctx;
-  SSL *ssl;
-};
 
+#if MG_ENABLE_OPENSSL
 static int mg_tls_err(struct mg_tls *tls, int res) {
   int err = SSL_get_error(tls->ssl, res);
   // We've just fetched the last error from the queue.
@@ -3993,7 +4026,6 @@ void mg_tls_init(struct mg_connection *c, struct mg_tls_opts *opts) {
   if (c->is_client && c->is_resolving == 0 && c->is_connecting == 0) {
     mg_tls_handshake(c);
   }
-  c->is_hexdumping = 1;
   LOG(LL_DEBUG, ("%lu SSL %s OK", c->id, c->is_accepted ? "accept" : "client"));
   return;
 fail:
@@ -4035,26 +4067,6 @@ long mg_tls_send(struct mg_connection *c, const void *buf, size_t len) {
   int n = SSL_write(tls->ssl, buf, (int) len);
   return n == 0 ? -1 : n < 0 && mg_tls_err(tls, n) == 0 ? 0 : n;
 }
-
-#else  //////////////////////////////////////////   NO TLS
-
-void mg_tls_init(struct mg_connection *c, struct mg_tls_opts *opts) {
-  (void) opts;
-  mg_error(c, "TLS is not enabled");
-}
-void mg_tls_handshake(struct mg_connection *c) {
-  (void) c;
-}
-void mg_tls_free(struct mg_connection *c) {
-  (void) c;
-}
-long mg_tls_recv(struct mg_connection *c, void *buf, size_t len) {
-  return c == NULL || buf == NULL || len == 0 ? 0 : -1;
-}
-long mg_tls_send(struct mg_connection *c, const void *buf, size_t len) {
-  return c == NULL || buf == NULL || len == 0 ? 0 : -1;
-}
-
 #endif
 
 #ifdef MG_ENABLE_LINES
@@ -4151,8 +4163,11 @@ struct mg_str mg_url_pass(const char *url) {
 #endif
 
 
+#if MG_ARCH == MG_ARCH_UNIX && defined(__APPLE__)
+#include <mach/mach_time.h>
+#endif
 
-
+#if MG_ENABLE_FILE
 char *mg_file_read(const char *path, size_t *sizep) {
   FILE *fp;
   char *data = NULL;
@@ -4194,6 +4209,7 @@ bool mg_file_write(const char *path, const void *buf, size_t len) {
   }
   return result;
 }
+#endif
 
 bool mg_file_printf(const char *path, const char *fmt, ...) {
   char tmp[256], *buf = tmp;
@@ -4446,48 +4462,7 @@ int mg_check_ip_acl(struct mg_str acl, uint32_t remote_ip) {
   return allowed == '+';
 }
 
-double mg_time(void) {
-#if MG_ARCH == MG_ARCH_WIN32
-  SYSTEMTIME sysnow;
-  FILETIME ftime;
-  GetLocalTime(&sysnow);
-  SystemTimeToFileTime(&sysnow, &ftime);
-  /*
-   * 1. VC 6.0 doesn't support conversion uint64 -> double, so, using int64
-   * This should not cause a problems in this (21th) century
-   * 2. Windows FILETIME is a number of 100-nanosecond intervals since January
-   * 1, 1601 while time_t is a number of _seconds_ since January 1, 1970 UTC,
-   * thus, we need to convert to seconds and adjust amount (subtract 11644473600
-   * seconds)
-   */
-  return (double) (((int64_t) ftime.dwLowDateTime +
-                    ((int64_t) ftime.dwHighDateTime << 32)) /
-                   10000000.0) -
-         11644473600;
-#elif MG_ARCH == MG_ARCH_FREERTOS_TCP || MG_ARCH == MG_ARCH_AZURERTOS
-  return mg_millis() / 1000.0;
-#else
-  struct timeval tv;
-  if (gettimeofday(&tv, NULL /* tz */) != 0) return 0;
-  return (double) tv.tv_sec + (((double) tv.tv_usec) / 1000000.0);
-#endif /* _WIN32 */
-}
-
-void mg_usleep(unsigned long usecs) {
-#if MG_ARCH == MG_ARCH_WIN32
-  Sleep(usecs / 1000);
-#elif MG_ARCH == MG_ARCH_ESP8266
-  ets_delay_us(usecs);
-#elif MG_ARCH == MG_ARCH_FREERTOS_TCP || MG_ARCH == MG_ARCH_FREERTOS_LWIP
-  vTaskDelay(pdMS_TO_TICKS(usecs / 1000));
-#elif MG_ARCH == MG_ARCH_AZURERTOS
-  tx_thread_sleep((usecs / 1000) * TX_TIMER_TICKS_PER_SECOND);
-#else
-  usleep((useconds_t) usecs);
-#endif
-}
-
-unsigned long mg_millis(void) {
+int64_t mg_millis(void) {
 #if MG_ARCH == MG_ARCH_WIN32
   return GetTickCount();
 #elif MG_ARCH == MG_ARCH_ESP32
@@ -4498,18 +4473,33 @@ unsigned long mg_millis(void) {
   return xTaskGetTickCount() * portTICK_PERIOD_MS;
 #elif MG_ARCH == MG_ARCH_AZURERTOS
   return tx_time_get() * (1000 /* MS per SEC */ / TX_TIMER_TICKS_PER_SECOND);
-#else
+#elif MG_ARCH == MG_ARCH_UNIX && defined(__APPLE__)
+  uint64_t ticks = mach_absolute_time();
+  static mach_timebase_info_data_t timebase;
+  mach_timebase_info(&timebase);
+  double ticks_to_nanos = (double) timebase.numer / timebase.denom;
+  uint64_t uptime_nanos = (uint64_t) (ticks_to_nanos * ticks);
+  return (int64_t) (uptime_nanos / 1000000);
+#elif MG_ARCH == MG_ARCH_UNIX
   struct timespec ts;
+#ifdef _POSIX_MONOTONIC_CLOCK
+#ifdef CLOCK_MONOTONIC_RAW
+  clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+#else
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+#endif
+#else
   clock_gettime(CLOCK_REALTIME, &ts);
-  return (unsigned long) ((uint64_t) ts.tv_sec * 1000 +
-                          (uint64_t) ts.tv_nsec / 1000000);
+#endif
+  return ((int64_t) ts.tv_sec * 1000 + (int64_t) ts.tv_nsec / 1000000);
+#else
+  return time(NULL) * 1000;
 #endif
 }
 
 #ifdef MG_ENABLE_LINES
 #line 1 "src/ws.c"
 #endif
-
 
 
 
@@ -4685,7 +4675,7 @@ static void mg_ws_cb(struct mg_connection *c, int ev, void *ev_data,
           if (final) mg_call(c, MG_EV_WS_MSG, &m);
           break;
         case WEBSOCKET_OP_CLOSE:
-          LOG(LL_ERROR, ("%lu Got WS CLOSE", c->id));
+          LOG(LL_DEBUG, ("%lu Got WS CLOSE", c->id));
           mg_call(c, MG_EV_WS_CTL, &m);
           c->is_closing = 1;
           break;
