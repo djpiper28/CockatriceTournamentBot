@@ -338,6 +338,14 @@ struct game_info test_create_game(struct Config config, int pdi) {
     return info;
 }
 
+void test_end_game(struct Config config, struct game_info info) {
+    std::string request = STR("authtoken=") + config.authToken + endl;
+    request += STR("gameid=") + std::to_string(info.gameid) + endl;
+
+		std::string ret = sendRequest(config.bindAddr + STR("/api/endgame"), request);
+		if (ret != "success") fail("end game failed");
+}
+
 int test_api(struct Config config) {
     struct game_info info_no_pdi = test_create_game(config, 0);
 		
@@ -347,6 +355,8 @@ int test_api(struct Config config) {
     std::string get_status_game = getRequest(base_url + STR("/") + STR(info_no_pdi.replayname));
     if (get_status_game.find(GAME_NAME) == std::string::npos) 
         fail("Failed to get game status for game with no pdi");
+
+    test_end_game(config, info_no_pdi);
 
     struct game_info info_pdi = test_create_game(config, 1);
 
@@ -361,6 +371,8 @@ int test_api(struct Config config) {
     if (get_status_game.find(P2_NAME) == std::string::npos) fail("p2 name not found");
     if (get_status_game.find(P2_DECK_1) == std::string::npos) fail("p2 hash 1 not found");
     if (get_status_game.find(P2_DECK_2) == std::string::npos) fail("p2 hash 2 not found");
+    
+    test_end_game(config, info_pdi);
     
 	  return 0;
 }
