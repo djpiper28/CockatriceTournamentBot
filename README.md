@@ -112,8 +112,7 @@ mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=TEST
 cmake --build . # -j
-./CockatriceTournamentBotTests #runs tests
-make coverage #runs tests and gets coverage
+ctest
 ```
 
 ## Help it is borked
