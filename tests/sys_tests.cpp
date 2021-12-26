@@ -1,10 +1,19 @@
+// C headers
 #include <stdlib.h>
 #include <stdio.h>
-#include <string>
 #include <string.h>
 #include <curl/curl.h>
 #include <pthread.h>
 #include "../src/bot_conf.h"
+
+// C++ headers
+#include <iostream>
+#include <ios>
+#include <sstream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <list>
 
 #define NET_ERROR 1
 #define MAIN_FUNC src_main
@@ -208,8 +217,130 @@ void *start_src_main(void *args_in) {
 	  pthread_exit(NULL);
 }
 
+std::list<std::string> get_lines(std::string text) {
+	  std::list<std::string> ret;
+		std::string line;
+    std::stringstream streamData(text);
+    while (std::getline(streamData, line, '\n')) {
+        ret.push_back(line);
+    }
+		
+	  return ret;
+}
+
+std::string get_tag(std::string in) {
+    std::string ret = in;
+    size_t index = ret.find("=");
+    if (index == std::string::npos) return ""; // Failed to find
+    
+    ret = ret.substr(0L, index);
+    printf("INFO-tag: %s\n", ret.c_str());
+     
+    return ret;
+}
+
+std::string get_prop(std::string in) {
+    std::string ret = in;
+    size_t index = ret.find("=");
+    if (index == std::string::npos) return ""; // Failed to find
+
+    ret = ret.substr(index + 1L);
+    printf("INFO-prop: %s\n", ret.c_str());
+				
+		return ret;
+}
+
+#define STR(x) std::string(x)
+
+#define GAME_NAME STR("game_name")
+#define PASSWORD STR("password123")
+#define P1_NAME STR("dave")
+#define P1_DECK_1 STR("12345678")
+#define P2_NAME STR("hans_gruber_from_die_hard")
+#define P2_DECK_1 STR("23456789")
+#define P2_DECK_2 STR("34567890")
+
 #define ERROR "error 404"
 #define WAIT 5
+#define endl STR("\n")
+
+struct game_info {
+    int gameid;
+		std::string replayname;
+};
+
+struct game_info test_create_game(struct Config config) {
+		std::string api_request = STR("authtoken=") + config.authToken;
+		api_request += endl;
+		api_request += STR("gamename=") + GAME_NAME;
+		api_request += endl;
+		api_request += STR("password=") + PASSWORD;
+		api_request += endl;
+		api_request += STR("playerCount=2");
+		api_request += endl;
+		api_request += STR("spectatorsAllowed=1");
+		api_request += endl;
+		api_request += STR("spectatorsNeedPassword=1");
+		api_request += endl;
+    api_request += STR("spectatorsCanChat=1");
+		api_request += endl;
+    api_request += STR("spectatorsCanSeeHands=1");
+		api_request += endl;
+    api_request += STR("onlyRegistered=1");
+		api_request += endl;
+
+    // Player deck verification
+    api_request += STR("playerDeckVerification=1");
+		api_request += endl;
+    api_request += STR("playerName=") + P1_NAME;
+		api_request += endl;
+    api_request += STR("deckHash=") + P1_DECK_1;
+		api_request += endl;
+
+    api_request += STR("playerName=") + P2_NAME;
+		api_request += endl;
+    api_request += STR("deckHash=") + P2_DECK_1;
+		api_request += endl;
+    api_request += STR("deckHash=") + P2_DECK_2;
+		api_request += endl;
+
+    // Make request
+    int gameid = -1;
+    std::string replayname = "";
+    std::string base_url = STR(config.bindAddr); 
+		std::string ret = sendRequest(base_url + STR("/api/creategame"), api_request);
+		if (ret == "timeout error") fail("timeout error for game create");
+		if (ret == "invalid player info") fail("invalid player info for game create");
+	  		
+	  // Get data from api call
+		std::string line;
+		std::list<std::string> lines = get_lines(ret);
+    while (lines.size() > 0) {
+    	  line = lines.back();
+    	  lines.pop_back();
+				std::string tag = get_tag(line);
+				std::string prop = get_prop(line);
+
+				// Guard against invalid or empty lines
+				if (tag == "" || prop == "") continue;
+
+				if (tag == "gameid") { gameid = atoi(prop.c_str()); }
+				if (tag == "replayName") { replayname = prop; }
+		}
+		
+	  // Check if valid
+		if (gameid < 1) fail("no gameid for game create"); // also checks for atoi fails
+		if (replayname == "") fail("no replay name for game create");
+		
+	  struct game_info info = {gameid, replayname};
+    return info;
+}
+
+int test_api(struct Config config) {
+    struct game_info info = test_create_game(config);
+
+	  return 0;
+}
 
 int main(int argc, char **argv) {
     struct args_struct args_in = {argc, argv};
@@ -231,7 +362,7 @@ int main(int argc, char **argv) {
     if (status) fail("Cannot read config.conf");
     if (config.bindAddr == NULL) fail("NULL bind address");
 
-    std::string base_url = config.bindAddr;
+    std::string base_url = STR(config.bindAddr);
 		
     // Test api page
     status = ERROR == getRequest(base_url + "/api");
@@ -282,6 +413,8 @@ int main(int argc, char **argv) {
     status = "valid=1" != sendRequest(base_url + "/api/checkauthkey", token);
     if (status) fail("Cannot checkauthkey");
 
+    status = test_api(config);
+		
 		// Do not free anything as I am lazy
 	  return status;
 }
