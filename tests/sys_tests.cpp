@@ -269,7 +269,7 @@ struct game_info {
 		std::string replayname;
 };
 
-struct game_info test_create_game(struct Config config) {
+struct game_info test_create_game(struct Config config, int pdi) {
 		std::string api_request = STR("authtoken=") + config.authToken;
 		api_request += endl;
 		api_request += STR("gamename=") + GAME_NAME;
@@ -290,19 +290,21 @@ struct game_info test_create_game(struct Config config) {
 		api_request += endl;
 
     // Player deck verification
-    api_request += STR("playerDeckVerification=1");
-		api_request += endl;
-    api_request += STR("playerName=") + P1_NAME;
-		api_request += endl;
-    api_request += STR("deckHash=") + P1_DECK_1;
-		api_request += endl;
+    if (pdi) {
+        api_request += STR("playerDeckVerification=1");
+    		api_request += endl;
+        api_request += STR("playerName=") + P1_NAME;
+    		api_request += endl;
+        api_request += STR("deckHash=") + P1_DECK_1;
+    		api_request += endl;
 
-    api_request += STR("playerName=") + P2_NAME;
-		api_request += endl;
-    api_request += STR("deckHash=") + P2_DECK_1;
-		api_request += endl;
-    api_request += STR("deckHash=") + P2_DECK_2;
-		api_request += endl;
+        api_request += STR("playerName=") + P2_NAME;
+    		api_request += endl;
+        api_request += STR("deckHash=") + P2_DECK_1;
+    		api_request += endl;
+        api_request += STR("deckHash=") + P2_DECK_2;
+		    api_request += endl;
+		}
 
     // Make request
     int gameid = -1;
@@ -337,7 +339,10 @@ struct game_info test_create_game(struct Config config) {
 }
 
 int test_api(struct Config config) {
-    struct game_info info = test_create_game(config);
+    struct game_info info_no_pdi = test_create_game(config, 0);
+
+
+    struct game_info info_pdi = test_create_game(config, 1);
 
 	  return 0;
 }
