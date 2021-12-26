@@ -252,7 +252,7 @@ std::string get_prop(std::string in) {
 
 #define STR(x) std::string(x)
 
-#define GAME_NAME STR("game_name")
+#define GAME_NAME STR("game/name")
 #define PASSWORD STR("password123")
 #define P1_NAME STR("dave")
 #define P1_DECK_1 STR("12345678")
@@ -340,10 +340,28 @@ struct game_info test_create_game(struct Config config, int pdi) {
 
 int test_api(struct Config config) {
     struct game_info info_no_pdi = test_create_game(config, 0);
-
+		
+		printf("Sleeping 1.\n");
+    sleep(1);
+		std::string base_url = STR(config.bindAddr);
+    std::string get_status_game = getRequest(base_url + STR("/") + STR(info_no_pdi.replayname));
+    if (get_status_game.find(GAME_NAME) == std::string::npos) 
+        fail("Failed to get game status for game with no pdi");
 
     struct game_info info_pdi = test_create_game(config, 1);
 
+    printf("Sleeping 1.\n");
+    get_status_game = getRequest(base_url + STR("/") + STR(info_pdi.replayname));
+    if (get_status_game.find(GAME_NAME) == std::string::npos)
+        fail("Failed to get game status for game with pdi");
+    
+    if (get_status_game.find(P1_NAME) == std::string::npos) fail("p1 name not found");
+    if (get_status_game.find(P1_DECK_1) == std::string::npos) fail("p1 deck not found");
+    
+    if (get_status_game.find(P2_NAME) == std::string::npos) fail("p2 name not found");
+    if (get_status_game.find(P2_DECK_1) == std::string::npos) fail("p2 hash 1 not found");
+    if (get_status_game.find(P2_DECK_2) == std::string::npos) fail("p2 hash 2 not found");
+    
 	  return 0;
 }
 
