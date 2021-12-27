@@ -154,6 +154,9 @@ struct tb_apiServerPropety tb_readProperty(struct tb_apiServerStr line) {
                                            prop,
                                            tmp
                                           };
+    for (int i = 0; i < propLen; i++) {
+        prop[i] = tolower(prop[i]);
+    }
     return property;
 }
 
@@ -582,7 +585,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 gameName = property.value;
             } else if (strncmp(property.property, "password", property.propLen) == 0) {
                 password = property.value;
-            } else if (strncmp(property.property, "playerName", property.propLen) == 0) {
+            } else if (strncmp(property.property, "playername", property.propLen) == 0) {
                 if (playerNames < MAX_PLAYERS
                     && property.valueLen < PLAYER_NAME_LENGTH) {
                     strncpy(playerNameBuffers[playerNames],
@@ -592,7 +595,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     playerNames++;
                 }
                 free(property.value);
-            } else if (strncmp(property.property, "deckHash", property.propLen) == 0) {
+            } else if (strncmp(property.property, "deckhash", property.propLen) == 0) {
                 if (playerNames > 0 && playerNames <= MAX_PLAYERS) {
                     if (deckCount[playerNames - 1] == 0) {
                         deckHashes++;
@@ -617,31 +620,31 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 if (isNum) {
                     tb_readNumberIfPropertiesMatch(number,
                                                    &playerCount,
-                                                   "playerCount",
+                                                   "playercount",
                                                    property.property);
                     tb_readNumberIfPropertiesMatch(number,
                                                    &spectatorsAllowed,
-                                                   "spectatorsAllowed",
+                                                   "spectatorsallowed",
                                                    property.property);
                     tb_readNumberIfPropertiesMatch(number,
                                                    &spectatorsNeedPassword,
-                                                   "spectatorsNeedPassword",
+                                                   "spectatorsneedpassword",
                                                    property.property);
                     tb_readNumberIfPropertiesMatch(number,
                                                    &spectatorsCanChat,
-                                                   "spectatorsCanChat",
+                                                   "spectatorscanchat",
                                                    property.property);
                     tb_readNumberIfPropertiesMatch(number,
                                                    &spectatorsCanSeeHands,
-                                                   "spectatorsCanSeeHands",
+                                                   "spectatorscanseehands",
                                                    property.property);
                     tb_readNumberIfPropertiesMatch(number,
                                                    &onlyRegistered,
-                                                   "onlyRegistered",
+                                                   "onlyregistered",
                                                    property.property);
                     tb_readNumberIfPropertiesMatch(number,
                                                    &isPlayerDeckVerif,
-                                                   "playerDeckVerification",
+                                                   "playerdeckverification",
                                                    property.property);
                 }
 
