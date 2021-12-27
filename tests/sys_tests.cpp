@@ -260,6 +260,7 @@ std::string get_prop(std::string in)
 #define GAME_NAME STR("game/name")
 #define PASSWORD STR("password123")
 #define P1_NAME STR("dave")
+#define P1_NAME_2 STR("eric")
 #define P1_DECK_1 STR("12345678")
 #define P2_NAME STR("hans_gruber_from_die_hard")
 #define P2_DECK_1 STR("23456789")
@@ -361,8 +362,28 @@ void test_end_game(struct Config config, struct game_info info, int expect_error
     }
 }
 
+void test_update_pdi(struct Config config, struct game_info info, int expect_error)
+{
+    std::string request = STR("authtoken=") + config.authToken + endl;
+    request += STR("gameid=") + std::to_string(info.gameid) + endl;
+    request += STR("oldplayername=") + P1_NAME + endl;
+    request += STR("newplayername=") + P1_NAME_2 + endl;
+
+		std::string resp = sendRequest(config.bindAddr + STR("/api/updateplayerinfo"), request);
+    if (expect_error) {
+    	  if ("success" == resp) fail("update pdi failed, expected error did not happen");
+    } else {
+    	  if ("success" != resp) fail("update pdi failed as an error occurred");
+				
+				std::string new_status_pg = getRequest(config.bindAddr + STR("/") + STR(info.replayname));
+        if (new_status_pg.find(P1_NAME) != std::string::npos) fail("(pdi) name was not changed");
+        if (new_status_pg.find(P1_NAME_2) == std::string::npos) fail("(pdi) name was changed wrongly");
+    }
+}
+
 int test_api(struct Config config)
 {
+    // Create test game with no pdi then close it
     struct game_info info_no_pdi = test_create_game(config, 0);
 
     printf("Sleeping 1.\n");
@@ -378,7 +399,9 @@ int test_api(struct Config config)
     struct game_info info_test = info_no_pdi;
     info_test.gameid = 180;
     test_end_game(config, info_test, 1);
+    test_update_pdi(config, info_test, 1);
 
+		// Create test game with pdi then test the unique pdi endpoints
     struct game_info info_pdi = test_create_game(config, 1);
 
     printf("Sleeping 1.\n");
@@ -393,6 +416,12 @@ int test_api(struct Config config)
     if (get_status_game.find(P2_DECK_1) == std::string::npos) fail("p2 hash 1 not found");
     if (get_status_game.find(P2_DECK_2) == std::string::npos) fail("p2 hash 2 not found");
 
+    // Test update methods for the game with pdi
+    test_update_pdi(config, info_pdi, 0);
+    
+    // Test disable pdi
+		
+		// Test end game
     test_end_game(config, info_pdi, 0);
 
     return 0;
