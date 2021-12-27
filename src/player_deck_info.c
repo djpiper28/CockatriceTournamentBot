@@ -3,16 +3,18 @@
 
 #include "player_deck_info.h"
 
-struct playerDeckInfo *initPlayerDeckInfoArr(int length) {
+struct playerDeckInfo *initPlayerDeckInfoArr(int length)
+{
     struct playerDeckInfo *pdi = (struct playerDeckInfo *)
-        malloc(sizeof(struct playerDeckInfo) * length);
+                                 malloc(sizeof(struct playerDeckInfo) * length);
     return pdi;
 }
 
 struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
-                                         int deckCount,
-                                         char *playerName,
-                                         int isEmptySlot) {
+        int deckCount,
+        char *playerName,
+        int isEmptySlot)
+{
     struct playerDeckInfo pdi;
     pdi.deckCount = deckCount;
     pdi.isEmptySlot = isEmptySlot;
@@ -26,11 +28,13 @@ struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
     return pdi;
 }
 
-void freePlayerDeckInfoArray(void *ptr) {
+void freePlayerDeckInfoArray(void *ptr)
+{
     free(ptr);
 }
 
-struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
+struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi)
+{
     struct gameData g = {
         (void *) pdi,
         &freePlayerDeckInfoArray
@@ -40,7 +44,8 @@ struct gameData gameDataForPlayerDeckInfo(struct playerDeckInfo *pdi) {
 
 int isPlayerAllowed(char *playerName,
                     int pid,
-                    struct game g) {
+                    struct game g)
+{
     // Default to not allowing
     int exactMatch = 0;
     int index = -1;
@@ -102,7 +107,8 @@ int isPlayerAllowed(char *playerName,
 
 int isPlayerDeckAllowed(char *deckHash,
                         int pid,
-                        struct game g) {
+                        struct game g)
+{
     // Default to not allowing
     int allowed = 0;
     if (g.gameData.gameDataPtr != NULL) {
@@ -133,7 +139,8 @@ int isPlayerDeckAllowed(char *deckHash,
 }
 
 void clearPlayerSlot(int playerIndex,
-                     struct game g) {
+                     struct game g)
+{
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
     if (pdi != NULL) {
         int found = 0;

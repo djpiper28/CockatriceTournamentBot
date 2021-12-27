@@ -14,16 +14,18 @@
 //Type defs moved to trice_structs.h due to circlular references
 
 //Init method for the command queue
-void initPendingCommandQueue(struct pendingCommandQueue *q) {
+void initPendingCommandQueue(struct pendingCommandQueue *q)
+{
     q->mutex = PTHREAD_MUTEX_INITIALIZER;
     q->head = NULL;
     q->tail = NULL;
 }
 
-static void *freeCmdForGameCreate(void *param) {
+static void *freeCmdForGameCreate(void *param)
+{
     if (param != NULL) {
         struct gameCreateCallbackWaitParam *p = (struct gameCreateCallbackWaitParam *)
-            param;
+                                                param;
 
         //Wait for timeout of the game callback in another thread
         int waiting = 1;
@@ -44,7 +46,8 @@ static void *freeCmdForGameCreate(void *param) {
 }
 
 //Queue methods
-void freePendingCommand(struct pendingCommand *cmd) {
+void freePendingCommand(struct pendingCommand *cmd)
+{
     if (cmd != NULL) {
         if (cmd->message != NULL) {
             free(cmd->message);
@@ -81,18 +84,21 @@ void freePendingCommand(struct pendingCommand *cmd) {
     }
 }
 
-static int hasNextNTS(struct pendingCommandQueue *queue) {
+static int hasNextNTS(struct pendingCommandQueue *queue)
+{
     return queue->head != NULL;
 }
 
-int hasNext(struct pendingCommandQueue *queue) {
+int hasNext(struct pendingCommandQueue *queue)
+{
     pthread_mutex_lock(&queue->mutex);
     int res = hasNextNTS(queue);
     pthread_mutex_unlock(&queue->mutex);
     return res;
 }
 
-static struct pendingCommand *deqNTS(struct pendingCommandQueue *queue) {
+static struct pendingCommand *deqNTS(struct pendingCommandQueue *queue)
+{
     if (queue->head != NULL) {
         struct pendingCommandQueueNode *last = queue->head;
         queue->head = last->next;
@@ -110,7 +116,8 @@ static struct pendingCommand *deqNTS(struct pendingCommandQueue *queue) {
     }
 }
 
-struct pendingCommand *deq(struct pendingCommandQueue *queue) {
+struct pendingCommand *deq(struct pendingCommandQueue *queue)
+{
     pthread_mutex_lock(&queue->mutex);
     struct pendingCommand *returnValue = deqNTS(queue);
     pthread_mutex_unlock(&queue->mutex);
@@ -119,7 +126,8 @@ struct pendingCommand *deq(struct pendingCommandQueue *queue) {
 }
 
 int isGameEq(const char *gameName,
-             struct pendingCommand *node) {
+             struct pendingCommand *node)
+{
     if (node->isGame) {
         struct gameCreateCallbackWaitParam *data = (struct
                 gameCreateCallbackWaitParam *) node->param;
@@ -133,7 +141,8 @@ int isGameEq(const char *gameName,
 }
 
 struct pendingCommand *gameWithName(struct pendingCommandQueue *queue,
-                                    const char *gameName) {
+                                    const char *gameName)
+{
     pthread_mutex_lock(&queue->mutex);
 
     struct pendingCommand *output = NULL;
@@ -144,7 +153,7 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue *queue,
         }
 
         struct pendingCommandQueueNode *current = queue->head,
-                                       *last = NULL;
+                                            *last = NULL;
 
 
         int cont = current != NULL;
@@ -182,7 +191,8 @@ struct pendingCommand *gameWithName(struct pendingCommandQueue *queue,
 }
 
 struct pendingCommand *cmdForCMDId(int CMDId,
-                                   struct pendingCommandQueue *queue) {
+                                   struct pendingCommandQueue *queue)
+{
     pthread_mutex_lock(&queue->mutex);
 
     if (queue->head->payload->cmdID == CMDId) {
@@ -192,7 +202,7 @@ struct pendingCommand *cmdForCMDId(int CMDId,
     }
 
     struct pendingCommandQueueNode *current = queue->head,
-                                      *last = NULL;
+                                        *last = NULL;
 
     struct pendingCommand *output = NULL;
 
@@ -232,9 +242,10 @@ struct pendingCommand *cmdForCMDId(int CMDId,
 struct pendingCommand *prepCmdNTS(struct triceBot *b,
                                   CommandContainer cont,
                                   int gameID,
-                                  int roomID) {
+                                  int roomID)
+{
     struct pendingCommand *pending = (struct pendingCommand *)
-        malloc(sizeof(struct pendingCommand));
+                                     malloc(sizeof(struct pendingCommand));
     pending->cmdID = b->cmdID;
     cont.set_cmd_id(pending->cmdID);
 
@@ -278,7 +289,8 @@ struct pendingCommand *prepCmdNTS(struct triceBot *b,
 struct pendingCommand *prepCmd(struct triceBot *b,
                                CommandContainer cont,
                                int gameID,
-                               int roomID) {
+                               int roomID)
+{
     pthread_mutex_lock(&b->mutex);
     struct pendingCommand *a = prepCmdNTS(b, cont, gameID, roomID);
     pthread_mutex_unlock(&b->mutex);
@@ -291,13 +303,15 @@ struct pendingCommand *prepCmd(struct triceBot *b,
 * is not used in this code but added for backwards compatibility with old
 * servatrice server see remotclient.cpp in the cockatrice for the reason
 */
-struct pendingCommand *prepEmptyCmd(struct triceBot *b) {
+struct pendingCommand *prepEmptyCmd(struct triceBot *b)
+{
     CommandContainer cont;
     return prepCmd(b, cont, -1, -1);
 }
 
 void enq(struct pendingCommand *cmd,
-         struct pendingCommandQueue *queue) {
+         struct pendingCommandQueue *queue)
+{
     pthread_mutex_lock(&queue->mutex);
 
     struct pendingCommandQueueNode *node = (struct pendingCommandQueueNode *)
@@ -316,7 +330,8 @@ void enq(struct pendingCommand *cmd,
     pthread_mutex_unlock(&queue->mutex);
 }
 
-struct pendingCommand *peek(struct pendingCommandQueue *queue) {
+struct pendingCommand *peek(struct pendingCommandQueue *queue)
+{
     pthread_mutex_lock(&queue->mutex);
 
     struct pendingCommand *out = hasNextNTS(queue) ? queue->head->payload : NULL;
@@ -325,7 +340,8 @@ struct pendingCommand *peek(struct pendingCommandQueue *queue) {
     return out;
 }
 
-void freePendingCommandQueue(struct pendingCommandQueue *queue) {
+void freePendingCommandQueue(struct pendingCommandQueue *queue)
+{
     pthread_mutex_lock(&queue->mutex);
 
     while (hasNextNTS(queue)) {

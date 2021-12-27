@@ -40,7 +40,8 @@ struct ServerConnection {
 };
 
 static void initServerConnection(struct ServerConnection *s,
-                                 struct tb_apiServer *api) {
+                                 struct tb_apiServer *api)
+{
     s->startTime = time(NULL);
     s->param = NULL;
     s->isGameCreate = 0;
@@ -50,7 +51,8 @@ static void initServerConnection(struct ServerConnection *s,
 
 void tb_initServer(struct tb_apiServer *server,
                    struct triceBot *triceBot,
-                   struct Config config) {
+                   struct Config config)
+{
     memset(server, NULL, sizeof(struct tb_apiServer));
 
     server->bottleneck = PTHREAD_MUTEX_INITIALIZER;
@@ -74,23 +76,27 @@ void tb_initServer(struct tb_apiServer *server,
              "/%s/**/*", server->config.replayFolder);
 }
 
-void tb_freeServer(struct tb_apiServer *api) {
+void tb_freeServer(struct tb_apiServer *api)
+{
     pthread_mutex_destroy(&api->bottleneck);
     free(api->replayFolerWildcard);
 }
 
-static void sendInvalidAuthTokenResponse(struct mg_connection *c) {
+static void sendInvalidAuthTokenResponse(struct mg_connection *c)
+{
     mg_http_reply(c, 401, "", "invalid auth token");
 }
 
-static void send404(struct mg_connection *c) {
+static void send404(struct mg_connection *c)
+{
     mg_http_reply(c, 404, "", "error 404");
 }
 
 void tb_readNumberIfPropertiesMatch(int number,
                                     int *dest,
                                     const char *property,
-                                    char *readProperty) {
+                                    char *readProperty)
+{
     if (strncmp(property, readProperty, BUFFER_LENGTH) == 0) {
         *dest = number;
     }
@@ -98,7 +104,8 @@ void tb_readNumberIfPropertiesMatch(int number,
 
 struct tb_apiServerStr tb_readNextLine(const char *buffer,
                                        size_t *ptr,
-                                       size_t len) {
+                                       size_t len)
+{
     size_t i = 0;
     size_t tmp = *ptr;
 
@@ -113,7 +120,8 @@ struct tb_apiServerStr tb_readNextLine(const char *buffer,
     return string;
 }
 
-struct tb_apiServerPropety tb_readProperty(struct tb_apiServerStr line) {
+struct tb_apiServerPropety tb_readProperty(struct tb_apiServerStr line)
+{
     size_t eqPtr = 0, valueLen = 0, propLen = 0;
     char *tmp = NULL, *prop = NULL;
 
@@ -149,11 +157,11 @@ struct tb_apiServerPropety tb_readProperty(struct tb_apiServerStr line) {
     }
 
     struct tb_apiServerPropety property = {eqPtr,
-                                           valueLen,
-                                           propLen,
-                                           prop,
-                                           tmp
-                                          };
+               valueLen,
+               propLen,
+               prop,
+               tmp
+    };
     for (int i = 0; i < propLen; i++) {
         prop[i] = tolower(prop[i]);
     }
@@ -163,7 +171,8 @@ struct tb_apiServerPropety tb_readProperty(struct tb_apiServerStr line) {
 
 static void serverKickPlayerCommand(struct ServerConnection *s,
                                     struct mg_connection *c,
-                                    struct mg_http_message *hm) {
+                                    struct mg_http_message *hm)
+{
     char *authToken = NULL,
           *playerName = NULL;
     int gameID = -1;
@@ -172,8 +181,8 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
 
     while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
-                                                      &ptr,
-                                                      hm->body.len);
+                                      &ptr,
+                                      hm->body.len);
         struct tb_apiServerPropety propety = tb_readProperty(line);
 
         //Error case - no prop len or, value len
@@ -189,7 +198,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
             } else {
                 //Check is number
                 int isNum = propety.valueLen <= 9,
-                number = atoi(propety.value);
+                    number = atoi(propety.value);
 
                 if (isNum) {
                     tb_readNumberIfPropertiesMatch(number,
@@ -250,8 +259,9 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
 
 
 static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
-                                                 struct mg_connection *c,
-                                                 struct mg_http_message *hm) {
+        struct mg_connection *c,
+        struct mg_http_message *hm)
+{
     char *authToken = NULL;
     int gameID = -1;
 
@@ -260,8 +270,8 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
 
     while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
-                                                      &ptr,
-                                                      hm->body.len);
+                                      &ptr,
+                                      hm->body.len);
         struct tb_apiServerPropety property = tb_readProperty(line);
 
         //Error case - no prop len or, value len
@@ -275,7 +285,7 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
             } else {
                 //Check is number
                 int isNum = property.valueLen <= 7,
-                number = atoi(property.value);
+                    number = atoi(property.value);
 
                 if (isNum) {
                     tb_readNumberIfPropertiesMatch(number,
@@ -336,18 +346,19 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
 
 static void serverUpdatePlayerInfo(struct ServerConnection *s,
                                    struct mg_connection *c,
-                                   struct mg_http_message *hm) {
+                                   struct mg_http_message *hm)
+{
     char *authToken = NULL,
-         *oldPlayerName = NULL,
-         *newPlayerName = NULL;
+          *oldPlayerName = NULL,
+           *newPlayerName = NULL;
     int gameID = -1;
     //Read the buffer line by line
     size_t ptr = 0;
 
     while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
-                                                      &ptr,
-                                                      hm->body.len);
+                                      &ptr,
+                                      hm->body.len);
         struct tb_apiServerPropety property = tb_readProperty(line);
 
         //Error case - no prop len or, value len
@@ -365,7 +376,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
             } else {
                 //Check is number
                 int isNum = property.valueLen <= 7,
-                number = atoi(property.value);
+                    number = atoi(property.value);
 
                 if (isNum) {
                     tb_readNumberIfPropertiesMatch(number,
@@ -382,9 +393,9 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
     }
 
     int valid = authToken != NULL
-        && oldPlayerName != NULL
-        && newPlayerName != NULL
-        && gameID != -1;
+                && oldPlayerName != NULL
+                && newPlayerName != NULL
+                && gameID != -1;
 
     if (valid) {
         //Check authtoken
@@ -409,8 +420,8 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
                         slotOccupied = 0;
 
                     for (int i = 0; (!exactMatch)
-                        && ambiguousMatches < 2
-                        && i < g->playerCount; i++) {
+                            && ambiguousMatches < 2
+                            && i < g->playerCount; i++) {
                         // 2 Only empty slots are treated as good
                         if (strncmp(pdi[i].playerName,
                                     oldPlayerName,
@@ -465,18 +476,19 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
 }
 
 static void serverEndGame(struct ServerConnection *s,
-								          struct mg_connection *c,
-								          struct mg_http_message *hm) {
+                          struct mg_connection *c,
+                          struct mg_http_message *hm)
+{
     char *authToken = NULL;
     int gameId = -1;
-    
-		// Read the buffer line by line
+
+    // Read the buffer line by line
     size_t ptr = 0;
- 
+
     while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
-                                                      &ptr,
-                                                      hm->body.len);
+                                      &ptr,
+                                      hm->body.len);
         struct tb_apiServerPropety property = tb_readProperty(line);
         //Error case - no prop len or, value len
         if (property.propLen > 0 && property.valueLen > 0) {
@@ -487,27 +499,27 @@ static void serverEndGame(struct ServerConnection *s,
             if (strncmp(property.property, "authtoken", property.propLen) == 0) {
                 authToken = property.value;
             } else if (strncmp(property.property, "gameid", property.propLen) == 0) {
-            		gameId = atoi(property.value);
-            		free(property.value);
-						} else {
-            	 free(property.value);
+                gameId = atoi(property.value);
+                free(property.value);
+            } else {
+                free(property.value);
             }
 
             free(property.property);
-				}
-		}
+        }
+    }
 
-		int valid = gameId != -1 && authToken != NULL;
+    int valid = gameId != -1 && authToken != NULL;
     if (valid) {
         //Check authtoken
         if (strncmp(authToken, s->api->config.authToken, BUFFER_LENGTH) == 0) {
             //Find the game
             pthread_mutex_lock(&s->api->triceBot->gameList.mutex);
             struct game *g = getGameWithIDNTS(&s->api->triceBot->gameList,
-            							                         gameId);
+                                              gameId);
 
             if (g == NULL) {
-            	  mg_http_reply(c, 200, "", "error not found");
+                mg_http_reply(c, 200, "", "error not found");
             } else {
                 Command_LeaveGame leaveCommand;
 
@@ -531,27 +543,28 @@ static void serverEndGame(struct ServerConnection *s,
                 removeGame(&s->api->triceBot->gameList, g);
                 g = NULL;
             }
-            
+
             if (g != NULL) {
                 pthread_mutex_unlock(&s->api->triceBot->gameList.mutex);
-						}
-				} else {
+            }
+        } else {
             sendInvalidAuthTokenResponse(c);
-				}
-		} else {
-			  printf("[Error]: Invalid end game command.\n");
-			  send404(c);
-		}
-		
-		if (authToken != NULL) free(authToken);
+        }
+    } else {
+        printf("[Error]: Invalid end game command.\n");
+        send404(c);
+    }
+
+    if (authToken != NULL) free(authToken);
 }
 
 static void serverCreateGameCommand(struct ServerConnection *s,
                                     struct mg_connection *c,
-                                    struct mg_http_message *hm) {
+                                    struct mg_http_message *hm)
+{
     char *authToken = NULL,
-         *gameName = NULL,
-         *password = NULL;
+          *gameName = NULL,
+           *password = NULL;
     int playerCount = -1,
         spectatorsAllowed = -1,
         spectatorsNeedPassword = -1,
@@ -570,8 +583,8 @@ static void serverCreateGameCommand(struct ServerConnection *s,
 
     while (ptr <= hm->body.len) {
         struct tb_apiServerStr line = tb_readNextLine(hm->body.ptr,
-                                                      &ptr,
-                                                      hm->body.len);
+                                      &ptr,
+                                      hm->body.len);
         struct tb_apiServerPropety property = tb_readProperty(line);
         //Error case - no prop len or, value len
         if (property.propLen > 0 && property.valueLen > 0) {
@@ -587,7 +600,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 password = property.value;
             } else if (strncmp(property.property, "playername", property.propLen) == 0) {
                 if (playerNames < MAX_PLAYERS
-                    && property.valueLen < PLAYER_NAME_LENGTH) {
+                        && property.valueLen < PLAYER_NAME_LENGTH) {
                     strncpy(playerNameBuffers[playerNames],
                             property.value,
                             PLAYER_NAME_LENGTH - 1);
@@ -602,9 +615,9 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                     }
 
                     if (deckCount[playerNames - 1] < MAX_DECKS - 1
-                        && property.valueLen + 1 == DECK_HASH_LENGTH) {
+                            && property.valueLen + 1 == DECK_HASH_LENGTH) {
                         strncpy(deckHashBuffers[deckHashes - 1]
-                                               [deckCount[playerNames - 1]],
+                                [deckCount[playerNames - 1]],
                                 property.value,
                                 DECK_HASH_LENGTH);
                         deckCount[playerNames - 1]++;
@@ -615,7 +628,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
             } else {
                 //Check is number
                 int isNum = property.valueLen <= 9,
-                number = atoi(property.value);
+                    number = atoi(property.value);
 
                 if (isNum) {
                     tb_readNumberIfPropertiesMatch(number,
@@ -663,9 +676,9 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                 && spectatorsNeedPassword != -1 && spectatorsCanChat != -1
                 && spectatorsCanSeeHands != -1 && onlyRegistered != -1
                 && ((!isPlayerDeckVerif) || (isPlayerDeckVerif
-                    && playerNames <= playerCount
-                    && deckHashes  == playerNames
-                    && playerCount <= MAX_PLAYERS));
+                        && playerNames <= playerCount
+                        && deckHashes  == playerNames
+                        && playerCount <= MAX_PLAYERS));
 
     if (valid) {
         //Check authtoken
@@ -741,11 +754,13 @@ static void serverCreateGameCommand(struct ServerConnection *s,
     if (password != NULL) free(password);
 }
 
-static void ErrorCallback(struct gameCreateCallbackWaitParam *param) {
+static void ErrorCallback(struct gameCreateCallbackWaitParam *param)
+{
     printf("[ERROR]: Game create callback error - api client disconnected.\n");
 }
 
-static int min(int a, int b) {
+static int min(int a, int b)
+{
     return a > b ? b : a;
 }
 
@@ -753,7 +768,8 @@ static int min(int a, int b) {
 static void eventHandler(struct mg_connection *c,
                          int event,
                          void *ev_data,
-                         void *fn_data) {
+                         void *fn_data)
+{
     struct tb_apiServer *api = (struct tb_apiServer *) c->fn_data;
 
     if (event == MG_EV_ACCEPT) {
@@ -779,13 +795,13 @@ static void eventHandler(struct mg_connection *c,
                 || mg_http_match_uri(hm, "/")) {
             mg_http_reply(c, 200, "", "%s", INDEX);
         } else if (mg_http_match_uri(hm, "/discord/")
-                || mg_http_match_uri(hm, "/discord")) {
+                   || mg_http_match_uri(hm, "/discord")) {
             mg_http_reply(c, 301, "", "<meta http-equiv=\"refresh\" content=\"0; URL="
                           "https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8\"/>\n"
                           "<h1>Redirecting to discord.com...</h1>",
                           api->config.clientID);
         } else
-        
+
 #endif
             if (mg_http_match_uri(hm, "/favicon.ico")) {
                 struct mg_http_serve_opts opts = {.mime_types = "ico=image/x-icon"};
@@ -825,19 +841,19 @@ static void eventHandler(struct mg_connection *c,
                 serverUpdatePlayerInfo(s, c, hm);
             } else if (mg_http_match_uri(hm,
                                          "/api/disableplayerdeckverification/")
-                || mg_http_match_uri(hm,
-                                     "/api/disableplayerdeckverification")) {
+                       || mg_http_match_uri(hm,
+                                            "/api/disableplayerdeckverification")) {
                 serverDisablePlayerDeckVerififcation(s, c, hm);
             } else if (mg_http_match_uri(hm, "/api/kickplayer/")
                        || mg_http_match_uri(hm, "/api/kickplayer")) {
                 serverKickPlayerCommand(s, c, hm);
             } else if (mg_http_match_uri(hm, "/api/endgame/")
-            					 || mg_http_match_uri(hm, "/api/endgame")) {
+                       || mg_http_match_uri(hm, "/api/endgame")) {
                 serverEndGame(s, c, hm);
-						}
+            }
 
             else if (mg_http_match_uri(hm, "/api/")
-                       || mg_http_match_uri(hm, "/api")) {
+                     || mg_http_match_uri(hm, "/api")) {
                 mg_http_reply(c, 200, "", "%s", API_HELP);
             } else if (mg_http_match_uri(hm, "/faq/")
                        || mg_http_match_uri(hm, "/faq")) {
@@ -845,7 +861,7 @@ static void eventHandler(struct mg_connection *c,
             }
 
             else if (mg_http_match_uri(hm, "/status/")
-                       || mg_http_match_uri(hm, "/status")) {
+                     || mg_http_match_uri(hm, "/status")) {
                 pthread_mutex_lock(&api->triceBot->mutex);
                 mg_http_reply(c, 200, "", "serverIp=%s\n"
                               "roomName=%s\n"
@@ -873,70 +889,70 @@ static void eventHandler(struct mg_connection *c,
 
                 for (size_t i = 0; i < hm->uri.len; i++) {
                     switch (hm->uri.ptr[i]) {
-                        case '-':
-                            state = 1;
-                            break;
+                    case '-':
+                        state = 1;
+                        break;
 
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            if (state == 1) {
-                                state = 2;
-                                gameIdStartPtr = i;
-                            } else if (state != 2) {
-                                state = 0;
-                            }
-
-                            break;
-
-                        case '.':
-                            if (state == 2) {
-                                gameIdEndPtr = i - 1;
-                                // To not be misleading it will point to the last byte
-                                state = 3;
-                            } else {
-                                state = 0;
-                            }
-
-                            break;
-
-                        case 'c':
-                            if (state == 3) {
-                                state = 4;
-                            } else {
-                                state = 0;
-                            }
-
-                            break;
-
-                        case 'o':
-                            if (state == 4) {
-                                state = 5;
-                            } else {
-                                state = 0;
-                            }
-
-                            break;
-
-                        case 'r':
-                            if (state == 5) {
-                                state = 6; //accepting
-                            } else {
-                                state = 0;
-                            }
-
-                            break;
-
-                        default:
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        if (state == 1) {
+                            state = 2;
+                            gameIdStartPtr = i;
+                        } else if (state != 2) {
                             state = 0;
-                            break;
+                        }
+
+                        break;
+
+                    case '.':
+                        if (state == 2) {
+                            gameIdEndPtr = i - 1;
+                            // To not be misleading it will point to the last byte
+                            state = 3;
+                        } else {
+                            state = 0;
+                        }
+
+                        break;
+
+                    case 'c':
+                        if (state == 3) {
+                            state = 4;
+                        } else {
+                            state = 0;
+                        }
+
+                        break;
+
+                    case 'o':
+                        if (state == 4) {
+                            state = 5;
+                        } else {
+                            state = 0;
+                        }
+
+                        break;
+
+                    case 'r':
+                        if (state == 5) {
+                            state = 6; //accepting
+                        } else {
+                            state = 0;
+                        }
+
+                        break;
+
+                    default:
+                        state = 0;
+                        break;
                     }
                 }
 
@@ -955,14 +971,14 @@ static void eventHandler(struct mg_connection *c,
 
                     if (!gameFinished) {
                         //<li></li>
-                        #define BASE_LEN strlen("<li></li>")
+#define BASE_LEN strlen("<li></li>")
                         int buffLen = 0;
                         int players = 0;
                         for (int i = 0; i < g.playerCount; i++) {
                             if (g.playerArr[i].playerName != NULL) {
                                 buffLen += BASE_LEN
-                                        + strnlen(g.playerArr[i].playerName,
-                                                  256);
+                                           + strnlen(g.playerArr[i].playerName,
+                                                     256);
                                 players++;
                             }
                         }
@@ -973,16 +989,16 @@ static void eventHandler(struct mg_connection *c,
                         int ptr = 0;
                         for (int i = 0; i < g.playerCount; i++) {
                             if (g.playerArr[i].playerName != NULL) {
-                                #define BUFF_LEN 266
+#define BUFF_LEN 266
                                 char buffTmp[BUFF_LEN];
                                 snprintf(buffTmp,
                                          BUFF_LEN,
                                          "<li>%s</li>",
                                          g.playerArr[i].playerName);
                                 snprintf(buff + ptr,
-                                        min(1 + buffLen - ptr, BUFF_LEN),
-                                        "%s",
-                                        buffTmp);
+                                         min(1 + buffLen - ptr, BUFF_LEN),
+                                         "%s",
+                                         buffTmp);
                                 ptr += strnlen(buffTmp, BUFF_LEN);
                             }
                         }
@@ -992,11 +1008,11 @@ static void eventHandler(struct mg_connection *c,
                         if (isPDI) {
                             struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
                             int len = (PLAYER_NAME_LENGTH + 29) * g.playerCount
-                                    + (DECK_HASH_LENGTH + 2) * MAX_DECKS * g.playerCount + 1024;
+                                      + (DECK_HASH_LENGTH + 2) * MAX_DECKS * g.playerCount + 1024;
                             pdiMSG = (char *) malloc(sizeof(char) * len);
 
                             snprintf(pdiMSG, len, "<h2>Player deck info verification is enabled</h2>\n"
-                            "<h3>Expected Players are:</h3>\n");
+                                     "<h3>Expected Players are:</h3>\n");
 
                             for (int i = 0; i < g.playerCount; i++) {
                                 strcat(pdiMSG, "\t- ");
@@ -1014,7 +1030,7 @@ static void eventHandler(struct mg_connection *c,
                                 strcat(pdiMSG, "<br>");
                             }
                         }
-                                                
+
                         if (players == 0) {
                             mg_http_reply(c,
                                           200,
@@ -1064,53 +1080,53 @@ static void eventHandler(struct mg_connection *c,
                                           VERSION_MINOR);
                         } else {
                             mg_http_reply(c,
-                                        200,
-                                        "",
-                                        "<!DOCTYPE html>"
-                                        "<html>\n"
-                                        "<head>\n"
-                                        "<meta charset=\"UTF-8\" />\n"
-                                        "<meta property=\"og:type\" content=\"website\" />\n"
-                                        "<meta property=\"og:title\" content=\"%s\" />\n"
-                                        "<meta property=\"og:description\" content=\"A %d player cockatrice game.\" />\n"
-                                        "<meta property=\"og:image\" content=\"%s/img/logo.png\" />"
-                                        "<meta property=\"og:url\" content=\"%s\" />"
-                                        "<meta name=\"theme-color\" content=\"#004B4B\" />"
-                                        "%s\n"
-                                        "<title>Game %d (%d/%d)</title>\n"
-                                        "</head>\n"
-                                        "<body class=\"bg\">\n"
-                                        "<div class=\"grid-container\">\n"
-                                        "<div class=\"index\">\n"
-                                        "<div class=\"index-inner\">\n"
-                                        "<h1>%s</h1>\n</div>\n</div>\n"
-                                        "<div class=\"content\">"
-                                        "<div class=\"content-inner\">"
-                                        "<h1>%s</h1>\n"
-                                        "<h3>Game %d is in progress on server '%s (%s)'.</h3>\n"
-                                        "<h4>Current players are:</h4>\n"
-                                        "<ol>\n%s\n</ol>\n"
-                                        "%s\n<br>\n"
-                                        "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
-                                        "</div>\n</div>\n</div>\n</body>\n</html>",
-                                        g.gameName,
-                                        g.playerCount,
-                                        api->config.externURL,
-                                        api->config.externURL,
-                                        PAGE_CSS,
-                                        gameID,
-                                        players,
-                                        g.playerCount,
-                                        g.gameName,
-                                        PROG_NAME,
-                                        gameID,
-                                        api->config.cockatriceServer,
-                                        api->triceBot->roomName,
-                                        buff,
-                                        pdiMSG,
-                                        GITHUB_REPO,
-                                        VERSION_MAJOR,
-                                        VERSION_MINOR);
+                                          200,
+                                          "",
+                                          "<!DOCTYPE html>"
+                                          "<html>\n"
+                                          "<head>\n"
+                                          "<meta charset=\"UTF-8\" />\n"
+                                          "<meta property=\"og:type\" content=\"website\" />\n"
+                                          "<meta property=\"og:title\" content=\"%s\" />\n"
+                                          "<meta property=\"og:description\" content=\"A %d player cockatrice game.\" />\n"
+                                          "<meta property=\"og:image\" content=\"%s/img/logo.png\" />"
+                                          "<meta property=\"og:url\" content=\"%s\" />"
+                                          "<meta name=\"theme-color\" content=\"#004B4B\" />"
+                                          "%s\n"
+                                          "<title>Game %d (%d/%d)</title>\n"
+                                          "</head>\n"
+                                          "<body class=\"bg\">\n"
+                                          "<div class=\"grid-container\">\n"
+                                          "<div class=\"index\">\n"
+                                          "<div class=\"index-inner\">\n"
+                                          "<h1>%s</h1>\n</div>\n</div>\n"
+                                          "<div class=\"content\">"
+                                          "<div class=\"content-inner\">"
+                                          "<h1>%s</h1>\n"
+                                          "<h3>Game %d is in progress on server '%s (%s)'.</h3>\n"
+                                          "<h4>Current players are:</h4>\n"
+                                          "<ol>\n%s\n</ol>\n"
+                                          "%s\n<br>\n"
+                                          "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
+                                          "</div>\n</div>\n</div>\n</body>\n</html>",
+                                          g.gameName,
+                                          g.playerCount,
+                                          api->config.externURL,
+                                          api->config.externURL,
+                                          PAGE_CSS,
+                                          gameID,
+                                          players,
+                                          g.playerCount,
+                                          g.gameName,
+                                          PROG_NAME,
+                                          gameID,
+                                          api->config.cockatriceServer,
+                                          api->triceBot->roomName,
+                                          buff,
+                                          pdiMSG,
+                                          GITHUB_REPO,
+                                          VERSION_MAJOR,
+                                          VERSION_MINOR);
                         }
 
                         if (isPDI) {
@@ -1219,7 +1235,8 @@ static void eventHandler(struct mg_connection *c,
     (void) fn_data;
 }
 
-static void *pollingThread(void *apiIn) {
+static void *pollingThread(void *apiIn)
+{
     struct mg_mgr mgr;
     struct mg_connection *c;
     struct tb_apiServer *api = (struct tb_apiServer *) apiIn;
@@ -1253,7 +1270,8 @@ static void *pollingThread(void *apiIn) {
     pthread_exit(NULL);
 }
 
-int tb_startServer(struct tb_apiServer *api) {
+int tb_startServer(struct tb_apiServer *api)
+{
     pthread_mutex_lock(&api->bottleneck);
 
     if (api->running) {
@@ -1279,7 +1297,8 @@ int tb_startServer(struct tb_apiServer *api) {
     }
 }
 
-void tb_stopServer(struct tb_apiServer *api) {
+void tb_stopServer(struct tb_apiServer *api)
+{
     pthread_mutex_lock(&api->bottleneck);
     api->running = 0;
     pthread_mutex_unlock(&api->bottleneck);

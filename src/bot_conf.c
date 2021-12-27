@@ -10,7 +10,8 @@
 #define TOKEN_LENGTH 32
 #define HEX_BIT_MASK 0xF
 
-static void readProperty(char *line, int length, struct Config *config) {
+static void readProperty(char *line, int length, struct Config *config)
+{
     // Don't read comments which are lines starting with #
     if (length > 1) {
         if (line[0] == '#') {
@@ -66,80 +67,81 @@ static void readProperty(char *line, int length, struct Config *config) {
 #endif
 
 #if JOIN_ROOM_AUTOMATICALLY
-    if (strncmp("roomName", propertyStr, length) == 0) {
-        if (config->roomName != NULL) free(config->roomName);
-        config->roomName = valueStr;
-    } else
+        if (strncmp("roomName", propertyStr, length) == 0) {
+            if (config->roomName != NULL) free(config->roomName);
+            config->roomName = valueStr;
+        } else
 #endif
 
-    if (strncmp("serveraddress", propertyStr, length) == 0) {
-        if (config->cockatriceServer != NULL) free(config->cockatriceServer);
-        config->cockatriceServer = valueStr;
-    } else if (strncmp("authtoken", propertyStr, length) == 0) {
-        if (config->authToken != NULL) free(config->authToken);
-        config->authToken = valueStr;
-    } else if (strncmp("ratelimit", propertyStr, length) == 0) {
-        int temp = atoi(valueStr);
-        if (config->maxMessagesPerSecond == 0) {
-            printf("[ERROR]: Rate limit is not set a valid value\n");
-        } else {
-            config->maxMessagesPerSecond = temp;
-        }
-        free(valueStr);
-    } else if (strncmp("replayFolder", propertyStr, length) == 0) {
-        if (config->replayFolder != NULL) free(config->replayFolder);
-        config->replayFolder = valueStr;
+            if (strncmp("serveraddress", propertyStr, length) == 0) {
+                if (config->cockatriceServer != NULL) free(config->cockatriceServer);
+                config->cockatriceServer = valueStr;
+            } else if (strncmp("authtoken", propertyStr, length) == 0) {
+                if (config->authToken != NULL) free(config->authToken);
+                config->authToken = valueStr;
+            } else if (strncmp("ratelimit", propertyStr, length) == 0) {
+                int temp = atoi(valueStr);
+                if (config->maxMessagesPerSecond == 0) {
+                    printf("[ERROR]: Rate limit is not set a valid value\n");
+                } else {
+                    config->maxMessagesPerSecond = temp;
+                }
+                free(valueStr);
+            } else if (strncmp("replayFolder", propertyStr, length) == 0) {
+                if (config->replayFolder != NULL) free(config->replayFolder);
+                config->replayFolder = valueStr;
 
-        //Remove trailing slashes i,e:
-        //    test///// to test
-        //    test/test/ to test/test
-        for (int i = valueLen - 2, trailingSlashes = 1;
-             i >= 0 && trailingSlashes;
-             i--) {
-            if (config->replayFolder[i] == '/') {
-                config->replayFolder[i] = 0;
-            } else {
-                trailingSlashes = 0;
-            }
-        }
+                //Remove trailing slashes i,e:
+                //    test///// to test
+                //    test/test/ to test/test
+                for (int i = valueLen - 2, trailingSlashes = 1;
+                        i >= 0 && trailingSlashes;
+                        i--) {
+                    if (config->replayFolder[i] == '/') {
+                        config->replayFolder[i] = 0;
+                    } else {
+                        trailingSlashes = 0;
+                    }
+                }
 
-        // Warn the user that the location is absolute
-        // and they might be trying to write to /replays/
-        if (valueLen >= 1) {
-            if (config->replayFolder[0] == '/') {
-                printf("[WARNING]: Replay folder is an absolute location (%s)\n",
-                       config->replayFolder);
-            }
-        }
-    } else if (strncmp("clientID", propertyStr, length) == 0) {
-        if (config->clientID != NULL) free(config->clientID);
-        config->clientID = valueStr;
-    } else
+                // Warn the user that the location is absolute
+                // and they might be trying to write to /replays/
+                if (valueLen >= 1) {
+                    if (config->replayFolder[0] == '/') {
+                        printf("[WARNING]: Replay folder is an absolute location (%s)\n",
+                               config->replayFolder);
+                    }
+                }
+            } else if (strncmp("clientID", propertyStr, length) == 0) {
+                if (config->clientID != NULL) free(config->clientID);
+                config->clientID = valueStr;
+            } else
 
-    //API Server config
-    if (strncmp("certfile", propertyStr, length) == 0) {
-        if (config->cert != NULL) free(config->cert);
-        config->cert = valueStr;
-    } else if (strncmp("certkeyfile", propertyStr, length) == 0) {
-        if (config->certkey != NULL) free(config->certkey);
-        config->certkey = valueStr;
-    } else if (strncmp("bindAddr", propertyStr, length) == 0) {
-        if (config->bindAddr != NULL) free(config->bindAddr);
-        config->bindAddr = valueStr;
-    } else if (strncmp("externURL", propertyStr, length) == 0) {
-        config->externURL = valueStr;
-    }
+                //API Server config
+                if (strncmp("certfile", propertyStr, length) == 0) {
+                    if (config->cert != NULL) free(config->cert);
+                    config->cert = valueStr;
+                } else if (strncmp("certkeyfile", propertyStr, length) == 0) {
+                    if (config->certkey != NULL) free(config->certkey);
+                    config->certkey = valueStr;
+                } else if (strncmp("bindAddr", propertyStr, length) == 0) {
+                    if (config->bindAddr != NULL) free(config->bindAddr);
+                    config->bindAddr = valueStr;
+                } else if (strncmp("externURL", propertyStr, length) == 0) {
+                    config->externURL = valueStr;
+                }
 
     //Free string if not used
-    else {
-        free(valueStr);
-    }
+                else {
+                    free(valueStr);
+                }
 
     free(propertyStr);
 }
 
 //Grabbed from the mongoose source code because I am very lazy.
-static int toBase64(int c) {
+static int toBase64(int c)
+{
     if (c < 0) {
         return toBase64(-c);
     } else {
@@ -156,7 +158,8 @@ static int toBase64(int c) {
 }
 
 // Creates a new file with the arbitary settings, is not path safe
-void makeNewFile(char *filename) {
+void makeNewFile(char *filename)
+{
     // No file
     FILE * configFile = fopen(filename, "w+");
 
@@ -211,7 +214,8 @@ config->maxMessagesPerSecond = -1;\
 config->externURL = NULL;
 
 // Reads the configuration from a buffer: char *data, of length: int length
-void readConfFromBuffer(struct Config *config, char *data, int length) {
+void readConfFromBuffer(struct Config *config, char *data, int length)
+{
     INIT_CONFIG
 
     int lineStartPtr = 0, lineEndPtr = -1;
@@ -233,7 +237,8 @@ void readConfFromBuffer(struct Config *config, char *data, int length) {
  * Returns 0 if there was an error reading the file
  * Returns -1 if the file doesn't exist and was made
  */
-int readConf(struct Config *config, char *filename) {
+int readConf(struct Config *config, char *filename)
+{
     INIT_CONFIG
 
     if (access(filename, F_OK) == 0) {
@@ -268,7 +273,8 @@ int readConf(struct Config *config, char *filename) {
     }
 }
 
-void freeConf(struct Config *config) {
+void freeConf(struct Config *config)
+{
 #if LOGIN_AUTOMATICALLY
 
     if (config->cockatriceUsername != NULL) {

@@ -3,10 +3,10 @@
 
 namespace google
 {
-    namespace protobuf
-    {
-        class Message;
-    }
+namespace protobuf
+{
+class Message;
+}
 } // namespace google
 
 int getPbExtension(const ::google::protobuf::Message &message);

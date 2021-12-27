@@ -369,13 +369,13 @@ void test_update_pdi(struct Config config, struct game_info info, int expect_err
     request += STR("oldplayername=") + P1_NAME + endl;
     request += STR("newplayername=") + P1_NAME_2 + endl;
 
-		std::string resp = sendRequest(config.bindAddr + STR("/api/updateplayerinfo"), request);
+    std::string resp = sendRequest(config.bindAddr + STR("/api/updateplayerinfo"), request);
     if (expect_error) {
-    	  if ("success" == resp) fail("update pdi failed, expected error did not happen");
+        if ("success" == resp) fail("update pdi failed, expected error did not happen");
     } else {
-    	  if ("success" != resp) fail("update pdi failed as an error occurred");
-				
-				std::string new_status_pg = getRequest(config.bindAddr + STR("/") + STR(info.replayname));
+        if ("success" != resp) fail("update pdi failed as an error occurred");
+
+        std::string new_status_pg = getRequest(config.bindAddr + STR("/") + STR(info.replayname));
         if (new_status_pg.find(P1_NAME) != std::string::npos) fail("(pdi) name was not changed");
         if (new_status_pg.find(P1_NAME_2) == std::string::npos) fail("(pdi) name was changed wrongly");
     }
@@ -401,7 +401,7 @@ int test_api(struct Config config)
     test_end_game(config, info_test, 1);
     test_update_pdi(config, info_test, 1);
 
-		// Create test game with pdi then test the unique pdi endpoints
+    // Create test game with pdi then test the unique pdi endpoints
     struct game_info info_pdi = test_create_game(config, 1);
 
     printf("Sleeping 1.\n");
@@ -418,10 +418,10 @@ int test_api(struct Config config)
 
     // Test update methods for the game with pdi
     test_update_pdi(config, info_pdi, 0);
-    
+
     // Test disable pdi
-		
-		// Test end game
+
+    // Test end game
     test_end_game(config, info_pdi, 0);
 
     return 0;

@@ -16,9 +16,9 @@ struct playerDeckInfo {
 struct playerDeckInfo *initPlayerDeckInfoArr(int length);
 
 struct playerDeckInfo initPlayerDeckInfo(char **deckHash,
-                                         int deckCount,
-                                         char *playerName,
-                                         int isEmptySlot);
+        int deckCount,
+        char *playerName,
+        int isEmptySlot);
 
 void freePlayerDeckInfoArray(void* ptr);
 

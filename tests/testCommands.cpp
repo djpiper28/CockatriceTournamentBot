@@ -11,7 +11,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TestCommands);
 
 TestCommands::TestCommands () : CppUnit::TestCase("commands.h tests") {}
 
-void TestCommands::testInitAndFree() {    
+void TestCommands::testInitAndFree()
+{
     struct Config testConfig = {
         "username",
         "password",
@@ -27,7 +28,7 @@ void TestCommands::testInitAndFree() {
     };
     struct triceBot b;
     initBot(&b, testConfig);
-    
+
     initCommandList(&b);
     freeCommandList();
 }

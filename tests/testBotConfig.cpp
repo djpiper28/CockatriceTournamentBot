@@ -7,7 +7,8 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TestBotConfig);
 
-TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
+TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests")
+{
 
 }
 
@@ -148,13 +149,15 @@ TestBotConfig::TestBotConfig () : CppUnit::TestCase("bot_conf.h tests") {
 "test=\n"\
 "externURL=test"
 
-static void writeConfigFile(char *filename, char *data) {
+static void writeConfigFile(char *filename, char *data)
+{
     FILE *f = fopen(filename, "w+");
     fprintf(f, "%s", data);
     fclose(f);
 }
 
-void TestBotConfig::testReadConf() {
+void TestBotConfig::testReadConf()
+{
     struct Config config;
     writeConfigFile(TEST_ONE_FILENAME, TEST_ONE_CONTENT);
 
@@ -278,7 +281,7 @@ void TestBotConfig::testReadConf() {
     CPPUNIT_ASSERT(strcmp(config.externURL, TEST) == 0);
     CPPUNIT_ASSERT(config.maxMessagesPerSecond == 10);
     freeConf(&config);
-        
+
     // Test nine maks sure that when the value is empty it doesnt cause errors
     readConfFromBuffer(&config, TEST_NINE_CONTENT, strlen(TEST_NINE_CONTENT));
     // Assert all fields are set to test
@@ -298,7 +301,8 @@ void TestBotConfig::testReadConf() {
 }
 
 #define TEST_NEW_FILE "/tmp/test_file.conf"
-void TestBotConfig::testMakeNewConfFile() {
+void TestBotConfig::testMakeNewConfFile()
+{
     makeNewFile(TEST_NEW_FILE);
 
     struct Config config;

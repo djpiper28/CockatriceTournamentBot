@@ -3,7 +3,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-class TestCommands : public CppUnit::TestCase {
+class TestCommands : public CppUnit::TestCase
+{
     CPPUNIT_TEST_SUITE(TestCommands);
     CPPUNIT_TEST(testInitAndFree);
     CPPUNIT_TEST_SUITE_END();

@@ -5,8 +5,9 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TestTriceStructs);
 
-TestTriceStructs::TestTriceStructs () : CppUnit::TestCase("trice_structs.h tests") {
-    
+TestTriceStructs::TestTriceStructs () : CppUnit::TestCase("trice_structs.h tests")
+{
+
 }
 
 #define INIT_TRICE_BOT \
@@ -155,10 +156,11 @@ TEST_STATE_CHANGE_FN(onReplayDownload)
 set_##fn (TEST##fn, &b);\
 CPPUNIT_ASSERT(b.fn == TEST##fn);
 
-void TestTriceStructs::testTriceBotEventFunctionSetters() {
+void TestTriceStructs::testTriceBotEventFunctionSetters()
+{
     // Init trice bot struct
     INIT_TRICE_BOT
-    
+
     // Test each setter
     //Server events
     TEST_EVENT_FN_SETTER(onEventServerIdentifictaion)
@@ -175,12 +177,12 @@ void TestTriceStructs::testTriceBotEventFunctionSetters() {
     TEST_EVENT_FN_SETTER(onEventGameJoined)
     TEST_EVENT_FN_SETTER(onEventNotifyUser)
     TEST_EVENT_FN_SETTER(onEventReplayAdded)
-    
+
     //Room events
     TEST_EVENT_FN_SETTER(onEventJoinRoom)
     TEST_EVENT_FN_SETTER(onEventLeaveRoom)
     TEST_EVENT_FN_SETTER(onEventRoomSay)
-    
+
     //Game events
     TEST_EVENT_FN_SETTER(onGameEventJoin)
     TEST_EVENT_FN_SETTER(onGameEventLeave)
@@ -212,18 +214,18 @@ void TestTriceStructs::testTriceBotEventFunctionSetters() {
     TEST_EVENT_FN_SETTER(onGameEventStopDumpZone)
     TEST_EVENT_FN_SETTER(onGameEventChangeZoneProperties)
     TEST_EVENT_FN_SETTER(onGameEventReverseTurn)
-    
+
     //Game state changes
     TEST_EVENT_FN_SETTER(onGameStart)
     TEST_EVENT_FN_SETTER(onGameEnd)
-    
+
     //Setters for bot state updates
     TEST_EVENT_FN_SETTER(onBotDisconnect)
     TEST_EVENT_FN_SETTER(onBotConnect)
     TEST_EVENT_FN_SETTER(onBotConnectionError)
     TEST_EVENT_FN_SETTER(onBotLogin)
     TEST_EVENT_FN_SETTER(onReplayDownload)
-    
+
     freeBot(&b);
 }
 

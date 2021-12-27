@@ -122,7 +122,8 @@ if (event.HasExtension(type::ext)) {\
  * struct Config config -> bot configuration
  */
 void initBot(struct triceBot *b,
-             struct Config config) {
+             struct Config config)
+{
     memset(b, NULL, sizeof(struct triceBot));
 
     b->mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -208,13 +209,15 @@ void initBot(struct triceBot *b,
 /**
  * Check to see if the server should be pinged
  */
-int needsPing(long lastPingTime) {
+int needsPing(long lastPingTime)
+{
     return time(NULL) - lastPingTime >= PING_FREQUENCY;
 }
 
 static void pingCallback(struct triceBot *b,
                          const Response *resp,
-                         void *param) {
+                         void *param)
+{
     pthread_mutex_lock(&b->mutex);
     b->lastPingTime = time(NULL); // Ping every TIMEOUT with no msg received
     pthread_mutex_unlock(&b->mutex);
@@ -223,7 +226,8 @@ static void pingCallback(struct triceBot *b,
 /**
  * Queues a ping command
  */
-void sendPing(struct triceBot *b) {
+void sendPing(struct triceBot *b)
+{
     pthread_mutex_lock(&b->mutex);
     CommandContainer cont;
     SessionCommand *c = cont.add_session_command();
@@ -242,7 +246,8 @@ void sendPing(struct triceBot *b) {
  */
 void loginResponse(struct triceBot *b,
                    const Response *response,
-                   void *param) {
+                   void *param)
+{
     pthread_mutex_lock(&b->mutex);
 
     if (response != NULL) {
@@ -277,7 +282,8 @@ void loginResponse(struct triceBot *b,
 }
 
 //Login, login details are stored in b->config
-void sendLogin(struct triceBot *b) {
+void sendLogin(struct triceBot *b)
+{
     pthread_mutex_lock(&b->mutex);
 
     Command_Login cmdLogin;
@@ -314,7 +320,8 @@ void sendLogin(struct triceBot *b) {
  */
 void executeCallback(struct triceBot *b,
                      struct pendingCommand *cmd,
-                     const Response *response) {
+                     const Response *response)
+{
     if (cmd->callbackFunction != NULL) {
         cmd->callbackFunction(b, response, cmd->param);
     }
@@ -337,7 +344,8 @@ void executeCallback(struct triceBot *b,
  *
  * Returns 1 if chars were cleaned
  */
-static int cleanUpStringInput(char *str, int length) {
+static int cleanUpStringInput(char *str, int length)
+{
     int cleaned = 0;
 
     for (int i = 0; i < length - 1; i++) {
@@ -364,7 +372,8 @@ static int cleanUpStringInput(char *str, int length) {
 char *getReplayFileName(int gameID,
                         const char *gameNameUnfiltered,
                         int length,
-                        char *baseDIR) {
+                        char *baseDIR)
+{
     //Allow non-null terminated data to work
     char *gameNameCP = (char *) malloc(sizeof(char) * (length + 1));
     strncpy(gameNameCP, gameNameUnfiltered, length + 1);
@@ -392,7 +401,7 @@ char *getReplayFileName(int gameID,
             }
         } else if (gameNameCP[i] == '/' && i + 1 < length) {
             gameNameCP[i + 1] = (gameNameCP[i + 1] == '/') * '_'
-                              + (gameNameCP[i + 1] != '/') * gameNameCP[i + 1];
+                                + (gameNameCP[i + 1] != '/') * gameNameCP[i + 1];
         }
     }
 
@@ -417,7 +426,7 @@ char *getReplayFileName(int gameID,
     }
 
     char *tempFolderName = (char *) malloc(sizeof(char)
-                         * (tempFolderBaseLength + length + 2));
+                                           * (tempFolderBaseLength + length + 2));
 
     int lastSlash = -1;
 
@@ -433,24 +442,24 @@ char *getReplayFileName(int gameID,
 
             if (code == -1) {
                 printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
-                    baseDIR);
+                       baseDIR);
 
                 switch (errno) {
-                    case EACCES :
-                        printf("-> The parent directory does not allow write.\n");
-                        break;
+                case EACCES :
+                    printf("-> The parent directory does not allow write.\n");
+                    break;
 
-                    case EEXIST:
-                        printf("-> Pathname already exists.\n");
-                        break;
+                case EEXIST:
+                    printf("-> Pathname already exists.\n");
+                    break;
 
-                    case ENAMETOOLONG:
-                        printf("-> Pathname is too long.\n");
-                        break;
+                case ENAMETOOLONG:
+                    printf("-> Pathname is too long.\n");
+                    break;
 
-                    default:
-                        perror("-> Mkdir failed.\n");
-                        break;
+                default:
+                    perror("-> Mkdir failed.\n");
+                    break;
                 }
             } else {
                 printf("[INFO]: Made dir %s for replays.\n",
@@ -495,35 +504,35 @@ char *getReplayFileName(int gameID,
 
                         if (code == -1) {
                             printf("[ERROR]: Failed to created the folder %s while "
-                            "getting replay name ready.\n",
-                            tempFolderName);
+                                   "getting replay name ready.\n",
+                                   tempFolderName);
 
                             switch (errno) {
-                                case EACCES :
-                                    printf("-> The parent directory does not allow write.\n");
-                                    break;
+                            case EACCES :
+                                printf("-> The parent directory does not allow write.\n");
+                                break;
 
-                                case EEXIST:
-                                    printf("-> Pathname already exists.\n");
-                                    break;
+                            case EEXIST:
+                                printf("-> Pathname already exists.\n");
+                                break;
 
-                                case ENAMETOOLONG:
-                                    printf("-> Pathname is too long.\n");
-                                    break;
+                            case ENAMETOOLONG:
+                                printf("-> Pathname is too long.\n");
+                                break;
 
-                                default:
-                                    perror("-> Mkdir failed.\n");
-                                    break;
+                            default:
+                                perror("-> Mkdir failed.\n");
+                                break;
                             }
                         } else {
                             printf("[INFO]: Made dir %s for replays.\n",
-                                tempFolderName);
+                                   tempFolderName);
                         }
                     } else {
                         // Error message
                         printf("[ERROR]: Failed to created the folder %s while "
-                        "getting replay name ready.\n",
-                        tempFolderName);
+                               "getting replay name ready.\n",
+                               tempFolderName);
                     }
                 }
             }
@@ -568,7 +577,8 @@ char *getReplayFileName(int gameID,
  * Is subject to cockaspagheti
  */
 void replayResponseDownload(struct triceBot *b,
-                            const Response_ReplayDownload replay) {
+                            const Response_ReplayDownload replay)
+{
     int len = replay.replay_data().length();
     const char *replayData = replay.replay_data().c_str();
 
@@ -588,7 +598,8 @@ void replayResponseDownload(struct triceBot *b,
  * Is subject to cockaspagheti
  */
 void saveReplay(struct triceBot *b,
-                const GameReplay gameReplay) {
+                const GameReplay gameReplay)
+{
     long len = gameReplay.ByteSizeLong();
     char *replayData = (char*) malloc(sizeof(char) * len);
     char *fileName = (char *) malloc(sizeof(char) * BUFFER_LENGTH * 2);
@@ -639,7 +650,8 @@ void saveReplay(struct triceBot *b,
  * make it call a user defined function of OnServerMSG
  */
 void handleResponse(struct triceBot *b,
-                    ServerMessage *newServerMessage) {
+                    ServerMessage *newServerMessage)
+{
     //Response
     if (hasNext(&b->callbackQueue)) {
         const Response response = newServerMessage->response();
@@ -670,7 +682,8 @@ void handleResponse(struct triceBot *b,
  * Called when a room listed event is called
  */
 static void roomsListed(struct triceBot *b,
-                        Event_ListRooms listRooms) {
+                        Event_ListRooms listRooms)
+{
     pthread_mutex_lock(&b->mutex);
 
     if (b->magicRoomID == -1) {
@@ -744,7 +757,8 @@ static void roomsListed(struct triceBot *b,
 
 //Join the room in config
 void handleRoomEvent(struct triceBot *b,
-                     ServerMessage *newServerMessage) {
+                     ServerMessage *newServerMessage)
+{
     const RoomEvent event = newServerMessage->room_event();
 
     if (event.HasExtension(Event_JoinRoom::ext)) {
@@ -761,7 +775,8 @@ void handleRoomEvent(struct triceBot *b,
 
 void onReplayDownloadResponse(struct triceBot *b,
                               const Response *resp,
-                              void *param) {
+                              void *param)
+{
     // If resp is NULL the request timed out.
     if (resp == NULL || !resp->HasExtension(Response_ReplayDownload::ext)) {
         int replayID = *(int *) param;
@@ -798,7 +813,8 @@ void onReplayDownloadResponse(struct triceBot *b,
  * This is subject to cockspaghet tm
  */
 static void replayReady(struct triceBot *b,
-                        const Event_ReplayAdded replayAdded) {
+                        const Event_ReplayAdded replayAdded)
+{
     ServerInfo_ReplayMatch replays = replayAdded.match_info();
     int size = replays.replay_list_size();
 
@@ -828,7 +844,8 @@ static void replayReady(struct triceBot *b,
  * Called when a game event occurs
  */
 void handleGameEvent(struct triceBot *b,
-                     ServerMessage *newServerMessage) {
+                     ServerMessage *newServerMessage)
+{
     GameEventContainer gameEventContainer = newServerMessage->game_event_container();
 
     int id = gameEventContainer.game_id();
@@ -934,7 +951,7 @@ void handleGameEvent(struct triceBot *b,
             //Change player ping
             if (event.HasExtension(Event_PlayerPropertiesChanged::ext)) {
                 Event_PlayerPropertiesChanged ppcEvent = event.GetExtension(
-                    Event_PlayerPropertiesChanged::ext);
+                            Event_PlayerPropertiesChanged::ext);
 
                 if (ppcEvent.has_player_properties()) {
                     ServerInfo_PlayerProperties pp = ppcEvent.player_properties();
@@ -957,12 +974,12 @@ void handleGameEvent(struct triceBot *b,
 
                             if (!found) {
                                 addPlayer(&b->gameList,
-                                        currentGame,
-                                        pp.user_info().has_name() ?
-                                            "Uknown player.\0" :
-                                            pp.user_info().name().c_str(),
-                                        pp.player_id(),
-                                        pp.has_ping_seconds() ? pp.ping_seconds() : -2);
+                                          currentGame,
+                                          pp.user_info().has_name() ?
+                                          "Uknown player.\0" :
+                                          pp.user_info().name().c_str(),
+                                          pp.player_id(),
+                                          pp.has_ping_seconds() ? pp.ping_seconds() : -2);
                             }
                         }
                     }
@@ -971,66 +988,66 @@ void handleGameEvent(struct triceBot *b,
 
             //Game event call
             MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventJoin,
-                                                   Event_Join)
+                   Event_Join)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameClosed,
-                                                        Event_GameClosed)
+                   Event_GameClosed)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventHostChanged,
-                                                        Event_GameHostChanged)
+                   Event_GameHostChanged)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerKicked,
-                                                        Event_Kicked)
+                   Event_Kicked)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventPlayerPropertyChanged,
-                                                        Event_PlayerPropertiesChanged)
+                   Event_PlayerPropertiesChanged)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventGameSay,
-                                                        Event_GameSay)
+                   Event_GameSay)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateArrow,
-                                                        Event_CreateArrow)
+                   Event_CreateArrow)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDeleteArrow,
-                                                        Event_DeleteArrow)
+                   Event_DeleteArrow)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateCounter,
-                                                        Event_CreateCounter)
+                   Event_CreateCounter)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCounter,
-                                                        Event_SetCounter)
+                   Event_SetCounter)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDelCounter,
-                                                        Event_DelCounter)
+                   Event_DelCounter)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDrawCards,
-                                                        Event_DrawCards)
+                   Event_DrawCards)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRevealCards,
-                                                        Event_RevealCards)
+                   Event_RevealCards)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventShuffle,
-                                                        Event_Shuffle)
+                   Event_Shuffle)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventRollDie,
-                                                        Event_RollDie)
+                   Event_RollDie)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventMoveCard,
-                                                        Event_MoveCard)
+                   Event_MoveCard)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventFlipCard,
-                                                        Event_FlipCard)
+                   Event_FlipCard)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDestroyCard,
-                                                        Event_DestroyCard)
+                   Event_DestroyCard)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventAttachCard,
-                                                        Event_AttachCard)
+                   Event_AttachCard)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventCreateToken,
-                                                        Event_CreateToken)
+                   Event_CreateToken)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardAttr,
-                                                        Event_SetCardAttr)
+                   Event_SetCardAttr)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetCardCounter,
-                                                        Event_SetCardCounter)
+                   Event_SetCardCounter)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePlayer,
-                                                        Event_SetActivePlayer)
+                   Event_SetActivePlayer)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventSetActivePhase,
-                                                        Event_SetActivePhase)
+                   Event_SetActivePhase)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventDumpZone,
-                                                        Event_DumpZone)
+                   Event_DumpZone)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventStopDumpZone,
-                                                        Event_StopDumpZone)
+                   Event_StopDumpZone)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventChangeZoneProperties,
-                                                        Event_ChangeZoneProperties)
+                   Event_ChangeZoneProperties)
             else MACRO_CALL_FUNCTION_PTR_FOR_GAME_EVENT(onGameEventReverseTurn,
-                                                        Event_ReverseTurn)
+                   Event_ReverseTurn)
 
             //Free game. Call after event functions to stop seg fault
             if (event.HasExtension(Event_GameClosed::ext)) {
-                //Free game
-                removeGame(&b->gameList, currentGame);
+                    //Free game
+                    removeGame(&b->gameList, currentGame);
             }
         }
     }
@@ -1038,10 +1055,11 @@ void handleGameEvent(struct triceBot *b,
     freeGameCopy(g);
 }
 
-static void *freeCmdForGameCreate(void *param) {
+static void *freeCmdForGameCreate(void *param)
+{
     if (param != NULL) {
         struct gameCreateCallbackWaitParam *p = (struct gameCreateCallbackWaitParam *)
-        param;
+                                                param;
 
         pthread_mutex_lock(&p->mutex);
         void (*callbackFn)(struct gameCreateCallbackWaitParam *) =
@@ -1059,15 +1077,16 @@ static void *freeCmdForGameCreate(void *param) {
  * Called when a game is created
  */
 void handleGameCreate(struct triceBot *b,
-                      const Event_GameJoined gameCreate) {
+                      const Event_GameJoined gameCreate)
+{
     const char *gameName = gameCreate.game_info().description().c_str();
     struct pendingCommand *cmd = gameWithName(&b->callbackQueue,
-                                              gameName);
+                                 gameName);
 
     if (cmd != NULL) {
         //Game create callbackQueue
         struct gameCreateCallbackWaitParam *game = (struct gameCreateCallbackWaitParam *)
-            cmd->param;
+                cmd->param;
 
         //Check for null pointer
         if (game != NULL) {
@@ -1142,7 +1161,8 @@ sendCreateGameCommand(struct triceBot *b,
                       int onlyRegistered,
                       int onlyBuddies,
                       struct gameData gameData,
-                      void (*callbackFn)(struct gameCreateCallbackWaitParam *)) {
+                      void (*callbackFn)(struct gameCreateCallbackWaitParam *))
+{
     Command_CreateGame createGame;
     int gameNameLength = strnlen(gameName, BUFFER_LENGTH);
 
@@ -1200,7 +1220,8 @@ sendCreateGameCommand(struct triceBot *b,
  * The macros that are specific to this function are above ^^
  */
 void handleSessionEvent(struct triceBot *b,
-                        ServerMessage *newServerMessage) {
+                        ServerMessage *newServerMessage)
+{
     const SessionEvent event = newServerMessage->session_event();
 
     if (event.HasExtension(Event_ServerIdentification::ext)) {
@@ -1277,7 +1298,8 @@ void handleSessionEvent(struct triceBot *b,
 static void botEventHandler(struct mg_connection *c,
                             int ev,
                             void *ev_data,
-                            void *fn_data) {
+                            void *fn_data)
+{
     struct triceBot *b = (struct triceBot *) fn_data;
 
     if (ev == MG_EV_ERROR) {
@@ -1338,7 +1360,7 @@ static void botEventHandler(struct mg_connection *c,
             pthread_mutex_lock(&b->mutex);
             pthread_mutex_lock(&b->gameList.mutex);
             struct gameListNode *current = b->gameList.gamesHead,
-                                *old = NULL;
+                                     *old = NULL;
             pthread_mutex_unlock(&b->mutex);
 
             while (current != NULL) {
@@ -1453,7 +1475,8 @@ static void botEventHandler(struct mg_connection *c,
 /**
  * Run on a thread created by startBot
  */
-static void *botThread(void *in) {
+static void *botThread(void *in)
+{
     struct triceBot *b = (struct triceBot *) in;
 
     //Init data
@@ -1514,8 +1537,8 @@ static void *botThread(void *in) {
         free(b->roomName);
         b->roomName = NULL;
     }
-    
-    //Reset lists  
+
+    //Reset lists
     b->gameList.gamesHead = NULL;
     b->sendQueue.head = NULL;
     b->sendQueue.tail = NULL;
@@ -1534,7 +1557,8 @@ static void *botThread(void *in) {
 /**
  * Stops the bot
  */
-void stopBot(struct triceBot *b) {
+void stopBot(struct triceBot *b)
+{
     int flag = 0;
     pthread_mutex_lock(&b->mutex);
 
@@ -1553,7 +1577,8 @@ void stopBot(struct triceBot *b) {
 /**
  * struct triceBot *b -> pointer to the bot to free
  */
-void freeBot(struct triceBot *b) {
+void freeBot(struct triceBot *b)
+{
     pthread_mutex_lock(&b->mutex);
 
     if (b->running) {
@@ -1572,7 +1597,8 @@ void freeBot(struct triceBot *b) {
  * returns 1 if it succeeded
  * returns 0 if it had an error
  */
-int startBot(struct triceBot *b) {
+int startBot(struct triceBot *b)
+{
     pthread_mutex_lock(&b->mutex);
     b->running = 1;
     b->roomName = NULL;
@@ -1584,7 +1610,8 @@ int startBot(struct triceBot *b) {
 /**
  * should be called by the library host to shutdown the library
  */
-void killProtoufLib() {
+void killProtoufLib()
+{
     google::protobuf::ShutdownProtobufLibrary();
 }
 

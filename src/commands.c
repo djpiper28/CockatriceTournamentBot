@@ -11,7 +11,7 @@
 
 struct bot_command {
     char *commandName,
-    *commandDescription;
+         *commandDescription;
     void (*fnRoomSay) (struct triceBot *, Event_RoomSay);
     void (*fnGameSay) (struct triceBot *, struct game, Event_GameSay, int);
     void (*fnUserMsg) (struct triceBot *, Event_UserMessage);
@@ -35,7 +35,8 @@ NULL, NULL, &userMsgGithubLink}
 static struct bot_command commands[COMMAND_COUNT];
 static struct bot_command_list list;
 
-static void userMsgDiscordLink(struct triceBot *b, Event_UserMessage event) {
+static void userMsgDiscordLink(struct triceBot *b, Event_UserMessage event)
+{
     pthread_mutex_lock(&b->mutex);
 
     char msg[BUFFER_LENGTH];
@@ -57,7 +58,8 @@ static void userMsgDiscordLink(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_unlock(&b->mutex);
 }
 
-static void userMsgGithubLink(struct triceBot *b, Event_UserMessage event) {
+static void userMsgGithubLink(struct triceBot *b, Event_UserMessage event)
+{
     pthread_mutex_lock(&b->mutex);
 
     char msg[BUFFER_LENGTH];
@@ -79,7 +81,8 @@ static void userMsgGithubLink(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_unlock(&b->mutex);
 }
 
-void userMsgHelp(struct triceBot *b, Event_UserMessage event) {
+void userMsgHelp(struct triceBot *b, Event_UserMessage event)
+{
     pthread_mutex_lock(&b->mutex);
 
     Command_Message cmdMsg;
@@ -96,7 +99,8 @@ void userMsgHelp(struct triceBot *b, Event_UserMessage event) {
     pthread_mutex_unlock(&b->mutex);
 }
 
-void roomMsgHelp(struct triceBot *b, Event_RoomSay event) {
+void roomMsgHelp(struct triceBot *b, Event_RoomSay event)
+{
     pthread_mutex_lock(&b->mutex);
 
     Command_RoomSay cmdMsg;
@@ -112,7 +116,8 @@ void roomMsgHelp(struct triceBot *b, Event_RoomSay event) {
     pthread_mutex_unlock(&b->mutex);
 }
 
-static void execGameSayCommand(struct triceBot *b, struct game g, Event_GameSay event, int gameid) {
+static void execGameSayCommand(struct triceBot *b, struct game g, Event_GameSay event, int gameid)
+{
     const char *msg = event.message().c_str();
     if (msg[0] == list.commandPrefix) {
         for (size_t i = 0; i < list.commandsLength; i++) {
@@ -125,7 +130,8 @@ static void execGameSayCommand(struct triceBot *b, struct game g, Event_GameSay 
     }
 }
 
-static void execRoomSayCommand(struct triceBot *b, Event_RoomSay event) {
+static void execRoomSayCommand(struct triceBot *b, Event_RoomSay event)
+{
     const char *msg = event.message().c_str();
     if (msg[0] == list.commandPrefix) {
         for (size_t i = 0; i < list.commandsLength; i++) {
@@ -138,7 +144,8 @@ static void execRoomSayCommand(struct triceBot *b, Event_RoomSay event) {
     }
 }
 
-static void execUserMsgCommand(struct triceBot *b, Event_UserMessage event) {
+static void execUserMsgCommand(struct triceBot *b, Event_UserMessage event)
+{
     const char *msg = event.message().c_str();
     if (msg[0] == list.commandPrefix) {
         for (size_t i = 0; i < list.commandsLength; i++) {
@@ -152,7 +159,8 @@ static void execUserMsgCommand(struct triceBot *b, Event_UserMessage event) {
 }
 
 #define TMP_BUFFER_LENGTH 1024
-void initCommandList(struct triceBot* b) {
+void initCommandList(struct triceBot* b)
+{
     struct bot_command_list l = {'!',
         NULL,
         commands,
@@ -195,7 +203,8 @@ void initCommandList(struct triceBot* b) {
     set_onEventUserMessage(&execUserMsgCommand, b);
 }
 
-void freeCommandList() {
+void freeCommandList()
+{
     if (list.helpMessage != NULL) {
         free(list.helpMessage);
     }

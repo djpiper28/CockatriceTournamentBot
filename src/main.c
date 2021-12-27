@@ -24,7 +24,8 @@ struct tournamentBot {
     int running;
 };
 
-void stopAll(struct tournamentBot *bot) {
+void stopAll(struct tournamentBot *bot)
+{
     printf("[INFO]: Stopping bot\n");
 
     bot->running = 0;
@@ -119,7 +120,8 @@ MACRO_DEBUG_FOR_STATE_CHANGE(onReplayDownload)
 
 #define MACRO_DEBUG_FOR_EVENT_CALL(fn) set_##fn(&DebugFor##fn, b);
 
-void addDebugFunctions(struct triceBot *b) {
+void addDebugFunctions(struct triceBot *b)
+{
     MACRO_DEBUG_FOR_EVENT_CALL(onEventServerIdentifictaion)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventServerCompleteList)
     MACRO_DEBUG_FOR_EVENT_CALL(onEventServerMessage)
@@ -151,17 +153,18 @@ void addDebugFunctions(struct triceBot *b) {
 #endif
 
 int baseLen = strlen("Player @ was kicked, as they were not expected in this "
-"game. This action was taken automatically. "
-"If you do not think you should have been kicked checked "
-"your cockatrice name was put into the bot correctly. "
-"Then contact your tournament organiser (they can disable "
-"this check), finally if that doesn't help please raise an "
-"issue at:  if this was an error. Expected players: ") + strlen(GITHUB_REPO);
+                     "game. This action was taken automatically. "
+                     "If you do not think you should have been kicked checked "
+                     "your cockatrice name was put into the bot correctly. "
+                     "Then contact your tournament organiser (they can disable "
+                     "this check), finally if that doesn't help please raise an "
+                     "issue at:  if this was an error. Expected players: ") + strlen(GITHUB_REPO);
 
 void playerJoin(struct triceBot *b,
                 struct game g,
                 Event_Join event,
-                int pid) {
+                int pid)
+{
     // Get player deck info
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
     if (pdi != NULL && event.has_player_properties()) {
@@ -175,7 +178,7 @@ void playerJoin(struct triceBot *b,
             // If they are not then kick them
             if (!allowed) {
                 char *messageBuffer = (char *) malloc(sizeof(char) *
-                    (baseLen + (1 + g.playerCount) * (PLAYER_NAME_LENGTH + 1)));
+                                                      (baseLen + (1 + g.playerCount) * (PLAYER_NAME_LENGTH + 1)));
                 snprintf(messageBuffer,
                          512,
                          "Player @%s was kicked, as they were not expected in this "
@@ -202,7 +205,7 @@ void playerJoin(struct triceBot *b,
                 CommandContainer cont;
                 GameCommand *gc = cont.add_game_command();
                 gc->MutableExtension(Command_GameSay::ext)
-                    ->CopyFrom(gameSayCmd);
+                ->CopyFrom(gameSayCmd);
 
                 struct pendingCommand *cmd = prepCmd(b,
                                                      cont,
@@ -218,7 +221,7 @@ void playerJoin(struct triceBot *b,
                 CommandContainer cont2;
                 GameCommand *gc2 = cont2.add_game_command();
                 gc2->MutableExtension(Command_KickFromGame::ext)
-                    ->CopyFrom(kickCommand);
+                ->CopyFrom(kickCommand);
 
                 cmd = prepCmd(b,
                               cont2,
@@ -234,7 +237,8 @@ void playerJoin(struct triceBot *b,
 void playerLeave(struct triceBot *b,
                  struct game g,
                  Event_Leave event,
-                 int pid) {
+                 int pid)
+{
     for (int i = 0; i < g.playerCount; i++) {
         if(g.playerArr[i].playerID == pid) {
             clearPlayerSlot(g.playerArr[i].playerID, g);
@@ -245,7 +249,8 @@ void playerLeave(struct triceBot *b,
 void playerPropertyChange(struct triceBot *b,
                           struct game g,
                           Event_PlayerPropertiesChanged event,
-                          int pid) {
+                          int pid)
+{
     struct playerDeckInfo *pdi = (struct playerDeckInfo *) g.gameData.gameDataPtr;
     if (pdi != NULL && event.has_player_properties() && pid != -1) {
         ServerInfo_PlayerProperties pp = event.player_properties();
@@ -284,11 +289,11 @@ void playerPropertyChange(struct triceBot *b,
                              deckHash);
                 } else {
                     snprintf(messageBuffer,
-                            512,
-                            "@%s, you loaded a deck with hash '%s', which is not "
-                            "expected. Please load a deck with of these hashes: ",
-                            g.playerArr[plrArrayIndex].playerName,
-                            deckHash);
+                             512,
+                             "@%s, you loaded a deck with hash '%s', which is not "
+                             "expected. Please load a deck with of these hashes: ",
+                             g.playerArr[plrArrayIndex].playerName,
+                             deckHash);
                 }
 
                 printf("[INFO]: Player %s loaded an invalid deck.\n",
@@ -305,7 +310,7 @@ void playerPropertyChange(struct triceBot *b,
                 CommandContainer cont;
                 GameCommand *gc = cont.add_game_command();
                 gc->MutableExtension(Command_GameSay::ext)
-                    ->CopyFrom(gameSayCmd);
+                ->CopyFrom(gameSayCmd);
 
                 struct pendingCommand *cmd = prepCmd(b,
                                                      cont,
@@ -322,10 +327,12 @@ void playerPropertyChange(struct triceBot *b,
 
 void gameEndCallback(struct triceBot *b,
                      const Response *r,
-                     void *param) {
+                     void *param)
+{
     int id = *(int *) param;
     if (r->has_response_code()) {
-        if (r->response_code() == Response::RespOk) {;
+        if (r->response_code() == Response::RespOk) {
+            ;
             pthread_mutex_lock(&b->gameList.mutex);
 
             struct game *g = NULL;
@@ -352,7 +359,8 @@ void gameEndCallback(struct triceBot *b,
 }
 
 void onGameEnd(struct triceBot *b,
-               struct game g) {
+               struct game g)
+{
     pthread_mutex_lock(&b->mutex);
     int ID = b->magicRoomID;
     pthread_mutex_unlock(&b->mutex);
@@ -372,12 +380,14 @@ void onGameEnd(struct triceBot *b,
     enq(cmd, &b->sendQueue);
 }
 
-void botDisconnect(struct triceBot *b) {
+void botDisconnect(struct triceBot *b)
+{
     printf("[INFO]: The bot disconnected and will restart.\n");
     startBot(b);
 }
 
-void botConnect(struct triceBot *b) {
+void botConnect(struct triceBot *b)
+{
     printf("[INFO]: The bot has successfully connected to the server and will finish starting.\n");
 }
 
@@ -385,7 +395,8 @@ void botConnect(struct triceBot *b) {
 #ifndef MAIN_FUNC
 #define MAIN_FUNC main
 #endif
-int MAIN_FUNC(int argc, char * args[]) {
+int MAIN_FUNC(int argc, char * args[])
+{
     printf("[INFO]: %s\n-> by djpiper28 see %s for git repo.\n",
            PROG_NAME,
            GITHUB_REPO);

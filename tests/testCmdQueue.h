@@ -3,7 +3,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-class TestCmdQueue : public CppUnit::TestCase {
+class TestCmdQueue : public CppUnit::TestCase
+{
     CPPUNIT_TEST_SUITE(TestCmdQueue);
     CPPUNIT_TEST(testInitAndFree);
     CPPUNIT_TEST(testQueueOps);
