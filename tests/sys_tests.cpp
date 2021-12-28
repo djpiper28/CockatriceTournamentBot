@@ -381,6 +381,34 @@ void test_update_pdi(struct Config config, struct game_info info, int expect_err
     }
 }
 
+void test_game_status_page(struct Config config, struct game_info info)
+{
+    std::string get_status_game = getRequest(STR(config.bindAddr) + STR("/") + STR(info.replayname));
+    if (get_status_game.find(GAME_NAME) == std::string::npos)
+        fail("Failed to get game status for game with pdi");
+
+    if (get_status_game.find(P1_NAME) == std::string::npos) fail("p1 name not found");
+    if (get_status_game.find(P1_DECK_1) == std::string::npos) fail("p1 deck not found");
+
+    if (get_status_game.find(P2_NAME) == std::string::npos) fail("p2 name not found");
+    if (get_status_game.find(P2_DECK_1) == std::string::npos) fail("p2 hash 1 not found");
+    if (get_status_game.find(P2_DECK_2) == std::string::npos) fail("p2 hash 2 not found");
+}
+
+void test_disable_pdi(struct Config config, struct game_info info)
+{
+    std::string url = STR(config.bindAddr) + STR("/api/disableplayerdeckverification");
+    std::string data = STR("authtoken=") + STR(config.authToken) + endl;
+    data += STR("gameid=") + std::to_string(info.gameid) + endl;
+
+    std::string resp = sendRequest(url, data);
+    if (resp != "success") fail("failed to disable pdi");
+
+    std::string get_status_game = getRequest(STR(config.bindAddr) + STR("/") + STR(info.replayname));
+    if (get_status_game.find(GAME_NAME) == std::string::npos)
+        fail("Failed to get game status for game with pdi after disabling it");
+}
+
 int test_api(struct Config config)
 {
     // Create test game with no pdi then close it
@@ -405,21 +433,12 @@ int test_api(struct Config config)
     struct game_info info_pdi = test_create_game(config, 1);
 
     printf("Sleeping 1.\n");
-    get_status_game = getRequest(base_url + STR("/") + STR(info_pdi.replayname));
-    if (get_status_game.find(GAME_NAME) == std::string::npos)
-        fail("Failed to get game status for game with pdi");
-
-    if (get_status_game.find(P1_NAME) == std::string::npos) fail("p1 name not found");
-    if (get_status_game.find(P1_DECK_1) == std::string::npos) fail("p1 deck not found");
-
-    if (get_status_game.find(P2_NAME) == std::string::npos) fail("p2 name not found");
-    if (get_status_game.find(P2_DECK_1) == std::string::npos) fail("p2 hash 1 not found");
-    if (get_status_game.find(P2_DECK_2) == std::string::npos) fail("p2 hash 2 not found");
-
     // Test update methods for the game with pdi
+    test_game_status_page(config, info_pdi);
     test_update_pdi(config, info_pdi, 0);
 
     // Test disable pdi
+    test_disable_pdi(config, info_pdi);
 
     // Test end game
     test_end_game(config, info_pdi, 0);
