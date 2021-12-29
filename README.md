@@ -137,52 +137,12 @@ of `3` to get some verbose mongoose logs.
 (because I can)
 [![commits](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/commits.svg)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
 
-### Code Styling
-Where possible, code should be ISO C with exceptions for protobuf or cppunit
-library binds.
-
-#### Indentation And New Lines
- - Indentation should be with spaces not tabs (4 spaces).
- - Functions should have each arg on separate lines that are indented to the function name's end.
-i.e:
-```c
-sampleFunction(argOne,
-               argTwo);
-```
- - Structs should be indented to one level worth. 
- - When two or more variables in a struct have the same type they should be defined on separate lines.
-i.e:
-```c
-struct a = {
-    int a;
-    char *b,
-          c;
-};
-```
-
 #### Tests
 Tests are written in mostly C but use the cppunit library as needed with
 classes named in camelCase. Tests are compiled by automatically and can be
 ran with `ctest` or `./CockatriceTournamentBotTests`.
 
 [![tests](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/sunburst.svg)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
-
-#### Compiler Directives
- - All defines should be named in SCREAMING_SNAKE_CASE
- - All compiler directives should be at the top of the code if possible
- - The `#ifndef #define` should be used to guard against multiple header inclusions
-
-#### Naming Conventions
- - camelCase for function names and variable names
- - PascalCase for struct names
- - snake_case for file cxx file names
- - camelCase for python file names
-
-#### Comments
- - Please add comments
-
-#### Constants
- - #define them please as `const` is cringe
 
 ## TODO:
 - allow multi-room gaming
