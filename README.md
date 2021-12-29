@@ -132,12 +132,11 @@ issue, then (optional) run with a debugger and get the full backtrace of the
 program. Make sure that the program is called with an argument
 of `3` to get some verbose mongoose logs.
 
-## Contributing
-#### Commits and Code Coverage Graph
+## Commits and Code Coverage Graph
 (because I can)
 [![commits](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graphs/commits.svg)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
 
-#### Tests
+### Tests
 Tests are written in mostly C but use the cppunit library as needed with
 classes named in camelCase. Tests are compiled by automatically and can be
 ran with `ctest` or `./CockatriceTournamentBotTests`.
