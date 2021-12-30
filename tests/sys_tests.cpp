@@ -275,13 +275,13 @@ struct game_info {
     std::string replayname;
 };
 
-struct game_info test_create_game(struct Config config, int pdi)
+struct game_info test_create_game(struct Config config, int pdi, std::string password)
 {
     std::string api_request = STR("authtoken=") + config.authToken;
     api_request += endl;
     api_request += STR("gamename=") + GAME_NAME;
     api_request += endl;
-    api_request += STR("password=") + PASSWORD;
+    api_request += STR("password=") + password;
     api_request += endl;
     api_request += STR("playerCount=2");
     api_request += endl;
@@ -412,7 +412,7 @@ void test_disable_pdi(struct Config config, struct game_info info)
 int test_api(struct Config config)
 {
     // Create test game with no pdi then close it
-    struct game_info info_no_pdi = test_create_game(config, 0);
+    struct game_info info_no_pdi = test_create_game(config, 0, PASSWORD);
 
     printf("Sleeping 1.\n");
     sleep(1);
@@ -430,7 +430,7 @@ int test_api(struct Config config)
     test_update_pdi(config, info_test, 1);
 
     // Create test game with pdi then test the unique pdi endpoints
-    struct game_info info_pdi = test_create_game(config, 1);
+    struct game_info info_pdi = test_create_game(config, 1, PASSWORD);
 
     printf("Sleeping 1.\n");
     // Test update methods for the game with pdi
@@ -442,6 +442,10 @@ int test_api(struct Config config)
 
     // Test end game
     test_end_game(config, info_pdi, 0);
+
+    // Test empty passwords
+    struct game_info info_no_pwd = test_create_game(config, 0, std::string(""));
+    test_end_game(config, info_no_pwd, 0);
 
     return 0;
 }
