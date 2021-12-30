@@ -4,9 +4,10 @@ cmake_minimum_required(VERSION 3.12)
 set(VERSION_API 1)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
+set(VERSION "${VERSION_API}.${VERSION_MAJOR}.${VERSION_MINOR}")
 
 # set the project name
-project(CockatriceTournamentBot VERSION "${VERSION_API}.${VERSION_MAJOR}.${VERSION_MINOR}")
+project(CockatriceTournamentBot VERSION ${VERSION})
 set(GITHUB_REPO "https://www.github.com/djpiper28/CockatriceTournamentBot")
 
 # specify the C++ standard
