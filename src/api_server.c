@@ -818,8 +818,8 @@ static void eventHandler(struct mg_connection *c,
                               GITHUB_REPO);
             } else if (mg_http_match_uri(hm, "/api/version/")
                        || mg_http_match_uri(hm, "/api/version")) {
-                mg_http_reply(c, 200, "", "v%d.%d",
-                              VERSION_MAJOR, VERSION_MINOR);
+                mg_http_reply(c, 200, "", "%s",
+                              VERSION);
             }
         //Check message is short enough for the api to care about
             else if (hm->body.len > MAX_MSG_LENGTH_BYTES) {
@@ -1059,7 +1059,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<h3>Game %d is in progress on server '%s (%s)'.</h3>\n"
                                           "<h4>The game is currently empty</h4>\n"
                                           "%s\n<br>\n"
-                                          "<a href=\"%s\">Github Repo</a> | Version v%d.%d\n"
+                                          "<a href=\"%s\">Github Repo</a> | Version %s\n"
                                           "</div>\n</div>\n</div>\n</body>\n</html>",
                                           g.gameName,
                                           g.playerCount,
@@ -1076,8 +1076,7 @@ static void eventHandler(struct mg_connection *c,
                                           api->triceBot->roomName,
                                           pdiMSG,
                                           GITHUB_REPO,
-                                          VERSION_MAJOR,
-                                          VERSION_MINOR);
+                                          VERSION);
                         } else {
                             mg_http_reply(c,
                                           200,
@@ -1107,7 +1106,7 @@ static void eventHandler(struct mg_connection *c,
                                           "<h4>Current players are:</h4>\n"
                                           "<ol>\n%s\n</ol>\n"
                                           "%s\n<br>\n"
-                                          "<a href=\"%s\">Github Repo</a> | Version v%d.%d"
+                                          "<a href=\"%s\">Github Repo</a> | Version %s"
                                           "</div>\n</div>\n</div>\n</body>\n</html>",
                                           g.gameName,
                                           g.playerCount,
@@ -1125,8 +1124,7 @@ static void eventHandler(struct mg_connection *c,
                                           buff,
                                           pdiMSG,
                                           GITHUB_REPO,
-                                          VERSION_MAJOR,
-                                          VERSION_MINOR);
+                                          VERSION);
                         }
 
                         if (isPDI) {

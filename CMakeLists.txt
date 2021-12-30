@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.12)
 
+# set version
+set(VERSION_API 1)
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 0)
+
 # set the project name
-project(CockatriceTournamentBot)
-set(REPO_URL "https://github.com/djpiper28/CockatriceTournamentBot")
+project(CockatriceTournamentBot VERSION "${VERSION_API}.${VERSION_MAJOR}.${VERSION_MINOR}")
+set(GITHUB_REPO "https://www.github.com/djpiper28/CockatriceTournamentBot")
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)
@@ -17,6 +22,40 @@ set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
+# pre build
+message(STATUS "Building ${CMAKE_PROJECT_NAME}")
+message(STATUS "Git repo: ${GITHUB_REPO}")
+message(STATUS "Build type is ${CMAKE_BUILD_TYPE} for version ${CMAKE_PROJECT_VERSION}")
+
+# Get the git branch
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+  COMMAND git log -1 --format=%h
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
+add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
+
+add_definitions("-DVERSION=\"${VERSION} (${GIT_COMMIT_HASH}@${GIT_BRANCH})\"")
+add_definitions("-DOS=\"${CMAKE_SYSTEM_NAME}\"")
+add_definitions("-DGITHUB_REPO=\"${REPO_URL}\"")
+add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT_HASH}\"")
+add_definitions("-DGIT_BRANCH=\"${GIT_BRANCH}\"")
+add_definitions("-DVERSION_API=${VERSION_API}")
+add_definitions("-DVERSION_MAJOR=${VERSION_MAJOR}")
+add_definitions("-DVERSION_MINOR=${VERISON_MINOR}")
+
+# tests
 if (CMAKE_BUILD_TYPE STREQUAL "TEST")
     include(CodeCoverage)
 
