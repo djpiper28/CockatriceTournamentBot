@@ -573,14 +573,14 @@ char *getReplayFileName(int gameID,
 
 struct replayInfo {
     struct triceBot *b;
-    const Response_ReplayDownload replay;
+    Response_ReplayDownload *replay;
 };
 
 void *threadSaveReplay(void *info) {
     struct replayInfo *rInfo = (struct replayInfo *) info;
     
     struct triceBot *b = rInfo->b;
-    const Response_ReplayDownload replay = rInfo->replay;
+    Response_ReplayDownload replay = *rInfo->replay;
     
     int len = replay.replay_data().length();
     const char *replayData = replay.replay_data().c_str();
@@ -590,6 +590,7 @@ void *threadSaveReplay(void *info) {
         saveReplay(b, gameReplay);
     }
     
+    delete(rInfo->replay);
     free(info);
     pthread_exit(NULL);
 }
@@ -604,12 +605,15 @@ void replayResponseDownload(struct triceBot *b,
 {
     pthread_t replaySaveThread;
     struct replayInfo *rInfo = (struct replayInfo *) malloc(sizeof(struct replayInfo));
-    rInfo->b = b;
-    rInfo->replay = replay;
     
     if (rInfo != NULL) {
-        if (pthread_create(&replaySaveThread, NULL, threadSaveReplay, (void *) rInfo) != 0) {
+        rInfo->b = b;
+        rInfo->replay = new Response_ReplayDownload(replay);
+        if (rInfo->replay == NULL) {
+            free(rInfo);
+        } else if (pthread_create(&replaySaveThread, NULL, threadSaveReplay, (void *) rInfo) != 0) {
             printf("[ERROR]: Failed to start thread to save the replay.\n");
+            delete(rInfo->replay);
             free(rInfo);
         }
     }
