@@ -812,9 +812,10 @@ static void eventHandler(struct mg_connection *c,
             } else if (mg_http_match_uri(hm, "/img/**")) {
                 struct mg_http_serve_opts opts = {.root_dir = "static"};   // Serve the static directory
                 mg_http_serve_dir(c, hm, &opts);
-            } else if (mg_http_match_uri(hm, "/github")) {
+            } else if (mg_http_match_uri(hm, "/github")
+                        || mg_http_match_uri(hm, "/github/")) {
                 mg_http_reply(c, 301, "",
-                              "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />",
+                              "<meta http-equiv=\"refresh\" content=\"0; URL=\"%s\" />",
                               GITHUB_REPO);
             } else if (mg_http_match_uri(hm, "/api/version/")
                        || mg_http_match_uri(hm, "/api/version")) {
