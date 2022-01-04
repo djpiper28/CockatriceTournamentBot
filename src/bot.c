@@ -604,6 +604,8 @@ void replayResponseDownload(struct triceBot *b,
 {
     pthread_t replaySaveThread;
     struct replayInfo *rInfo = (struct replayInfo *) malloc(sizeof(struct replayInfo));
+    rInfo->b = b;
+    rInfo->replay = replay;
     
     if (rInfo != NULL) {
         if (pthread_create(&replaySaveThread, NULL, threadSaveReplay, (void *) rInfo) != 0) {
