@@ -592,7 +592,7 @@ void *threadSaveReplay(void *info) {
     
     delete(rInfo->replay);
     free(info);
-    pthread_exit(NULL);
+    pthread_detach(pthread_self());
 }
 
 /**
