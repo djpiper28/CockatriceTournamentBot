@@ -571,6 +571,29 @@ char *getReplayFileName(int gameID,
     return replayName;
 }
 
+struct replayInfo {
+    struct triceBot *b;
+    const Response_ReplayDownload replay;
+};
+
+void *threadSaveReplay(void *info) {
+    struct replayInfo *rInfo = (struct replayInfo *) info;
+    
+    struct triceBot *b = rInfo->b;
+    const Response_ReplayDownload replay = rInfo->replay;
+    
+    int len = replay.replay_data().length();
+    const char *replayData = replay.replay_data().c_str();
+    
+    GameReplay gameReplay;
+    if (gameReplay.ParseFromArray(replayData, len)) {
+        saveReplay(b, gameReplay);
+    }
+    
+    free(info);
+    pthread_exit(NULL);
+}
+
 /**
  * Downloads a replay to ./replays/ use getReplayFileName to get the URI
  * -> Fails silently
@@ -579,15 +602,13 @@ char *getReplayFileName(int gameID,
 void replayResponseDownload(struct triceBot *b,
                             const Response_ReplayDownload replay)
 {
-    int len = replay.replay_data().length();
-    const char *replayData = replay.replay_data().c_str();
-
-    GameReplay gameReplay;
-    if (gameReplay.ParseFromArray(replayData, len)) {
-        // Save the replay in another process
-        if (fork() == 0) {
-            saveReplay(b, gameReplay);
-            _exit(0);
+    pthread_t replaySaveThread;
+    struct replayInfo *rInfo = (struct replayInfo *) malloc(sizeof(struct replayInfo));
+    
+    if (rInfo != NULL) {
+        if (pthread_create(&replaySaveThread, NULL, threadSaveReplay, (void *) rInfo) != 0) {
+            printf("[ERROR]: Failed to start thread to save the replay.\n");
+            free(rInfo);
         }
     }
 }
