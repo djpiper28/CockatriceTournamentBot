@@ -49,7 +49,7 @@ add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
 add_definitions("-DVERSION=\"${VERSION} (${GIT_COMMIT_HASH}@${GIT_BRANCH})\"")
 add_definitions("-DOS=\"${CMAKE_SYSTEM_NAME}\"")
-add_definitions("-DGITHUB_REPO=\"${REPO_URL}\"")
+add_definitions("-DGITHUB_REPO=\"${GITHUB_REPO}\"")
 add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT_HASH}\"")
 add_definitions("-DGIT_BRANCH=\"${GIT_BRANCH}\"")
 add_definitions("-DVERSION_API=${VERSION_API}")
