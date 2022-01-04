@@ -815,7 +815,7 @@ static void eventHandler(struct mg_connection *c,
             } else if (mg_http_match_uri(hm, "/github")
                         || mg_http_match_uri(hm, "/github/")) {
                 mg_http_reply(c, 301, "",
-                              "<meta http-equiv=\"refresh\" content=\"0; URL=\"%s\" />",
+                              "<meta http-equiv=\"refresh\" content=\"0; URL=%s\" />",
                               GITHUB_REPO);
             } else if (mg_http_match_uri(hm, "/api/version/")
                        || mg_http_match_uri(hm, "/api/version")) {
