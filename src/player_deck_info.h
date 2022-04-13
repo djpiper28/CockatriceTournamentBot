@@ -8,7 +8,7 @@
 #define MAX_DECKS 10
 
 struct playerDeckInfo {
-    char deckHash[DECK_HASH_LENGTH][MAX_DECKS];
+    char deckHash[MAX_DECKS][DECK_HASH_LENGTH];
     char playerName[PLAYER_NAME_LENGTH];
     int isEmptySlot, playerUsingSlot, deckCount;
 };

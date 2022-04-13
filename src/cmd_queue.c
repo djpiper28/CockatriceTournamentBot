@@ -305,7 +305,7 @@ struct pendingCommand *prepCmd(struct triceBot *b,
 */
 struct pendingCommand *prepEmptyCmd(struct triceBot *b)
 {
-    CommandContainer cont;
+    CommandContainer cont; // Ignore the cppcheck warning
     return prepCmd(b, cont, -1, -1);
 }
 
