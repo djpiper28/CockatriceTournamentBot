@@ -1,7 +1,7 @@
 #ifndef GAMESTRUCT_
 #define GAMESTRUCT_
 #include "game_struct.h"
-
+#include "logger.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,7 +41,7 @@ int addPlayer(struct gameList *gl,
             g->playerArr[i] = p;
             done = 1;
 
-            printf("[INFO]: Player %s joined game %d.\n",
+            lprintf(LOG_INFO, "Player %s joined game %d.\n",
                    playerNameCP,
                    g->gameID);
         }
@@ -68,7 +68,7 @@ int removePlayer(struct gameList *gl,
         struct player *p = &g->playerArr[i];
 
         if (p->playerName != NULL && p->playerID == playerID) {
-            printf("[INFO]: Player %s left game %d.\n",
+            lprintf(LOG_INFO, "Player %s left game %d.\n",
                    p->playerName,
                    g->gameID);
 
@@ -344,7 +344,7 @@ void addGame(struct gameList *g, struct game *gamePointer)
         next->nextGame = NULL;
         current->nextGame = next;
 
-        printf("[INFO]: Joined game %d.\n", gamePointer->gameID);
+        lprintf(LOG_INFO, "Joined game %d.\n", gamePointer->gameID);
     }
 
     pthread_mutex_unlock(&g->mutex);

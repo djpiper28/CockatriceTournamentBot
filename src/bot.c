@@ -18,6 +18,7 @@
 #include "cmd_queue.h"
 #include "trice_structs.h"
 #include "bot_c_flags.h"
+#include "logger.h"
 
 //Pb imports
 #include "game_replay.pb.h"
@@ -379,7 +380,7 @@ char *getReplayFileName(int gameID,
     strncpy(gameNameCP, gameNameUnfiltered, length + 1);
 
     if (cleanUpStringInput(gameNameCP, length + 1)) {
-        printf("[WARNING]: A tournament with unprintable chars in its name was detected! All unprintable chars were changed to underscores.\n");
+        lprintf(LOG_WARNING, "A tournament with unprintable chars in its name was detected! All unprintable chars were changed to underscores.\n");
     }
 
     int makeDIR = baseDIR != NULL;
@@ -395,7 +396,7 @@ char *getReplayFileName(int gameID,
                 gameNameCP[i + 2] = '_';
 
                 if (makeDIR) {
-                    printf("[WARNING]: A tournament tried to create a replay in ../ in the path but was stopped. ");
+                    lprintf(LOG_WARNING, "A tournament tried to create a replay in ../ in the path but was stopped. ");
                     printf("The ../ (slash) was changed to ___.\n");
                 }
             }
@@ -413,8 +414,8 @@ char *getReplayFileName(int gameID,
         gameNameCP[0] = '_';
 
         if (makeDIR) {
-            printf("[WARNING]: A tournament tried to create a replay in an absolute path but was stopped. ");
-            printf("The Leading / was changed to an _.\n");
+            lprintf(LOG_WARNING, "A tournament tried to create a replay in an absolute path but was stopped. "
+                "The Leading / was changed to an _.\n");
         }
     }
 
@@ -441,7 +442,7 @@ char *getReplayFileName(int gameID,
             int code = mkdir(baseDIR, 0700);
 
             if (code == -1) {
-                printf("[ERROR]: Failed to created the folder %s while getting replay name ready.\n",
+                lprintf(LOG_ERROR, "Failed to created the folder %s while getting replay name ready.\n",
                        baseDIR);
 
                 switch (errno) {
@@ -462,14 +463,14 @@ char *getReplayFileName(int gameID,
                     break;
                 }
             } else {
-                printf("[INFO]: Made dir %s for replays.\n",
+                lprintf(LOG_INFO, "Made dir %s for replays.\n",
                        baseDIR);
             }
         } else if (makeDIR) {
-            printf("[ERROR]: Failed to create replay folder.\n");
+            lprintf(LOG_ERROR, "Failed to create replay folder.\n");
         }
     } else {
-        printf("[ERROR]: baseDIR is NULL, unable to create replay folder.\n");
+        lprintf(LOG_ERROR, "baseDIR is NULL, unable to create replay folder.\n");
     }
 
     // Create dirs
@@ -482,7 +483,7 @@ char *getReplayFileName(int gameID,
                 if (tempFolderName != NULL) {
                     free(tempFolderName);
                 } else {
-                    printf("[ERROR]: Unable to free temp folder name.\n");
+                    lprintf(LOG_ERROR, "Unable to free temp folder name.\n");
                 }
 
                 tempFolderName = (char *) malloc(sizeof(char) * (tempFolderBaseLength + i + 2));
@@ -503,7 +504,7 @@ char *getReplayFileName(int gameID,
                         int code = mkdir(tempFolderName, 0700);
 
                         if (code == -1) {
-                            printf("[ERROR]: Failed to created the folder %s while "
+                            lprintf(LOG_ERROR, "Failed to created the folder %s while "
                                    "getting replay name ready.\n",
                                    tempFolderName);
 
@@ -525,12 +526,12 @@ char *getReplayFileName(int gameID,
                                 break;
                             }
                         } else {
-                            printf("[INFO]: Made dir %s for replays.\n",
+                            lprintf(LOG_INFO, "Made dir %s for replays.\n",
                                    tempFolderName);
                         }
                     } else {
                         // Error message
-                        printf("[ERROR]: Failed to created the folder %s while "
+                        lprintf(LOG_ERROR, "Failed to created the folder %s while "
                                "getting replay name ready.\n",
                                tempFolderName);
                     }
@@ -542,7 +543,7 @@ char *getReplayFileName(int gameID,
     if (tempFolderName != NULL) {
         free(tempFolderName);
     } else {
-        printf("[ERROR]: Unable to free temp folder name.\n");
+        lprintf(LOG_ERROR, "Unable to free temp folder name.\n");
     }
 
     /**
@@ -565,7 +566,7 @@ char *getReplayFileName(int gameID,
     if (gameNameCP != NULL) {
         free(gameNameCP);
     } else {
-        printf("[ERROR]: Unable to free game name cp.\n");
+        lprintf(LOG_ERROR, "Unable to free game name cp.\n");
     }
 
     return replayName;
@@ -612,7 +613,7 @@ void replayResponseDownload(struct triceBot *b,
         if (rInfo->replay == NULL) {
             free(rInfo);
         } else if (pthread_create(&replaySaveThread, NULL, threadSaveReplay, (void *) rInfo) != 0) {
-            printf("[ERROR]: Failed to start thread to save the replay.\n");
+            lprintf(LOG_ERROR, "Failed to start thread to save the replay.\n");
             delete(rInfo->replay);
             free(rInfo);
         }
@@ -650,7 +651,7 @@ void saveReplay(struct triceBot *b,
     }
 
     if (access(fileName, F_OK) == 0) {
-        printf("[INFO]: Replay %s exists already, it was not overwritten.\n", fileName);
+        lprintf(LOG_INFO, "Replay %s exists already, it was not overwritten.\n", fileName);
     } else {
         FILE *replayFile = fopen(fileName, "wb+");
 
@@ -661,9 +662,9 @@ void saveReplay(struct triceBot *b,
 
             fclose(replayFile); //close file like a good boy
 
-            printf("[INFO]: Replay %s saved.\n", fileName);
+            lprintf(LOG_INFO, "Replay %s saved.\n", fileName);
         } else {
-            printf("[ERROR]: An error occurred saving the replay as %s.\n", fileName);
+            lprintf(LOG_ERROR, "An error occurred saving the replay as %s.\n", fileName);
         }
     }
 
@@ -743,7 +744,7 @@ static void roomsListed(struct triceBot *b,
                 enq(cmd, &b->sendQueue);
 
                 found = 1;
-                printf("[INFO]: Automatic room join being sent for %s.\n",
+                lprintf(LOG_INFO, "Automatic room join being sent for %s.\n",
                        roomName);
             }
         }
@@ -773,7 +774,7 @@ static void roomsListed(struct triceBot *b,
             enq(cmd, &b->sendQueue);
 
             found = 1;
-            printf("[INFO]: Automatic room join being sent for %s, as %s was not found.\n",
+            lprintf(LOG_INFO, "Automatic room join being sent for %s, as %s was not found.\n",
                    roomName,
                    b->config.roomName);
         }
@@ -807,12 +808,12 @@ void onReplayDownloadResponse(struct triceBot *b,
     // If resp is NULL the request timed out.
     if (resp == NULL || !resp->HasExtension(Response_ReplayDownload::ext)) {
         int replayID = *(int *) param;
-        printf("[ERROR]: Replay %d failed to download.\n",
+        lprintf(LOG_ERROR, "Replay %d failed to download.\n",
                replayID);
 
         Command_ReplayDownload replayDownload;
         replayDownload.set_replay_id(replayID);
-        printf("[INFO]: Requested replay %d.\n",
+        lprintf(LOG_INFO, "Requested replay %d.\n",
                replayID);
 
         CommandContainer cont;
@@ -852,7 +853,7 @@ static void replayReady(struct triceBot *b,
 
         Command_ReplayDownload replayDownload;
         replayDownload.set_replay_id(replayID);
-        printf("[INFO]: Requested replay %d.\n",
+        lprintf(LOG_INFO, "Requested replay %d.\n",
                replayID);
 
         CommandContainer cont;
@@ -1141,7 +1142,7 @@ void handleGameCreate(struct triceBot *b,
                 pthread_t t;
 
                 if (pthread_create(&t, NULL, freeCmdForGameCreate, (void *) game) != 0) {
-                    printf("[INFO]: Error creating poll thread for game "
+                    lprintf(LOG_INFO, "Error creating poll thread for game "
                            "create callback, running polling thread on current thread.\n");
 
                     //Wait for timeout of the game callback in another thread
@@ -1254,7 +1255,7 @@ void handleSessionEvent(struct triceBot *b,
     if (event.HasExtension(Event_ServerIdentification::ext)) {
 #if LOGIN_AUTOMATICALLY
         //Login when the server asks
-        printf("[INFO]: Automatic login being sent.\n");
+        lprintf(LOG_INFO, "Automatic login being sent.\n");
         sendLogin(b);
 #endif
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventServerIdentifictaion,
@@ -1311,7 +1312,7 @@ void handleSessionEvent(struct triceBot *b,
 #if DOWNLOAD_REPLAYS
         replayReady(b,
                     event.GetExtension(Event_ReplayAdded::ext));
-        printf("[INFO]: Automatic replay download being sent.\n");
+        lprintf(LOG_INFO, "Automatic replay download being sent.\n");
 #endif
 
         MACRO_CALL_FUNCTION_PTR_FOR_EVENT(onEventReplayAdded,
@@ -1356,7 +1357,7 @@ static void botEventHandler(struct mg_connection *c,
                 handleRoomEvent(b, &newServerMessage);
             }
         } else {
-            printf("[ERROR]: Unreadable message received.\n");
+            lprintf(LOG_ERROR, "Unreadable message received.\n");
         }
     }
 
@@ -1409,7 +1410,7 @@ static void botEventHandler(struct mg_connection *c,
                                                             current->currentGame->gameID,
                                                             b->magicRoomID);
 
-                    printf("[INFO]: Leaving game %d after %d seconds of inactivity.\n",
+                    lprintf(LOG_INFO, "Leaving game %d after %d seconds of inactivity.\n",
                            current->currentGame->gameID,
                            MAX_GAME_WAIT);
 

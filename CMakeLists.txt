@@ -23,6 +23,11 @@ set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
+# __FILENAME__
+string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
+add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
+add_definitions("-D__FILENAME__=(__FILE__ + SOURCE_PATH_SIZE)")
+
 # pre build
 message(STATUS "Building ${CMAKE_PROJECT_NAME}")
 message(STATUS "Git repo: ${GITHUB_REPO}")
@@ -116,6 +121,7 @@ set(SRC_FILES
     src/trice_structs.c
     src/player_deck_info.c
     src/commands.c
+    src/logger.c
     )
 add_executable(CockatriceTournamentBot ${SRC_FILES} ${MAIN})
 

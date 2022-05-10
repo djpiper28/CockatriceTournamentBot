@@ -19,6 +19,7 @@
 #include "bot_c_flags.h"
 #include "cmd_queue.h"
 #include "player_deck_info.h"
+#include "logger.h"
 
 #include "command_kick_from_game.pb.h"
 #include "commands.pb.h"
@@ -248,7 +249,7 @@ static void serverKickPlayerCommand(struct ServerConnection *s,
             sendInvalidAuthTokenResponse(c);
         }
     } else {
-        printf("[ERROR]: Invalid kick player command.\n");
+        lprintf(LOG_ERROR, "Invalid kick player command.\n");
         send404(c);
     }
 
@@ -335,7 +336,7 @@ static void serverDisablePlayerDeckVerififcation(struct ServerConnection *s,
             sendInvalidAuthTokenResponse(c);
         }
     } else {
-        printf("[INFO]: Invalid update player info command.\n");
+        lprintf(LOG_INFO, "Invalid update player info command.\n");
         send404(c);
     }
 
@@ -466,7 +467,7 @@ static void serverUpdatePlayerInfo(struct ServerConnection *s,
             sendInvalidAuthTokenResponse(c);
         }
     } else {
-        printf("[INFO]: Invalid update player info command.\n");
+        lprintf(LOG_INFO, "Invalid update player info command.\n");
         send404(c);
     }
 
@@ -532,7 +533,7 @@ static void serverEndGame(struct ServerConnection *s,
                                                      gameId,
                                                      s->api->triceBot->magicRoomID);
 
-                printf("[INFO]: Leaving game %s - %d after api request.\n",
+                lprintf(LOG_INFO, "Leaving game %s - %d after api request.\n",
                        g->gameName,
                        gameId);
 
@@ -737,14 +738,14 @@ static void serverCreateGameCommand(struct ServerConnection *s,
                                              NULL);
             s->isGameCreate = 1;
 
-            printf("[INFO]: Creating game called '%s' with %d players\n",
+            lprintf(LOG_INFO, "Creating game called '%s' with %d players\n",
                    gameName,
                    playerCount);
         } else {
             sendInvalidAuthTokenResponse(c);
         }
     } else {
-        printf("[ERROR]: Invalid game create command.\n");
+        lprintf(LOG_ERROR, "Invalid game create command.\n");
         send404(c);
     }
 
@@ -756,7 +757,7 @@ static void serverCreateGameCommand(struct ServerConnection *s,
 
 static void ErrorCallback(struct gameCreateCallbackWaitParam *param)
 {
-    printf("[ERROR]: Game create callback error - api client disconnected.\n");
+    lprintf(LOG_ERROR, "Game create callback error - api client disconnected.\n");
 }
 
 static int min(int a, int b)
@@ -1177,7 +1178,7 @@ static void eventHandler(struct mg_connection *c,
                              api->config.replayFolder,
                              replayName);
 
-                    printf("[INFO]: Game created with ID %d.\n",
+                    lprintf(LOG_INFO, "Game created with ID %d.\n",
                            paramdata->gameID);
 
                     mg_http_reply(c,
@@ -1248,7 +1249,7 @@ static void *pollingThread(void *apiIn)
                        apiIn);
 
     if (c == NULL) {
-        printf("[ERROR]: Unable to init mongoose.\n");
+        lprintf(LOG_ERROR, "Unable to init mongoose.\n");
         exit(13);
         //TODO: Handle error state!
     }
@@ -1275,10 +1276,10 @@ int tb_startServer(struct tb_apiServer *api)
 
     if (api->running) {
         pthread_mutex_unlock(&api->bottleneck);
-        printf("[ERROR]: Server has already started.\n");
+        lprintf(LOG_ERROR, "Server has already started.\n");
         return 0;
     } else {
-        printf("[INFO]: Starting api server, listening on %s\n",
+        lprintf(LOG_INFO, "Starting api server, listening on %s\n",
                api->config.bindAddr);
         printf("-> SSL enabled. cert: %s & certkey: %s.\n",
                api->config.cert,

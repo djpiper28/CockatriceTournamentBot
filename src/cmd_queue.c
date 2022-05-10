@@ -1,6 +1,7 @@
 #ifndef QUEUE_
 #define QUEUE_
 #include "cmd_queue.h"
+#include "logger.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -60,7 +61,7 @@ void freePendingCommand(struct pendingCommand *cmd)
             if (p != NULL) {
                 pthread_t t;
                 if (pthread_create(&t, NULL, freeCmdForGameCreate, (void *) p) != 0) {
-                    printf("[INFO]: Error creating poll thread for free cmd game "
+                    lprintf(LOG_INFO, "Error creating poll thread for free cmd game "
                            "create, running polling thread on current thread.\n");
 
                     //Wait for timeout of the game callback in another thread

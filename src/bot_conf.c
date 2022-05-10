@@ -1,6 +1,6 @@
 #ifndef BOTCONF_
 #define BOTCONF_
-
+#include "logger.h"
 #include "bot_conf.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -82,7 +82,7 @@ static void readProperty(char *line, int length, struct Config *config)
             } else if (strncmp("ratelimit", propertyStr, length) == 0) {
                 int temp = atoi(valueStr);
                 if (config->maxMessagesPerSecond == 0) {
-                    printf("[ERROR]: Rate limit is not set a valid value\n");
+                    lprintf(LOG_ERROR, "Rate limit is not set a valid value\n");
                 } else {
                     config->maxMessagesPerSecond = temp;
                 }
@@ -108,7 +108,7 @@ static void readProperty(char *line, int length, struct Config *config)
                 // and they might be trying to write to /replays/
                 if (valueLen >= 1) {
                     if (config->replayFolder[0] == '/') {
-                        printf("[WARNING]: Replay folder is an absolute location (%s)\n",
+                        lprintf(LOG_WARNING, "Replay folder is an absolute location (%s)\n",
                                config->replayFolder);
                     }
                 }
@@ -195,7 +195,7 @@ void makeNewFile(char *filename)
         fclose(configFile); //close file like a good boy
     } else {
         // Invalid permissions to make a new file
-        printf("[ERROR]: Unable to create config.conf.\n");
+        lprintf(LOG_ERROR, "Unable to create config.conf.\n");
     }
 }
 

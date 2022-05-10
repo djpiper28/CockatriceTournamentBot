@@ -13,6 +13,7 @@
 #include "room_commands.pb.h"
 #include "player_deck_info.h"
 #include "commands.h"
+#include "logger.h"
 
 #include "command_kick_from_game.pb.h"
 #include "command_game_say.pb.h"
@@ -26,7 +27,7 @@ struct tournamentBot {
 
 void stopAll(struct tournamentBot *bot)
 {
-    printf("[INFO]: Stopping bot\n");
+    lprintf(LOG_INFO, "Stopping bot\n");
 
     bot->running = 0;
     tb_stopServer(&bot->server);
@@ -39,38 +40,17 @@ void stopAll(struct tournamentBot *bot)
 #if DEBUG
 #define MACRO_DEBUG_FOR_EVENT(fn, type)\
 void DebugFor##fn (struct triceBot *b, type event) {\
-    time_t rawtime;\
-    struct tm info;\
-    char buffer[80];\
-    time(&rawtime);\
-    localtime_r(&rawtime , &info);\
-    strftime(buffer, 80, "%x - %H:%M:%S %Z", &info);\
-    \
-    printf("[DEBUG] (%s) %s: %s\n",#fn , buffer, event.DebugString().c_str());\
+    lprintf(LOG_DEBUG, "%s - %s\n", #fn , event.DebugString().c_str());\
 }
 
 #define MACRO_DEBUG_FOR_GAME_EVENT(fn,type)\
 void DebugFor##fn (struct triceBot *b, struct game, type event, int pid) {\
-    time_t rawtime;\
-    struct tm info;\
-    char buffer[80];\
-    time(&rawtime);\
-    localtime_r(&rawtime , &info);\
-    strftime(buffer, 80, "%x - %H:%M:%S %Z", &info);\
-    \
-    printf("[DEBUG] %s: %s\n", buffer, #fn);\
+    lprintf(LOG_DEBUG, "%s\n", #fn);\
 }
 
 #define MACRO_DEBUG_FOR_STATE_CHANGE(fn)\
 void DebugFor##fn (struct triceBot *b) {\
-    time_t rawtime;\
-    struct tm info;\
-    char buffer[80];\
-    time(&rawtime);\
-    localtime_r(&rawtime , &info);\
-    strftime(buffer, 80, "%x - %H:%M:%S %Z", &info);\
-    \
-    printf("[DEBUG] %s: %s\n", buffer, #fn);\
+    lprintf(LOG_DEBUG, "%s\n", #fn);\
 }
 
 //Server events
@@ -190,7 +170,7 @@ void playerJoin(struct triceBot *b,
                          "issue at: %s if this was an error. Expected players: ",
                          user.name().c_str(),
                          GITHUB_REPO);
-                printf("[INFO]: Player %s was kicked from game %d.\n",
+                lprintf(LOG_INFO, "Player %s was kicked from game %d.\n",
                        user.name().c_str(),
                        g.gameID);
 
@@ -296,7 +276,7 @@ void playerPropertyChange(struct triceBot *b,
                              deckHash);
                 }
 
-                printf("[INFO]: Player %s loaded an invalid deck.\n",
+                lprintf(LOG_INFO, "Player %s loaded an invalid deck.\n",
                        g.playerArr[plrArrayIndex].playerName);
 
                 for (int i = 0; i < pdi[pdiIndex].deckCount; i++) {
@@ -382,13 +362,13 @@ void onGameEnd(struct triceBot *b,
 
 void botDisconnect(struct triceBot *b)
 {
-    printf("[INFO]: The bot disconnected and will restart.\n");
+    lprintf(LOG_INFO, "The bot disconnected and will restart.\n");
     startBot(b);
 }
 
 void botConnect(struct triceBot *b)
 {
-    printf("[INFO]: The bot has successfully connected to the server and will finish starting.\n");
+    lprintf(LOG_INFO, "The bot has successfully connected to the server and will finish starting.\n");
 }
 
 // This is a nice hack to let me rename this for my system tests
@@ -397,13 +377,13 @@ void botConnect(struct triceBot *b)
 #endif
 int MAIN_FUNC(int argc, char * args[])
 {
-    printf("[INFO]: %s\n-> by djpiper28 see %s for git repo.\n",
+    lprintf(LOG_INFO, "%s\n-> by djpiper28 see %s for git repo.\n",
            PROG_NAME,
            GITHUB_REPO);
     printf("-> Version %s\n",
            VERSION);
     printf("-> Use the first argument for the mongoose debug level (0,1,2,3 or 4).\n");
-    printf("[INFO]: Starting bot...\n");
+    lprintf(LOG_INFO, "Starting bot...\n");
 
     mg_log_set(argc > 1 ? args[1] : "0");
 
@@ -417,91 +397,91 @@ int MAIN_FUNC(int argc, char * args[])
     if (status) {
         if (bot.config.cockatriceUsername == NULL) {
             valid = 0;
-            printf("[ERROR]: Cockatrice username is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Cockatrice username is not defined in config.conf.\n");
         }
 
         if (bot.config.cockatricePassword == NULL) {
             valid = 0;
-            printf("[ERROR]: Cockatrice password is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Cockatrice password is not defined in config.conf.\n");
         }
 
         if (bot.config.roomName == NULL) {
             valid = 0;
-            printf("[ERROR]: Cockatrice room name is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Cockatrice room name is not defined in config.conf.\n");
         }
 
         if (bot.config.cockatriceServer == NULL) {
             valid = 0;
-            printf("[ERROR]: Cockatrice server address is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Cockatrice server address is not defined in config.conf.\n");
         }
 
         if (bot.config.clientID == NULL) {
             valid = 0;
-            printf("[ERROR]: Cockatrice client ID is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Cockatrice client ID is not defined in config.conf.\n");
         }
 
         if (bot.config.replayFolder == NULL) {
             valid = 0;
-            printf("[ERROR]: Replay folder is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Replay folder is not defined in config.conf.\n");
         }
 
         if (bot.config.authToken == NULL) {
             valid = 0;
-            printf("[ERROR]: Authentication token is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Authentication token is not defined in config.conf.\n");
         }
 
         if (bot.config.bindAddr == NULL) {
             valid = 0;
-            printf("[ERROR]: API server bind address is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "API server bind address is not defined in config.conf.\n");
         }
 
         if (bot.config.externURL == NULL) {
             valid = 0;
-            printf("[ERROR]: API externURL is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "API externURL is not defined in config.conf.\n");
         }
 
         // Check certs exist and are readable.
         if (bot.config.cert == NULL) {
             valid = 0;
-            printf("[ERROR]: SSL certificate file is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "SSL certificate file is not defined in config.conf.\n");
         } else {
             if (access(bot.config.cert, F_OK) != 0) {
                 valid = 0;
-                printf("[ERROR]: SSL certificate file defined in config.conf does not exist.\n");
+                lprintf(LOG_ERROR, "SSL certificate file defined in config.conf does not exist.\n");
             } else {
                 if (access(bot.config.cert, R_OK) != 0) {
                     valid = 0;
-                    printf("[ERROR]: SSL certificate file defined in config.conf cannot be read.\n");
+                    lprintf(LOG_ERROR, "SSL certificate file defined in config.conf cannot be read.\n");
                 }
             }
         }
 
         if (bot.config.certkey == NULL) {
             valid = 0;
-            printf("[ERROR]: SSL certificate key file is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "SSL certificate key file is not defined in config.conf.\n");
         } else {
             if (access(bot.config.certkey, F_OK) != 0) {
                 valid = 0;
-                printf("[ERROR]: SSL certificate key file defined in config.conf does not exist.\n");
+                lprintf(LOG_ERROR, "SSL certificate key file defined in config.conf does not exist.\n");
             } else {
                 if (access(bot.config.certkey, R_OK) != 0) {
                     valid = 0;
-                    printf("[ERROR]: SSL certificate key file defined in config.conf cannot be read.\n");
+                    lprintf(LOG_ERROR, "SSL certificate key file defined in config.conf cannot be read.\n");
                 }
             }
         }
 
         if (bot.config.maxMessagesPerSecond == -1) {
             valid = 0;
-            printf("[ERROR]: Rate limit is not defined in config.conf.\n");
+            lprintf(LOG_ERROR, "Rate limit is not defined in config.conf.\n");
         } else if (bot.config.maxMessagesPerSecond <= 0) {
             valid = 0;
-            printf("[ERROR]: Rate limit is defined in config.conf but is an invalid value. "
+            lprintf(LOG_ERROR, "Rate limit is defined in config.conf but is an invalid value. "
                    "Make sure it is a value above 0.\n");
         }
 
         if (valid) {
-            printf("[INFO]: Config file read successfully.\n");
+            lprintf(LOG_INFO, "Config file read successfully.\n");
             initBot(&bot.b, bot.config);
             tb_initServer(&bot.server, &bot.b, bot.config);
 
@@ -516,13 +496,13 @@ int MAIN_FUNC(int argc, char * args[])
             set_onGameEventLeave(&playerLeave, &bot.b);
             set_onGameEventPlayerPropertyChanged(&playerPropertyChange, &bot.b);
 
-            printf("[INFO]: Starting bot...\n");
+            lprintf(LOG_INFO, "Starting bot...\n");
 
             initCommandList(&bot.b);
             startBot(&bot.b);
             tb_startServer(&bot.server);
 
-            printf("[INFO]: Bot started.\n");
+            lprintf(LOG_INFO, "Bot started.\n");
 
             for (;;) {
                 sleep(5);
@@ -530,14 +510,14 @@ int MAIN_FUNC(int argc, char * args[])
 
             //freeCommandList();
         } else {
-            printf("[ERROR]: Missing properties in config file, see README.md at "
+            lprintf(LOG_ERROR, "Missing properties in config file, see README.md at "
                    "%s/blob/main/README.md.\n",
                    GITHUB_REPO);
         }
     } else if (status == 0) {
-        printf("[ERROR]: There was an error reading the config file.\n");
+        lprintf(LOG_ERROR, "There was an error reading the config file.\n");
     } else if (status == -1) {
-        printf("[ERROR]: No config file exists, a new one was made. "
+        lprintf(LOG_ERROR, "No config file exists, a new one was made. "
                "Please edit it then restart the bot.\n");
     }
 
