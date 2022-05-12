@@ -24,7 +24,7 @@ def genCssFile(outputName, defineName, inputName):
             cssStr += line
 
     genSource.append("</style>")
-    genSourceString = "\\n\\\n".join(genSource)
+    genSourceString = "\\n".join(genSource)
     genSourceContents = f"""#ifndef {defineName}
     #define {defineName} "{genSourceString}"
     #endif
