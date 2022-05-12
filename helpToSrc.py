@@ -54,7 +54,7 @@ def genFile(outputName, defineName, inputName):
             # Using in to ignore indenting.
             # And comments, so they don't get picked up
             # in the documentation randomly.
-            if "/* {CSS} */" in line:
+            if "<!-- {CSS} -->" in line:
                 line = css
 
             if "<!-- {INDEX} -->" in line: 
