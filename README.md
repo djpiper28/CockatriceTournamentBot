@@ -10,6 +10,8 @@ players to use cockatrice beta to see the games that it makes.
 [![codecov](https://codecov.io/gh/djpiper28/CockatriceTournamentBot/branch/main/graph/badge.svg?token=EFPY6BDV96)](https://codecov.io/gh/djpiper28/CockatriceTournamentBot)
 [![System Tests](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/sys-tests.yml/badge.svg)](https://github.com/djpiper28/CockatriceTournamentBot/actions/workflows/sys-tests.yml)
 
+Live at [https://tricebot.co.uk](https://tricebot.co.uk)
+
 ## Features
  - Automatic game creation
  - Automatic replay downloads
