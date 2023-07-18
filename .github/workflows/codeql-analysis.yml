@@ -37,21 +37,12 @@ jobs:
       shell: bash
       run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libprotobuf-dev protobuf-compiler g++ libmbedtls-dev build-essential cmake
         
-    - name: Install sonar-scanner and build-wrapper
-      uses: SonarSource/sonarcloud-github-c-cpp@v1
-    - name: Run build-wrapper
+    - name: build
       run: |
         mkdir -p build
         cd build
-        cmake ..
-        build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build . -j
+        cmake ..make --build . -j
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
       
-    - name: Run sonar-scanner
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-        sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
