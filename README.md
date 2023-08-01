@@ -2,7 +2,7 @@
 
 Marchesa Bot (aka tricebot) is a FOSS to make hosting tournaments on cocaktrice
 easier for tournament organisers. It can create games, save replays and has an
-integration with [Squire Bot](https://gitalb.com/monarch3). It currently requires
+integration with [Squire Bot](https://gitlab.com/monarch3/SquireBot). It currently requires
 players to use cockatrice beta to see the games that it makes.
 
 ## Build status
