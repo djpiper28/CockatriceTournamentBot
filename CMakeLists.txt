@@ -11,7 +11,7 @@ project(CockatriceTournamentBot VERSION ${VERSION})
 set(GITHUB_REPO "https://www.github.com/djpiper28/CockatriceTournamentBot")
 
 # specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # compiler flags
